@@ -1,0 +1,36 @@
+# main docs of setup tools: https://setuptools.pypa.io/en/latest/userguide/quickstart.html
+# pypip tutoral: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+# Video Tutorial: https://www.youtube.com/watch?v=v6tALyc4C10
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+include-package-data = true # to include data directories
+
+[project]
+name = "prepare-quran-dataset"
+version = "0.0.1"
+authors = [
+  { name="Abdullah Aml", email="abdullahamlyossef@gmail.com" },
+]
+description = "Downloading and Processing Quran Recitaion of the Holy Quran"
+readme = "README.md"
+dependencies = [
+  'pypdl',
+  'tqdm',
+  "pydantic",
+  "datasets",
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Abdullahaml1/prepare-quran-dataset"
+Issues = "https://github.com/Abdullahaml1/prepare-quran-dataset/issues"
+
+# # for addint data: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#package-data
+# [tool.setuptools.package-data]
+# quran_transcript = ["quran-script/*"]
