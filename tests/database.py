@@ -3,8 +3,11 @@ from prepare_quran_dataset.construct.data_classes import Reciter
 
 
 if __name__ == '__main__':
+    print('Loading the Database')
     reciter_pool = ReciterPool(path='data/reciters.jsonl')
     print(reciter_pool)
+    for reciter in reciter_pool:
+        print(reciter)
     print('Len Of Reciter Pool:', len(reciter_pool))
 
     print('\n\nAfter Insertion')

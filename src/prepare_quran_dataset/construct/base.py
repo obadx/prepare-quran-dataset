@@ -60,6 +60,7 @@ class Pool(ABC):
     def update(self, new_item: BaseModel):
         """Updates and item in the dataset
         """
+        self.before_update(new_item)
         id = dict(new_item)[self.id_column]
         if id in self.dataset_dict:
             self.dataset_dict[id] = dict(new_item)
@@ -67,11 +68,18 @@ class Pool(ABC):
             raise KeyError(f'{id} is not found in the recitaion pool')
         self.after_update(new_item)
 
+    def before_update(self, new_item: BaseModel):
+        ...
+
     def after_update(self, new_item: BaseModel):
         ...
 
     def __getitem__(self, id: Any):
-        return self.item_type(**self.dataset_dict[id])
+        try:
+            return self.item_type(**self.dataset_dict[id])
+        except KeyError:
+            raise KeyError(
+                f'The item with ID={id} does not exists in the database')
 
     def __len__(self):
         return len(self.dataset_dict)
