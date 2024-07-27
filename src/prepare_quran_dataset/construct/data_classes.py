@@ -21,6 +21,13 @@ class Reciter(BaseModel):
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
 
 
+class AudioFile(BaseModel):
+    name: str = Field(description='Name of the file')
+    path: str = ""
+    sample_rate: int
+    duration_minutes: float
+
+
 class Moshaf(BaseModel):
     """
     Attributes:
@@ -34,12 +41,12 @@ class Moshaf(BaseModel):
         num_recitations (int): Number of recitations inside the Moshaf
         total_duration_minutes (float): The total duration of Moshaf in Minutes
         is_complete (bool): If the Moshaf has all the recitations (114)
-        recitation_files (dict[str, float]): dict of ["recitation file name": "duration in minutes"
+        recitation_files (list[AudioFile]): List of AudioFile objects
         publisher (Optional[str]): Publisher that records the recitations
         comments (Optional[str]): optional comments
         total_szie_mb (float): The total size in MegaBytes
 
-    Quran Specific Attirbutes
+    Quran Specific Attributes
         rewaya (Literal['hafs']): The rewya "روابة" of the moshaf
         madd_monfasel_len (Literal[2, 4, 5]): The length of Mad Al Monfasel "مد النفصل"
         madd_motasel_len (Literal[4, 5]): The length of Mad Al Motasel "مد المتصل"
@@ -69,8 +76,8 @@ class Moshaf(BaseModel):
         description='The total duration of Moshaf in Minutes')
     is_complete: bool = Field(
         description='If the Moshaf has all the recitations (114)')
-    recitation_fils: dict[str, float] = Field(
-        description='dict of ["recitation file name": "duration in minutes"')
+    recitation_files: list[AudioFile] = Field(
+        description='List of AudioFile objects')
     publisher: Optional[str] = Field(
         default='',
         description='Publisher that records the recitations')
