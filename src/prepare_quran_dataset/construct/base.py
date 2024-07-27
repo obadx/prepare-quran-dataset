@@ -72,7 +72,7 @@ class Pool(ABC):
             raise ItemExistsInPoolError('The item already exists')
 
         new_id = self.generate_id(new_item)
-        self.dataset_dict[new_id] = dict(new_item)
+        self.dataset_dict[new_id] = new_item.model_dump()
         self.dataset_dict[new_id][self.id_column] = new_id
         self.items_hash.add(new_item_hash)  # O(1)
 
@@ -96,9 +96,9 @@ class Pool(ABC):
         new_item = self.process_new_item_before_update(new_item)
         new_item_hash = self.validate_before_update(new_item)
 
-        id = dict(new_item)[self.id_column]
+        id = new_item.id
         if id in self.dataset_dict:
-            self.dataset_dict[id] = dict(new_item)
+            self.dataset_dict[id] = new_item.model_dump()
         else:
             raise KeyError(f'{id} is not found in the recitaion pool')
 
