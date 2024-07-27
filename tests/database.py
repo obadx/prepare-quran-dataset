@@ -34,14 +34,22 @@ if __name__ == '__main__':
     reciter_pool.insert(reciter)
     print(reciter_pool)
 
-    print('\n\nSaveing')
-    reciter_pool.save()
+    # print('\n\nSaveing')
+    # reciter_pool.save()
 
     # print('\n\nError: editing a rectier with reciter data exists in the database')
     # reciter = reciter_pool[1]
     # reciter.arabic_name = 'محمود خليل الحصري'
     # reciter_pool.update(reciter)
 
-    print('\n\nIterating')
+    print('\n\nValid update')
+    print('Before')
+    for reciter in reciter_pool:
+        print(reciter)
+    reciter = reciter_pool[1]
+    reciter.english_name = 'Mohamed'
+    reciter.model_validate(reciter)
+    reciter_pool.update(reciter)
+    print('After:')
     for reciter in reciter_pool:
         print(reciter)
