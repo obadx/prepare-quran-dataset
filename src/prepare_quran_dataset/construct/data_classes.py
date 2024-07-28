@@ -64,19 +64,23 @@ class Moshaf(BaseModel):
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
     name: str = Field(
         description='The arabic name of the moshaf i.e "محف محمود خليلي الحصري"')
-    path: str = Field(description='Absolute path to the moshaf')
+    path: str = Field(default="", description='Absolute path to the moshaf')
     reciter_id: int = Field(description='The ID of the reciter starting of 0')
-    reciter_arabic_name: str
-    reciter_english_name: str
+    reciter_arabic_name: str = ""
+    reciter_english_name: str = ""
     sources: list[str] = Field(
-        description=f'List of urls to download recitations')
+        description='List of urls to download recitations')
     num_recitations: int = Field(
+        default=0,
         description='Number of recitations inside the Moshaf')
     total_duraion_minutes: float = Field(
+        default=0.0,
         description='The total duration of Moshaf in Minutes')
     is_complete: bool = Field(
+        default=False,
         description='If the Moshaf has all the recitations (114)')
     recitation_files: list[AudioFile] = Field(
+        default_factory=lambda: [],
         description='List of AudioFile objects')
     publisher: Optional[str] = Field(
         default='',
@@ -85,6 +89,7 @@ class Moshaf(BaseModel):
         default='',
         description='optional comments')
     total_size_mb: float = Field(
+        default=0.0,
         description='The total size in MegaBytes')
 
     # Quran Specific Attributes
