@@ -4,8 +4,10 @@ from pathlib import Path
 import os
 import functools
 import time
-from zipfile import ZipFile
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from zipfile import ZipFile, is_zipfile
+from concurrent.futures import ProcessPoolExecutor
+from pypdl import Pypdl
+from dataclasses import dataclass
 
 
 def timer(func):
@@ -20,6 +22,47 @@ def timer(func):
 
         return value
     return wrapper_timer
+
+
+@dataclass
+class AudioFileInfo:
+    sample_rate: int
+    duration_seconds: float
+
+
+def download_file_fast(
+    url: str,
+    out_path: str | Path,
+    extract_zip=True,
+    num_download_segments=30,
+    num_unzip_workers=12,
+    remove_zipfile=True,
+) -> Path:
+    """Downloads a file and extract if if it is zipfile
+    Args:
+        out_path (str | Path): the path to the file i.e filename to download
+        extract_zip (bool): if true extract a zip file to `out_path`
+        remove_zipfile (bool): remove zipfile after downloading it
+    """
+    out_path = Path(out_path)
+    if out_path.exists():
+        return out_path
+
+    dl = Pypdl()
+    out = dl.start(url, file_path=out_path, segments=num_download_segments)
+    out_path = Path(out.path)
+
+    if is_zipfile(out_path):
+        zipfile_path = out_path.rename(
+            out_path.parent / f'{out_path.name}.download')
+        extract_zipfile(zipfile_path=zipfile_path,
+                        extract_path=out_path, num_workers=num_unzip_workers)
+
+        # remove zipfile
+        if remove_zipfile:
+            zipfile_path.unlink()
+
+    return out_path
 
 
 def download_file_slow(
@@ -92,17 +135,6 @@ def download_file_slow(
         return filepath
     else:
         raise RuntimeError(f"Failed to download file: {response.status_code}")
-
-
-def exception_catcher(func):
-    """Decorator Print the runtime of the decorated function"""
-    @functools.wraps(func)
-    def wrapper_catcher(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            return e
-    return wrapper_catcher
 
 
 # @exception_catcher
