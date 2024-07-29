@@ -120,18 +120,22 @@ def unzip_files(
             # unzip the file
             handle.extract(file, extract_path)
             # report progress
-            print(f'.unzipped {file}')
+            # print(f'.unzipped {file}')
 
 
-@timer
 def extract_zipfile(
     zipfile_path: str | Path,
     extract_path: str | Path,
-    num_workers=8
+    num_workers: int = 8,
 ):
     # WARN: we ingore empty files in zip file
     """Extract zipfiles using multiple processes eachone is working on group of files
     source: https://superfastpython.com/multithreaded-unzip-files/
+    Args:
+        zipfile_path (str | Path): path to zipfile
+        extract_path (str | Path): path to extract zipfile
+        num_worker (int): number of worker to process zipfile in parallel
+
     """
     extract_path = Path(extract_path)
     # open the zip file
