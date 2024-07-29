@@ -8,6 +8,7 @@ from zipfile import ZipFile, is_zipfile
 from concurrent.futures import ProcessPoolExecutor
 from pypdl import Pypdl
 from dataclasses import dataclass
+from mutagen import File
 
 
 def timer(func):
@@ -28,6 +29,17 @@ def timer(func):
 class AudioFileInfo:
     sample_rate: int
     duration_seconds: float
+
+
+def get_audiofile_info(audiofile_path: str | Path) -> AudioFileInfo:
+    """Reads the file metadata and return its information
+    """
+    audio = File(audiofile_path)
+    if audio is None:
+        raise ValueError('Usuported Audio File')
+    return AudioFileInfo(
+        sample_rate=audio.info.sample_rate,
+        duration_seconds=audio.info.length)
 
 
 def download_file_fast(
