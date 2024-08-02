@@ -1,4 +1,3 @@
-from tqdm import tqdm
 import requests
 from pathlib import Path
 import os
@@ -6,9 +5,17 @@ import functools
 import time
 from zipfile import ZipFile, is_zipfile
 from concurrent.futures import ProcessPoolExecutor
-from pypdl import Pypdl
 from dataclasses import dataclass
+from urllib.parse import urlparse
+
+
+from tqdm import tqdm
+from pypdl import Pypdl
 from mutagen import File
+
+
+class DownloadError(Exception):
+    ...
 
 
 def timer(func):
@@ -33,10 +40,12 @@ class AudioFileInfo:
 
 def get_audiofile_info(audiofile_path: str | Path) -> AudioFileInfo:
     """Reads the file metadata and return its information
+    Returns:
+        (AudioFileInfo): if the audiofile is not valid return None
     """
     audio = File(audiofile_path)
     if audio is None:
-        raise ValueError('Usuported Audio File')
+        return None
     return AudioFileInfo(
         sample_rate=audio.info.sample_rate,
         duration_seconds=audio.info.length)
@@ -46,22 +55,29 @@ def download_file_fast(
     url: str,
     out_path: str | Path,
     extract_zip=True,
-    num_download_segments=30,
+    num_download_segments=20,
     num_unzip_workers=12,
     remove_zipfile=True,
 ) -> Path:
     """Downloads a file and extract if if it is zipfile
     Args:
-        out_path (str | Path): the path to the file i.e filename to download
+        out_path (str | Path): the path to the Download (Directory)
         extract_zip (bool): if true extract a zip file to `out_path`
         remove_zipfile (bool): remove zipfile after downloading it
     """
     out_path = Path(out_path)
+    assert not out_path.is_file(), (
+        'Download Path `out_path` has to be a directory not a file')
+    os.makedirs(out_path, exist_ok=True)
+    filename = deduce_filename(url)
+    out_path /= filename
     if out_path.exists():
         return out_path
 
     dl = Pypdl()
     out = dl.start(url, file_path=out_path, segments=num_download_segments)
+    if out is None:
+        raise DownloadError
     out_path = Path(out.path)
 
     if is_zipfile(out_path):
@@ -75,6 +91,26 @@ def download_file_fast(
             zipfile_path.unlink()
 
     return out_path
+
+
+def deduce_filename(url) -> str:
+    """extracts file name from url"""
+    # Extract filename from URL
+    parsed_url = urlparse(url)
+    filename = parsed_url.path.split('/')[-1]
+
+    # Make a HEAD request to get headers
+    try:
+        response = requests.head(url, allow_redirects=True)
+
+        # Check for Content-Disposition header
+        if 'content-disposition' in response.headers:
+            content_disposition = response.headers['content-disposition']
+            filename = content_disposition.split('filename=')[1].strip('"')
+    except Exception as e:
+        print(f'Error connecting to the url: {e}')
+
+    return filename
 
 
 def download_file_slow(
