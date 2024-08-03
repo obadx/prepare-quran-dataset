@@ -20,6 +20,7 @@ dependencies = [
   "pydantic",
   "datasets",
   "mutagen",
+  "quran-transcript @ git+https://github.com/Abdullahaml1/quran-transcript.git",
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -33,5 +34,5 @@ Homepage = "https://github.com/Abdullahaml1/prepare-quran-dataset"
 Issues = "https://github.com/Abdullahaml1/prepare-quran-dataset/issues"
 
 # # for addint data: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#package-data
-# [tool.setuptools.package-data]
-# quran_transcript = ["quran-script/*"]
+[tool.setuptools.package-data]
+quran_transcript = ["data/*"]

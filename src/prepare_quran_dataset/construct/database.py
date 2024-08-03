@@ -3,10 +3,17 @@ from typing import Any
 from pathlib import Path
 import shutil
 import os
+from collections import defaultdict
+
 
 from prepare_quran_dataset.construct.base import Pool
 from prepare_quran_dataset.construct.data_classes import Reciter, Moshaf
-from prepare_quran_dataset.construct.utils import download_file_fast, get_audiofile_info
+from prepare_quran_dataset.construct.utils import (
+    download_file_fast,
+    get_audiofile_info,
+    get_suar_list,
+    normalize_text
+)
 
 
 class ReciterPool(Pool):
@@ -78,21 +85,38 @@ def download_media_and_fill_metadata(item: Moshaf, database_path: Path | str) ->
     database_path = Path(database_path)
     moshaf_path = database_path / item.id
     os.makedirs(moshaf_path, exist_ok=False)
-    download_moshaf_from_urls(urls=item.sources, moshaf_path=moshaf_path)
+    download_moshaf_from_urls(
+        urls=item.sources, moshaf_name=item.id, moshaf_path=moshaf_path)
 
+    # TODO:
     # Fill Moshaf's Metadata
 
 
 def download_moshaf_from_urls(
-        urls: list[str], moshaf_path: str | Path, download_path: str | Path):
-    """download and gather sources so that the output file structure is:
+    urls: list[str],
+    moshaf_path: str | Path,
+    moshaf_name: str,
+    download_path: str | Path,
+    remove_after_download=False,
+):
+    """Download the moshaf media files and store it in `moshaf_path`
+
+    Download the media from urls either (zip file, or media file) in
+    `download_path/moshaf_name` and then extract all media files in
+    `moshaf_path`
     mohaf_path:
         media_file1
         media_file2
         media_file3
         ...
+
+    Args:
+        urls list[str]: list of urls either zip or single medila files
+        moshaf_path (str | Path): path to storm moshaf media files
+        moshaf_name (str): the moshaf name
+        download_path (str): Base Path to download files
     """
-    download_path = Path(download_path)
+    download_path = Path(download_path) / moshaf_name
     moshaf_path = Path(moshaf_path)
     downloaded_pathes: list[Path] = []
     for idx, url in enumerate(urls):
@@ -104,26 +128,61 @@ def download_moshaf_from_urls(
 
         downloaded_pathes.append(url_path)
 
-    # get files pathes out of cascadded directories
+    # Check for duplicate files in downloaded media
     files_pathes = get_files(downloaded_pathes)
     file_names = [p.name for p in files_pathes]
-    assert len(set(file_names)) == len(file_names), (
-        f'There are duplicate files in downloading. Download_path: {download_path.absolute()}')
+    files_count = defaultdict(lambda: 0)
+    for file in file_names:
+        files_count[get_sura_standard_name(file)] += 1
+    duplicate_files = [file for file,
+                       count in files_count.items() if count > 1]
+    assert duplicate_files == [], (
+        f'Duplicate Files. These files are duplicated {duplicate_files}. Download_path: {download_path.absolute()}')
 
-    # TODO: check files are:
-    # *. media
-    # *. check for name resolution 001, 002, ...
-
-    # move these files into moshaf_path
+    # copy downloaded media into moshaf path
     for filepath in files_pathes:
-        filepath.rename(moshaf_path / filepath.name)
+        shutil.copy(
+            filepath, moshaf_path / get_sura_standard_name(filepath.name))
 
-    # remove downloaded directories
-    for path in downloaded_pathes:
-        if path.is_dir():
-            shutil.rmtree(path)
-        elif path.is_file():
-            raise RuntimeError('File has to be moved to moshaf directory')
+    if remove_after_download:
+        shutil.rmtree(download_path)
+
+
+def get_sura_standard_name(filename: str) -> str:
+    """Returns the standard name of the sura represnted by the Sura's Index i.e("001")
+    Args:
+        name (str): the name of the sura represnted by:
+        * the sura Arabic name i.e("البقرة")
+        * or by the sura's index i.e ("002") or ("2")
+        * or by bothe i.e("البقرة 2")
+
+    Returns:
+        (str): the sura's index as a standard name i.e("002")
+    """
+    splits = filename.split('.')
+    assert len(splits) == 2, (
+        f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
+    name = splits[0]
+    extention = splits[1]
+    sura_idx = None
+
+    # search first for numbers "002", or "2"
+    re_result = re.search(r'\d+', name)
+    if re_result:
+        sura_idx = int(re_result.group())
+
+    # searching for the Arabic name of the sura
+    else:
+        name_normalized = normalize_text(name)
+        suar_list = get_suar_list()
+        for idx, sura_name in enumerate(suar_list):
+            sura_name_normalized = normalize_text(sura_name)
+            if re.search(sura_name_normalized, name_normalized):
+                sura_idx = idx + 1
+
+    assert sura_idx is not None, (
+        f'Sura name is not handeled in this case. name={name}')
+    return f'{sura_idx:0{3}}.{extention}'
 
 
 def get_files(pathes: list[Path]) -> list[Path]:

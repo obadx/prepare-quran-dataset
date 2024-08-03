@@ -7,11 +7,16 @@ from zipfile import ZipFile, is_zipfile
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from urllib.parse import urlparse
+import json
+import re
 
 
 from tqdm import tqdm
 from pypdl import Pypdl
 from mutagen import File
+from quran_transcript.utils import normalize_aya
+
+DATA_PATH = Path(__file__).parent.parent / 'data'
 
 
 class DownloadError(Exception):
@@ -30,6 +35,24 @@ def timer(func):
 
         return value
     return wrapper_timer
+
+
+def normalize_text(text: str) -> str:
+    out_text = re.sub(r'-|_', '', text)
+    out_text = re.sub("أ|إ|آ", "ا", out_text)
+    return normalize_aya(
+        out_text,
+        remove_spaces=True,
+        remove_tashkeel=True,
+        remove_small_alef=True)
+
+
+def get_suar_list(suar_path=DATA_PATH / 'suar_list.json') -> list[str]:
+    """Return the suar names of the Holy Quran in an ordered list
+    """
+    with open(suar_path, 'r', encoding='utf8') as f:
+        suar_list = json.load(f)
+    return suar_list
 
 
 @dataclass

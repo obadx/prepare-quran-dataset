@@ -28,6 +28,7 @@ class AudioFile(BaseModel):
     duration_minutes: float
 
 
+# TODO: Add: arabice translation for the attributes
 class Moshaf(BaseModel):
     """
     Attributes:

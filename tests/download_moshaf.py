@@ -20,9 +20,9 @@ if __name__ == '__main__':
     # Test download_moshaf
     # ----------------------------------------------------------------------
     urls = [
-        'https://storage.googleapis.com/drive-bulk-export-anonymous/20240802T211752.944Z/4133399871716478688/24f18390-7ef1-41b7-8020-16deecd29b4a/1/835a22ad-83c9-49b4-ace0-bd186fe72a99?authuser',
+        'https://storage.googleapis.com/drive-bulk-export-anonymous/20240803T123812.801Z/4133399871716478688/647c412c-3306-49d5-bc8a-b8ab504391d6/1/975a2587-26d0-4c35-87c7-450e6b001b14?authuser',
 
-        'https://download.quran.islamway.net/quran3/696/001.mp3',
+        # 'https://download.quran.islamway.net/quran3/696/001.mp3',
         'https://download.quran.islamway.net/quran3/696/110.mp3',
         'https://download.quran.islamway.net/quran3/696/111.mp3',
         'https://download.quran.islamway.net/quran3/696/112.mp3',
@@ -30,4 +30,7 @@ if __name__ == '__main__':
     download_moshaf_from_urls(
         urls=urls,
         moshaf_path='data/mohaf_123',
-        download_path='data/downloads')
+        moshaf_name='moshaf_123',
+        download_path='data/downloads',
+        remove_after_download=True,
+    )
