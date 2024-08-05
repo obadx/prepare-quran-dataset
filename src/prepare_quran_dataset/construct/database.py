@@ -7,7 +7,11 @@ from collections import defaultdict
 
 
 from prepare_quran_dataset.construct.base import Pool
-from prepare_quran_dataset.construct.data_classes import Reciter, Moshaf
+from prepare_quran_dataset.construct.data_classes import (
+    Reciter,
+    Moshaf,
+    AudioFile
+)
 from prepare_quran_dataset.construct.utils import (
     download_file_fast,
     get_audiofile_info,
@@ -71,9 +75,24 @@ class MoshafPool(Pool):
 
     def process_new_item_before_insert(self, new_item: Moshaf):
         new_item = new_item.copy(deep=True)
+        new_item.reciter_arabic_name = self._reciter_pool[new_item.reciter_id].arabic_name
+        new_item.reciter_english_name = self._reciter_pool[new_item.reciter_id].english_name
+        new_item.model_validate()
+
+        return new_item
+
+    # TODO:
+    def download_all_moshaf():
+        # update reciter after downloading
+        ...
 
 
-def download_media_and_fill_metadata(item: Moshaf, database_path: Path | str) -> Moshaf:
+def download_media_and_fill_metadata(
+    item: Moshaf,
+    database_path: Path | str,
+    download_path: Path | str,
+    redownload=False,
+) -> Moshaf:
     """
 
     Downlaoad audio files from url, gather them in a single directory, and fill metadata of the moshaf
@@ -82,14 +101,50 @@ def download_media_and_fill_metadata(item: Moshaf, database_path: Path | str) ->
         (Moshaf): the moshaf filled with metadata
     """
     item = item.copy(deep=True)
+
+    # if the moshaf is already downloaded do not download it unless `redownload`
+    if item.is_downloaded and not redownload:
+        print(f'Mohaf({item.id} Downloaded and processed Existing ........')
+        return item
+
+    # Downloadint the moshaf and processing metadata
     database_path = Path(database_path)
     moshaf_path = database_path / item.id
-    os.makedirs(moshaf_path, exist_ok=False)
+    download_path = Path(download_path)
+    os.makedirs(moshaf_path, exist_ok=True)
     download_moshaf_from_urls(
-        urls=item.sources, moshaf_name=item.id, moshaf_path=moshaf_path)
+        urls=item.sources,
+        moshaf_name=item.id,
+        moshaf_path=moshaf_path,
+        download_path=download_path,
+    )
 
     # TODO:
     # Fill Moshaf's Metadata
+    total_duration_minutes = 0.0
+    total_size_megabytes = 0.0
+    for filepath in moshaf_path.iterdir():
+        audio_file_info = get_audiofile_info(filepath)
+        if audio_file_info:
+            audio_file = AudioFile(
+                name=filepath.name,
+                path=str(filepath.absolute()),
+                sample_rate=audio_file_info.sample_rate,
+                duration_minutes=audio_file_info.duration_seconds / 60.0)
+            item.recitation_files.append(audio_file)
+            total_duration_minutes += audio_file_info.duration_seconds / 60.0
+            total_size_megabytes += filepath.stat().st_size / (1024.0 * 1024.0)
+
+    item.path = str(moshaf_path.absolute())
+    item.num_recitations = len(item.recitation_files)
+    item.total_duraion_minutes = total_duration_minutes
+    item.is_complete = len(item.recitation_files) == 114
+    item.total_size_mb = total_size_megabytes
+    item.is_downloaded = True
+
+    # TODO: update reciter_pool after new moshaf is inserted
+
+    return item
 
 
 def download_moshaf_from_urls(
