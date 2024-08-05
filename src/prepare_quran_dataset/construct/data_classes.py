@@ -99,23 +99,23 @@ class Moshaf(BaseModel):
     # Quran Specific Attributes
     rewaya: Literal['hafs']
     madd_monfasel_len: Literal[2, 4, 5] = Field(
-        description='The length of Mad Al Monfasel "مد النفصل"')
+        description='ArabicNmae(مقدرا المد المنفصل) The length of Mad Al Monfasel "مد النفصل"')
     madd_mottasel_len: Literal[4, 5] = Field(
-        description='The length of Mad Al Motasel "مد المتصل"')
+        description='ArabicNmae(مقدار المد المتصل) The length of Mad Al Motasel "مد المتصل"')
     madd_aared_len: Literal[2, 4, 6] = Field(
-        description='The length of Mad Al Aared "مد العارض للسكون"')
+        description='ArabicNmae(مقدار المد العارض) The length of Mad Al Aared "مد العارض للسكون"')
     madd_mottasel_mahmooz_aared_len: Literal[4, 5, 6] = Field(
-        description='The length of Madd Almotasel Al Mahmooz during waqf "مد المتصل المهموز عند الوقف". Example "السماء"')
+        description='ArabicNmae(مقدار المد المتصل المتطرف المهموز عند الوقف) The length of Madd Almotasel Al Mahmooz during waqf "مد المتصل المهموز عند الوقف". Example "السماء"')
     madd_alayn_lazem_len: Literal[4, 6] = Field(
-        description='The length of Lzem Harfy Madd "المد الحرفي اللازم لحرف العين" in surar: Maryam "مريم", AlShura "الشورى" either 4 or 6')
+        description='ArabicNmae(مقدار   المد اللازم الحرفي للعين) The length of Lzem Harfy Madd "المد الحرفي اللازم لحرف العين" in surar: Maryam "مريم", AlShura "الشورى" either 4 or 6')
     tasheel_or_madd: Literal['tasheel', 'madd'] = Field(
-        description='Tasheel of Madd "وجع التسهيل أو المد" for 6 words in The Holy Quran: "ءالذكرين", "ءالله", "ءائن"')
+        description='ArabicNmae(تسهيل أم مد) Tasheel of Madd "وجع التسهيل أو المد" for 6 words in The Holy Quran: "ءالذكرين", "ءالله", "ءائن"')
     daaf_harka: Literal['fath', 'dam'] = Field(
-        description='The Haraka of "ضعف" in surah AlRoom "الروم" aya(54)')
+        description='ArabicNmae(وجه كلمة ضعف) The Haraka of "ضعف" in surah AlRoom "الروم" aya(54)')
     idghaam_nkhlqkm: Literal['kamel', 'nakes'] = Field(
-        description='The Idghaof of word "نخلقكم" in suran Almurslat "المرسلات" Aya (20) Either Idgham nakes "إدغام نافص" or Idghtam kamel "إدغام كامل"')
+        description='ArabicNmae(نوع الإدغام في كلمة نخلقكم) The Idghaof of word "نخلقكم" in suran Almurslat "المرسلات" Aya (20) Either Idgham nakes "إدغام نافص" or Idghtam kamel "إدغام كامل"')
     noon_tamnna: Literal['ishmam', 'ikhtlas'] = Field(
-        description='Warys to recite word tammna "تأمنا" in surah Yusuf Aya(11) "سورة يوسف". Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
+        description='ArabicNmae(وجع تأمننا) Warys to recite word tammna "تأمنا" in surah Yusuf Aya(11) "سورة يوسف". Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
 
     def model_post_init(self, __context):
         pass
