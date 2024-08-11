@@ -34,6 +34,10 @@ if __name__ == '__main__':
     reciter_pool.insert(reciter)
     print(reciter_pool)
 
+    print('Validate the id of the __getitem__ method of the same object')
+    print('ID of reciter object of reciter_id=0', id(reciter_pool[0]))
+    print('ID of reciter object of reciter_id=0', id(reciter_pool[0]))
+
     # print('\n\nSaveing')
     # reciter_pool.save()
 
