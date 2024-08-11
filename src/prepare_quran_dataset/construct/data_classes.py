@@ -16,8 +16,8 @@ class Reciter(BaseModel):
     country_code: str = Field(
         min_length=2, max_length=2,
         description='The two number ISO country code of the reciter')
-    mohaf_ids: list[str] = Field(
-        default_factory=lambda: [],
+    moshaf_set_ids: set[str] = Field(
+        default_factory=lambda: set(),
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
 
 

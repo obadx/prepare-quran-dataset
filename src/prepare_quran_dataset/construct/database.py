@@ -6,6 +6,9 @@ import os
 from collections import defaultdict
 
 
+from pydantic import BaseModel
+
+
 from prepare_quran_dataset.construct.base import Pool
 from prepare_quran_dataset.construct.data_classes import (
     Reciter,
@@ -30,6 +33,11 @@ class ReciterPool(Pool):
             id_column='id',
         )
 
+        # the id of the last element
+        self._last_idx = -1
+        if self.dataset_dict:
+            self._last_idx = sorted(self.dataset_dict.keys())[-1]
+
     def get_hash(self, item: dict[str, Any] | Reciter) -> str:
         if isinstance(item, Reciter):
             item = item.model_dump()
@@ -37,7 +45,13 @@ class ReciterPool(Pool):
         return f'{clean_text}_{item["country_code"]}'
 
     def generate_id(self, new_item: Reciter) -> int:
-        return self.__len__()
+        self._last_idx += 1
+        return self._last_idx
+
+    def after_delete(self, reciter: Reciter) -> None:
+        """update self._last_idx"""
+        if self._last_idx == reciter.id:
+            self._last_idx -= 1
 
 
 class MoshafPool(Pool):
@@ -47,7 +61,8 @@ class MoshafPool(Pool):
         self,
         reciter_pool: ReciterPool,
         dataset_path='data/',
-        metadata_path='data/moshaf_pool.jsonl'
+        metadata_path='data/moshaf_pool.jsonl',
+        download_path='data/Downloads',
     ):
         super().__init__(
             path=metadata_path,
@@ -56,35 +71,110 @@ class MoshafPool(Pool):
         )
         self._reciter_pool = reciter_pool
         self.dataset_path = Path(dataset_path)
+        self.download_path = Path(download_path)
 
     def get_hash(self, item: dict[str, Any] | Moshaf) -> str:
         """We will use url and reciter's ID as a unique Identifier"""
         if isinstance(item, dict):
             item = Moshaf(**item)
-        urls_text = ''
-        for url in item.urls:
-            urls_text += url + '_'
+        urls_text = '_'.join(item.sources)
         return f'{item.reciter_id}_{urls_text}'
 
-    def generate_id(self, new_item: Moshaf) -> int:
+    def generate_id(self, new_moshaf: Moshaf) -> int:
         """The id is "{reciter_id}.{moshaf_id}" example (0.1)
         Reciter ID = 0
         Moshaf number 1 of Reciter(0)
         """
-        return len(self._reciter_pool[new_item.reciter_id].moshaf_ids)
+        reciter: Reciter = self._reciter_pool[new_moshaf.reciter_id]
 
-    def process_new_item_before_insert(self, new_item: Moshaf):
-        new_item = new_item.copy(deep=True)
-        new_item.reciter_arabic_name = self._reciter_pool[new_item.reciter_id].arabic_name
-        new_item.reciter_english_name = self._reciter_pool[new_item.reciter_id].english_name
-        new_item.model_validate()
+        moshaf_list: list[int] = []
+        for str_idx in reciter.moshaf_set_ids:
+            moshaf_list.append(int(str_idx.split('.')[1]))
+        moshaf_id = 0
+        if moshaf_list:
+            moshaf_id = sorted(moshaf_list)[-1] + 1
 
+        return f'{new_moshaf.reciter_id}.{moshaf_id}'
+
+    def process_new_item_before_insert(self, new_item: Moshaf) -> Moshaf:
+        return self.update_reciter_metadata_in_moshaf(new_item)
+
+    def after_insert(self, new_moshaf: Moshaf) -> None:
+        self._add_moshaf_to_reciter(new_moshaf)
+
+    def update(self, new_moshaf: Moshaf) -> None:
+        moshaf_id = new_moshaf.id
+        if self.__getitem__(moshaf_id).reciter_id != new_moshaf.reciter_id:
+            super().update(new_moshaf, generate_new_id=True)
+        else:
+            super().update(new_moshaf, generate_new_id=False)
+
+    def process_new_item_before_update(self, new_item: Moshaf) -> Moshaf:
+        return self.update_reciter_metadata_in_moshaf(new_item)
+
+    def update_reciter_metadata_in_moshaf(self, new_item: Moshaf) -> Moshaf:
+        new_item = new_item.model_copy(deep=True)
+        reciter = self._reciter_pool[new_item.reciter_id]
+        new_item.reciter_arabic_name = reciter.arabic_name
+        new_item.reciter_english_name = reciter.english_name
+        new_item.model_validate(new_item)
         return new_item
 
-    # TODO:
-    def download_all_moshaf():
-        # update reciter after downloading
-        ...
+    # removing the moshaf form reciter's moshaf_set_ids
+    def after_update(self, old_moshaf: Moshaf, new_moshaf: Moshaf) -> None:
+        reciter = self._reciter_pool[old_moshaf.reciter_id]
+        reciter.moshaf_set_ids.discard(old_moshaf.id)
+        self._reciter_pool.update(reciter)
+
+        self._add_moshaf_to_reciter(new_moshaf)
+
+    def after_delete(self, deleted_moshaf: Moshaf) -> None:
+        """delete the moshaf id from the reciter pool"""
+        reciter: Reciter = self._reciter_pool[deleted_moshaf.reciter_id]
+        reciter.moshaf_set_ids.discard(deleted_moshaf.id)
+        self._reciter_pool.update(reciter)
+        # self._reciter_pool.save()
+
+    def _add_moshaf_to_reciter(
+        self,
+        new_moshaf: Moshaf,
+        save_reciter_pool=False,
+    ) -> None:
+        """Adding a moshaf to a reciter"""
+        reciter = self._reciter_pool[new_moshaf.reciter_id]
+        reciter.moshaf_set_ids.add(new_moshaf.id)
+        self._reciter_pool.update(reciter)
+        if save_reciter_pool:
+            self._reciter_pool.save()
+
+    def download_moshaf(self, id: str, redownload=False, save_on_disk=True):
+        """Download a moshaf and add it to the reciter"""
+        moshaf = self.__getitem__(id)
+        moshaf = download_media_and_fill_metadata(
+            moshaf,
+            database_path=self.dataset_path,
+            download_path=self.download_path,
+            redownload=redownload)
+
+        # update the moshaf in the pool
+        self.update(moshaf)
+
+        # update the moshaf for the reciter pool
+        reciter = self._reciter_pool[moshaf.reciter_id]
+        reciter.moshaf_set_ids.add(moshaf.id)
+        self._reciter_pool.update(reciter)
+
+        # saving on disk
+        if save_on_disk:
+            self.save()
+            self._reciter_pool.save()
+
+    # TODO: Testing
+    def download_all_moshaf(self, redownload=False, save_on_disk=True):
+        """Download all moshaf and updae MohafPool and ReciterPool"""
+        for moshaf in self:
+            self.download_moshaf(
+                moshaf.id, redownload=redownload, save_on_disk=save_on_disk)
 
 
 def download_media_and_fill_metadata(
@@ -100,7 +190,7 @@ def download_media_and_fill_metadata(
     Returns:
         (Moshaf): the moshaf filled with metadata
     """
-    item = item.copy(deep=True)
+    item = item.model_copy(deep=True)
 
     # if the moshaf is already downloaded do not download it unless `redownload`
     if item.is_downloaded and not redownload:

@@ -60,7 +60,7 @@ class Pool(ABC):
         ...
 
     @abstractmethod
-    def get_hash(self, items: dict[str, Any] | BaseModel) -> str:
+    def get_hash(self, item: dict[str, Any] | BaseModel) -> str:
         ...
 
     def insert(self, new_item: BaseModel):
@@ -76,9 +76,36 @@ class Pool(ABC):
         self.dataset_dict[new_id][self.id_column] = new_id
         self.items_hash.add(new_item_hash)  # O(1)
 
+        self.after_insert(self.__getitem__(new_id))
+
     def process_new_item_before_insert(self, new_item: BaseModel) -> BaseModel:
         """[Optional]: You can override this method"""
         return new_item
+
+    def after_insert(self, new_item: BaseModel) -> None:
+        """[Optional]: You can override this method"""
+        ...
+
+    def delete(self, id: Any) -> BaseModel:
+        """Delete an item from the pool"""
+        item = self.__getitem__(id)
+        self.before_delete(item)
+
+        item_hash = self.get_hash(item)
+        self.items_hash.remove(item_hash)
+        del self.dataset_dict[id]
+
+        self.after_delete(item)
+
+        return item
+
+    def before_delete(self, deleted_item: BaseModel) -> None:
+        """[Optional]: You can override this method"""
+        ...
+
+    def after_delete(self, deleted_item: BaseModel) -> None:
+        """[Optional]: You can override this method"""
+        ...
 
     @abstractmethod
     def generate_id(self, item: BaseModel | dict) -> Any:
@@ -90,20 +117,30 @@ class Pool(ABC):
             return Dataset.from_list([])
         return Dataset.from_list(list(self.dataset_dict.values()))
 
-    def update(self, new_item: BaseModel):
+    def update(self, new_item: BaseModel, generate_new_id=False):
         """Updates and item in the dataset
         """
+        old_item = self.__getitem__(new_item.id).model_copy(deep=True)
+        assert old_item.id == new_item.id, (
+            "The user has chaned the items'id which is forbidden")
+
         new_item = self.process_new_item_before_update(new_item)
         new_item_hash = self.validate_before_update(new_item)
 
-        id = new_item.id
-        if id in self.dataset_dict:
-            self.dataset_dict[id] = new_item.model_dump()
-        else:
-            raise KeyError(f'{id} is not found in the recitaion pool')
+        id = old_item.id
+        if generate_new_id:
+            del self.dataset_dict[id]
+            id = self.generate_id(new_item)
+        self.dataset_dict[id] = new_item.model_dump()
 
         # Every Thing is working ->insert new hash
         self.items_hash.add(new_item_hash)  # O(1)
+
+        self.after_update(old_item, new_item)
+
+    def after_update(self, old_item: BaseModel, new_item: BaseModel) -> None:
+        """[Optional]: You can override this method"""
+        ...
 
     def validate_before_update(self, new_item: BaseModel) -> str:
         """Validate the new item
