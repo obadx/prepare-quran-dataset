@@ -11,11 +11,12 @@ from pydantic import BaseModel, Field
 class Reciter(BaseModel):
     id: int = Field(
         default=-1, description='The ID of the reciter starting of 0')
-    arabic_name: str
-    english_name: str
+    arabic_name: str = Field(description='ArabicName(الاسم)')
+    english_name: str = Field(
+        description='ArabicName(الاسم باللغة الإنجليزية)')
     country_code: str = Field(
         min_length=2, max_length=2,
-        description='The two number ISO country code of the reciter')
+        description='ArabicName(رمز الدولة بالإنجليزية) The two number ISO country code of the reciter')
     moshaf_set_ids: set[str] = Field(
         default_factory=lambda: set(),
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
@@ -99,23 +100,23 @@ class Moshaf(BaseModel):
     # Quran Specific Attributes
     rewaya: Literal['hafs']
     madd_monfasel_len: Literal[2, 4, 5] = Field(
-        description='ArabicNmae(مقدرا المد المنفصل) The length of Mad Al Monfasel "مد النفصل"')
+        description='ArabicName(مقدرا المد المنفصل) The length of Mad Al Monfasel "مد النفصل"')
     madd_mottasel_len: Literal[4, 5] = Field(
-        description='ArabicNmae(مقدار المد المتصل) The length of Mad Al Motasel "مد المتصل"')
+        description='ArabicName(مقدار المد المتصل) The length of Mad Al Motasel "مد المتصل"')
     madd_aared_len: Literal[2, 4, 6] = Field(
-        description='ArabicNmae(مقدار المد العارض) The length of Mad Al Aared "مد العارض للسكون"')
+        description='ArabicName(مقدار المد العارض) The length of Mad Al Aared "مد العارض للسكون"')
     madd_mottasel_mahmooz_aared_len: Literal[4, 5, 6] = Field(
-        description='ArabicNmae(مقدار المد المتصل المتطرف المهموز عند الوقف) The length of Madd Almotasel Al Mahmooz during waqf "مد المتصل المهموز عند الوقف". Example "السماء"')
+        description='ArabicName(مقدار المد المتصل المتطرف المهموز عند الوقف) The length of Madd Almotasel Al Mahmooz during waqf "مد المتصل المهموز عند الوقف". Example "السماء"')
     madd_alayn_lazem_len: Literal[4, 6] = Field(
-        description='ArabicNmae(مقدار   المد اللازم الحرفي للعين) The length of Lzem Harfy Madd "المد الحرفي اللازم لحرف العين" in surar: Maryam "مريم", AlShura "الشورى" either 4 or 6')
+        description='ArabicName(مقدار   المد اللازم الحرفي للعين) The length of Lzem Harfy Madd "المد الحرفي اللازم لحرف العين" in surar: Maryam "مريم", AlShura "الشورى" either 4 or 6')
     tasheel_or_madd: Literal['tasheel', 'madd'] = Field(
-        description='ArabicNmae(تسهيل أم مد) Tasheel of Madd "وجع التسهيل أو المد" for 6 words in The Holy Quran: "ءالذكرين", "ءالله", "ءائن"')
+        description='ArabicName(تسهيل أم مد) Tasheel of Madd "وجع التسهيل أو المد" for 6 words in The Holy Quran: "ءالذكرين", "ءالله", "ءائن"')
     daaf_harka: Literal['fath', 'dam'] = Field(
-        description='ArabicNmae(وجه كلمة ضعف) The Haraka of "ضعف" in surah AlRoom "الروم" aya(54)')
+        description='ArabicName(وجه كلمة ضعف) The Haraka of "ضعف" in surah AlRoom "الروم" aya(54)')
     idghaam_nkhlqkm: Literal['kamel', 'nakes'] = Field(
-        description='ArabicNmae(نوع الإدغام في كلمة نخلقكم) The Idghaof of word "نخلقكم" in suran Almurslat "المرسلات" Aya (20) Either Idgham nakes "إدغام نافص" or Idghtam kamel "إدغام كامل"')
+        description='ArabicName(نوع الإدغام في كلمة نخلقكم) The Idghaof of word "نخلقكم" in suran Almurslat "المرسلات" Aya (20) Either Idgham nakes "إدغام نافص" or Idghtam kamel "إدغام كامل"')
     noon_tamnna: Literal['ishmam', 'ikhtlas'] = Field(
-        description='ArabicNmae(وجع تأمننا) Warys to recite word tammna "تأمنا" in surah Yusuf Aya(11) "سورة يوسف". Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
+        description='ArabicName(وجع تأمننا) Warys to recite word tammna "تأمنا" in surah Yusuf Aya(11) "سورة يوسف". Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
 
     def model_post_init(self, __context):
         pass
