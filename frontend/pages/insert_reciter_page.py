@@ -3,6 +3,7 @@ import streamlit as st
 
 from prepare_quran_dataset.construct.data_classes import Reciter
 from utils import insert_or_update_item_in_pool
+from menu import menu_with_redirect
 
 
 def insert_reciter():
@@ -26,4 +27,6 @@ def insert_reciter():
         st.switch_page('pages/view_reciters_page.py')
 
 
+# displays sidebar menu & redirect to main page if not initialized
+menu_with_redirect()
 insert_reciter()

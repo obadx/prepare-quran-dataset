@@ -1,5 +1,7 @@
 import streamlit as st
 
+from menu import menu_with_redirect
+
 from utils import (
     get_field_name,
 )
@@ -27,6 +29,9 @@ def view_reciters():
                         st.session_state.reciter_pool.delete(reciter.id)
                         st.success("Reciter deleted successfully")
 
+
+# displays sidebar menu & redirect to main page if not initialized
+menu_with_redirect()
 
 st.session_state.switch_to_view_reciters = False
 view_reciters()
