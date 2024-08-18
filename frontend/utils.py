@@ -8,6 +8,22 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 from prepare_quran_dataset.construct.database import Pool
 
 
+@st.dialog("Delete Item")
+def delete_item():
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Yes", key="confirm_save"):
+            try:
+                st.session_state.reciter_pool.save()
+                st.session_state.moshaf_pool.save()
+                st.success("All data saved successfully!")
+            except Exception as e:
+                st.error(f"Error saving data: {str(e)}")
+    with col2:
+        if st.button("No", key="cancel_save"):
+            st.info("Save operation cancelled.")
+
+
 def insert_or_update_item_in_pool(
     model: Type[BaseModel],
     pool: Pool,
@@ -56,7 +72,7 @@ def insert_update_form_submit(
         if item_name_in_session_state is None:
             new_item = model(**form_data)
             pool.insert(new_item)
-            st.success("Insertion is successfully!")
+            pop_up_message("Insertion is successfully!", msg_type='success')
 
         # Update Operation
         else:
@@ -64,7 +80,7 @@ def insert_update_form_submit(
                 setattr(
                     st.session_state[item_name_in_session_state], field_name, val)
             pool.update(st.session_state[item_name_in_session_state])
-            st.success("Update is successfully!")
+            pop_up_message("Update is successfully!", msg_type='success')
     except Exception as e:
         st.error(f"Error in the update/insert: {str(e)}")
         raise e
@@ -77,6 +93,21 @@ def insert_update_form_submit(
 
     for key, val in states_values_after_submit.items():
         st.session_state[key] = val
+
+
+@st.dialog('Operation Ended')
+def pop_up_message(msg: str, msg_type: str):
+    """
+    Args:
+        msg_type (str): ['success', 'error']
+    """
+    match msg_type:
+        case 'success':
+            st.success(msg)
+        case 'error':
+            st.error(msg)
+        case _:
+            raise ValueError(f'{msg_type} is not valid')
 
 
 def create_input_for_field(

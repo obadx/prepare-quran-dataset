@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 
 from prepare_quran_dataset.construct.data_classes import Reciter
@@ -21,6 +22,7 @@ def insert_reciter():
     )
 
     if st.session_state.switch_to_view_reciters:
+        time.sleep(1)  # wait to let the app display the states
         st.switch_page('pages/view_reciters_page.py')
 
 
