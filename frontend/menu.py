@@ -1,5 +1,7 @@
 import streamlit as st
 
+from utils import save_pools_with_confirmation, pop_up_message
+
 
 def style_buttons():
     st.markdown("""
@@ -35,9 +37,8 @@ def menu():
     st.sidebar.page_link(
         'pages/insert_reciter_page.py', label='Insert Reciter', icon=':material/add_circle:')
 
-    st.sidebar.button('Save Pools')
-
-    style_buttons()
+    st.sidebar.button(
+        'Save Pools', on_click=save_pools_with_confirmation, use_container_width=True)
 
 
 def menu_with_redirect():

@@ -1,5 +1,6 @@
 import re
-from typing import Type, Literal, Optional, Any, get_args, get_origin
+from typing import Type, Literal, Optional, Any, Callable, get_args, get_origin
+import time
 
 import streamlit as st
 from pydantic import BaseModel
@@ -22,6 +23,49 @@ def delete_item():
     with col2:
         if st.button("No", key="cancel_save"):
             st.info("Save operation cancelled.")
+
+
+@st.dialog("Save Pools?")
+def save_pools_with_confirmation():
+    col1, col2 = st.columns(2)
+    placeholder = st.empty()
+
+    with placeholder.container():
+        with col1:
+            if st.button("Yes", use_container_width=True,):
+                save_pools(placeholder)
+        with col2:
+            if st.button("No", key='save_canceled', use_container_width=True):
+                placeholder.info("Save Operation is canceled")
+                time.sleep(1)
+                st.rerun()
+
+
+def save_pools(placeholder):
+    try:
+        st.session_state.reciter_pool.save()
+        st.session_state.moshaf_pool.save()
+
+        placeholder.success("All data saved successfully!")
+    except Exception as e:
+        placeholder.error(f"Error saving data: {str(e)}", 'error')
+
+
+def pop_up_message(msg: str, msg_type: str = 'success'):
+    @ st.dialog(msg)
+    def display_popup():
+        match msg_type:
+            case 'success':
+                st.success(msg)
+            case 'error':
+                st.error(msg)
+            case 'info':
+                st.info(msg)
+            case _:
+                raise ValueError(
+                    "Not valid selection, vlaid selections ['success', 'error', 'info']")
+
+    display_popup()
 
 
 def insert_or_update_item_in_pool(
@@ -93,21 +137,6 @@ def insert_update_form_submit(
 
     for key, val in states_values_after_submit.items():
         st.session_state[key] = val
-
-
-@st.dialog('Operation Ended')
-def pop_up_message(msg: str, msg_type: str):
-    """
-    Args:
-        msg_type (str): ['success', 'error']
-    """
-    match msg_type:
-        case 'success':
-            st.success(msg)
-        case 'error':
-            st.error(msg)
-        case _:
-            raise ValueError(f'{msg_type} is not valid')
 
 
 def create_input_for_field(
