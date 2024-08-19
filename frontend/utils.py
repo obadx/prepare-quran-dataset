@@ -9,20 +9,33 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 from prepare_quran_dataset.construct.database import Pool
 
 
-@st.dialog("Delete Item")
-def delete_item():
+@st.dialog("Delete Item?")
+def delete_item_from_pool_with_confirmation(pool: Pool, item: BaseModel):
+    st.warning(f'Are you want to to delete ID={item.id} ?')
     col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Yes", key="confirm_save"):
-            try:
-                st.session_state.reciter_pool.save()
-                st.session_state.moshaf_pool.save()
-                st.success("All data saved successfully!")
-            except Exception as e:
-                st.error(f"Error saving data: {str(e)}")
-    with col2:
-        if st.button("No", key="cancel_save"):
-            st.info("Save operation cancelled.")
+    placeholder = st.empty()
+
+    with placeholder.container():
+        with col1:
+            if st.button("Yes", use_container_width=True,):
+                delete_item_from_pool(pool, item, placeholder)
+                time.sleep(1)
+                st.rerun()
+        with col2:
+            if st.button("No", use_container_width=True):
+                placeholder.info("Delete Operation is canceled")
+                time.sleep(1)
+                st.rerun()
+
+
+def delete_item_from_pool(pool: Pool, item: BaseModel, placeholder):
+    try:
+        pool.delete(item.id)
+        placeholder.success(
+            f"ID={item.id} is deleted successfully")
+    except Exception as e:
+        placeholder.error(f"Error Deleteing item: {str(e)}", 'error')
+        raise e
 
 
 @st.dialog("Save Pools?")
@@ -35,7 +48,7 @@ def save_pools_with_confirmation():
             if st.button("Yes", use_container_width=True,):
                 save_pools(placeholder)
         with col2:
-            if st.button("No", key='save_canceled', use_container_width=True):
+            if st.button("No", use_container_width=True):
                 placeholder.info("Save Operation is canceled")
                 time.sleep(1)
                 st.rerun()
@@ -49,6 +62,7 @@ def save_pools(placeholder):
         placeholder.success("All data saved successfully!")
     except Exception as e:
         placeholder.error(f"Error saving data: {str(e)}", 'error')
+        raise e
 
 
 def pop_up_message(msg: str, msg_type: str = 'success'):
