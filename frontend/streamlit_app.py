@@ -40,10 +40,14 @@ def set_up() -> None:
     if 'switch_to_view_reciters' not in st.session_state:
         st.session_state.switch_to_view_reciters = False
 
+    if 'switch_to_view_moshaf_pool' not in st.session_state:
+        st.session_state.switch_to_view_moshaf_pool = False
+
 
 def main():
     menu()
     set_up()
+    st.header('Recitation Database Manager')
 
     # insert_reciter_page = st.Page(
     #     "pages/insert_reciter_page.py",

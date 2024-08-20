@@ -33,12 +33,16 @@ def menu():
 
     st.set_page_config(page_title="Recitation Database Manager", page_icon="📖")
     st.sidebar.page_link(
-        'pages/view_reciters_page.py', label='View Reciter', icon=':material/add_circle:')
+        'pages/view_reciters_page.py', label='View Reciters', icon="🧔")
+    st.sidebar.page_link(
+        'pages/view_moshaf_pool_page.py', label='View Moshaf Pool', icon="📖")
     st.sidebar.page_link(
         'pages/insert_reciter_page.py', label='Insert Reciter', icon=':material/add_circle:')
+    st.sidebar.page_link(
+        'pages/insert_moshaf_page.py', label='Insert Moshaf Item', icon=':material/add_circle:')
 
     st.sidebar.button(
-        'Save Pools', on_click=save_pools_with_confirmation, use_container_width=True)
+        '💾 Save Pools', on_click=save_pools_with_confirmation, use_container_width=True)
 
 
 def menu_with_redirect():

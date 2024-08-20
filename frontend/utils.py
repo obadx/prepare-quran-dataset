@@ -90,6 +90,8 @@ def insert_or_update_item_in_pool(
     item_name_in_session_state: str = None,
     states_values_after_submit: Optional[dict[str, Any]] = {},
 ):
+    """
+    """
 
     with st.form("insert_or_update_form"):
         for field_name in required_field_names:
@@ -169,6 +171,18 @@ def create_input_for_field(
 
     key = key_prefix + field_name
 
+    if field_name == 'reciter_id':
+        reciters = {r.id: r for r in st.session_state.reciter_pool}
+        reciters_ids = list(reciters.keys())
+        return st.selectbox(
+            label,
+            reciters_ids,
+            key=key,
+            format_func=lambda id: f'{reciters[id].arabic_name}, ID={id}',
+            index=reciters_ids.index(
+                default_value) if default_value is not None else 0,
+        )
+
     # the args of a Literal typs > 0 EX: Literal[3, 4]
     if get_origin(field_info.annotation) is Literal:
         choices = list(get_args(field_info.annotation))
@@ -179,17 +193,17 @@ def create_input_for_field(
             key=key,
         )
 
-    if field_info.annotation == str:
+    if field_info.annotation in [str, Optional[str]]:
         return st.text_input(label, value=default_value or "", key=key)
-    elif field_info.annotation == int:
+    elif field_info.annotation in [int, Optional[int]]:
         return st.number_input(label, value=default_value or 0, step=1, key=key)
-    elif field_info.annotation == str:
+    elif field_info.annotation in [float, Optional[float]]:
         return st.number_input(label, value=default_value or 0.0, step=0.1, key=key)
-    elif field_info.annotation == bool:
+    elif field_info.annotation in [bool, Optional[bool]]:
         return st.checkbox(label, value=default_value or False, key=key)
 
     raise ValueError(
-        f"Unsupported field type for {label}: {field_info.annotaion}")
+        f"Unsupported field type for {label}: {field_info.annotation}")
 
 
 def get_arabic_name(field_info: FieldInfo) -> str:
