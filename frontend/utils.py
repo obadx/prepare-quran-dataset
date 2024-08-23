@@ -8,22 +8,6 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool
 
-from custom_compnents import list_of_textinput
-
-
-def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'')):
-    """Creates a text area with each line is a sperate item identified by `line_determiner`
-
-    Args:
-        line_determiner (str): the re pattern that each line should be with EX: re.compile(r'^http')
-    """
-    text_list: list[str] = text.split('\n')
-    clean_text_list = []
-    for text in text_list:
-        if line_determiner.match(text):
-            clean_text_list.append(text)
-    return clean_text_list
-
 
 @st.dialog("Delete Item?")
 def delete_item_from_pool_with_confirmation(pool: Pool, item: BaseModel):
