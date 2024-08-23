@@ -8,6 +8,22 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool
 
+from custom_compnents import list_of_textinput
+
+
+def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'')):
+    """Creates a text area with each line is a sperate item identified by `line_determiner`
+
+    Args:
+        line_determiner (str): the re pattern that each line should be with EX: re.compile(r'^http')
+    """
+    text_list: list[str] = text.split('\n')
+    clean_text_list = []
+    for text in text_list:
+        if line_determiner.match(text):
+            clean_text_list.append(text)
+    return clean_text_list
+
 
 @st.dialog("Delete Item?")
 def delete_item_from_pool_with_confirmation(pool: Pool, item: BaseModel):
@@ -89,8 +105,13 @@ def insert_or_update_item_in_pool(
     key_prefix='model_',
     item_name_in_session_state: str = None,
     states_values_after_submit: Optional[dict[str, Any]] = {},
+    field_funcs_after_submit: Optional[dict[str, Callable[[Any], Any]]] = {},
 ):
     """
+    Args:
+        field_funcs_after_submit ( Optional[dict[str, Callable[[Any], Any]]]):
+            dict[str, func], dict to aggregate field value after from
+            submition, Ex: {'id': lambda x: str(x)}
     """
 
     with st.form("insert_or_update_form"):
@@ -110,6 +131,7 @@ def insert_or_update_item_in_pool(
                 'required_field_names': required_field_names,
                 'item_name_in_session_state': item_name_in_session_state,
                 'states_values_after_submit': states_values_after_submit,
+                'field_funcs_after_submit': field_funcs_after_submit,
             }
         )
 
@@ -121,11 +143,24 @@ def insert_update_form_submit(
     required_field_names: list[str] = [],
     item_name_in_session_state: str = None,
     states_values_after_submit: Optional[dict[str, Any]] = {},
+    field_funcs_after_submit: Optional[dict[str, Callable[[Any], Any]]] = {},
 ):
+    """
+    Args:
+        field_funcs_after_submit ( Optional[dict[str, Callable[[Any], Any]]]):
+            dict[str, func], dict to aggregate field value after from
+            submition, Ex: {'id': lambda x: str(x)}
+    """
+
     # Saveing values in dict
     form_data = {}
     for field_name in required_field_names:
-        form_data[field_name] = st.session_state[key_prefix + field_name]
+        if field_name in field_funcs_after_submit:
+            func = field_funcs_after_submit[field_name]
+            form_data[field_name] = func(
+                st.session_state[key_prefix + field_name])
+        else:
+            form_data[field_name] = st.session_state[key_prefix + field_name]
 
     try:
         # Insertion Operation
@@ -201,7 +236,12 @@ def create_input_for_field(
         return st.number_input(label, value=default_value or 0.0, step=0.1, key=key)
     elif field_info.annotation in [bool, Optional[bool]]:
         return st.checkbox(label, value=default_value or False, key=key)
-
+    elif field_info.annotation in [list[str], Optional[list[str]]]:
+        return st.text_area(
+            label,
+            key=key,
+            value='\n'.join(default_value) if default_value else '',
+        )
     raise ValueError(
         f"Unsupported field type for {label}: {field_info.annotation}")
 
