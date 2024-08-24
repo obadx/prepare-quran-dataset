@@ -6,9 +6,6 @@ import os
 from collections import defaultdict
 
 
-from pydantic import BaseModel
-
-
 from prepare_quran_dataset.construct.base import Pool
 from prepare_quran_dataset.construct.data_classes import (
     Reciter,
@@ -133,7 +130,14 @@ class MoshafPool(Pool):
         reciter: Reciter = self._reciter_pool[deleted_moshaf.reciter_id]
         reciter.moshaf_set_ids.discard(deleted_moshaf.id)
         self._reciter_pool.update(reciter)
-        # self._reciter_pool.save()
+
+        # saving pools
+        self._reciter_pool.save()
+        self.save()
+
+        # delete moshsf_item media files
+        if Path(deleted_moshaf.path).is_dir():
+            shutil.rmtree(deleted_moshaf.path)
 
     def _add_moshaf_to_reciter(
         self,
@@ -209,7 +213,6 @@ def download_media_and_fill_metadata(
         download_path=download_path,
     )
 
-    # TODO:
     # Fill Moshaf's Metadata
     total_duration_minutes = 0.0
     total_size_megabytes = 0.0
@@ -231,8 +234,6 @@ def download_media_and_fill_metadata(
     item.is_complete = len(item.recitation_files) == 114
     item.total_size_mb = total_size_megabytes
     item.is_downloaded = True
-
-    # TODO: update reciter_pool after new moshaf is inserted
 
     return item
 
