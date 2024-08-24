@@ -5,6 +5,7 @@ from menu import menu_with_redirect
 from utils import (
     get_field_name,
     delete_item_from_pool_with_confirmation,
+    download_single_msohaf,
 )
 
 
@@ -26,14 +27,21 @@ def view_moshaf_pool():
                     st.session_state.updated_moshaf = moshaf
                     st.switch_page("pages/update_moshaf_page.py")
             with col2:
-                if st.button("Download", key=f"download_{moshaf.id}", use_container_width=True):
-                    pass
+                st.button(
+                    "Download",
+                    key=f"download_{moshaf.id}", use_container_width=True,
+                    on_click=download_single_msohaf,
+                    args=(moshaf.id,),
+                )
 
             with col3:
                 st.button(
                     "Delete", key=f"delete_{moshaf.id}", use_container_width=True,
                     on_click=delete_item_from_pool_with_confirmation,
                     kwargs={'pool': st.session_state.moshaf_pool, 'item': moshaf})
+
+    if st.session_state.switch_to_download_page:
+        st.switch_page('pages/download_page.py')
 
 
 # displays sidebar menu & redirect to main page if not initialized

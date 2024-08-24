@@ -21,6 +21,7 @@ RECITER_POOL_FILE = BASE_DIR / 'reciter_pool.jsonl'
 MOSHAF_POOL_FILE = BASE_DIR / 'moshaf_pool.jsonl'
 DOWNLOAD_PATH = BASE_DIR / 'Downloads'
 DATASET_PATH = BASE_DIR / 'dataset'
+DOWNLOAD_LOCK_FILE = BASE_DIR / 'download.lock'
 
 REQUIRED_MOSHAF_FIELDS = [
     'name',

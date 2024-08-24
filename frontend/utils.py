@@ -1,12 +1,70 @@
 import re
 from typing import Type, Literal, Optional, Any, Callable, get_args, get_origin
 import time
+import multiprocessing
+from dataclasses import dataclass, field, asdict
+from pathlib import Path
+import json
 
 import streamlit as st
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
-from prepare_quran_dataset.construct.database import Pool
+from prepare_quran_dataset.construct.database import Pool, MoshafPool
+import config as conf
+
+
+@dataclass
+class DownloadLog:
+    current_moshaf_id: str
+    finished_count: int
+    total_count: int
+    moshaf_ids: list[str]
+    finished_moshaf_ids: list[str] = field(default_factory=[])
+
+
+def write_to_download_lock_log(log: DownloadLog, filepath: Path):
+    with open(filepath, 'w+') as f:
+        json.dump(asdict(log), f)
+
+
+def get_download_lock_log(filepath: Path) -> DownloadLog:
+    with open(filepath, 'r') as f:
+        log = json.load(f)
+    return DownloadLog(**log)
+
+
+def download_all_moshaf_pool():
+    ...
+
+
+def download_single_msohaf(moshaf_id: str):
+    def download_moshaf_task(moshaf_pool: MoshafPool, moshaf_id: str, lockfile_path: Path):
+        log = DownloadLog(
+            current_moshaf_id=moshaf_id,
+            finished_count=0,
+            total_count=1,
+            finished_moshaf_ids=[],
+            moshaf_ids=[moshaf_id]
+        )
+        write_to_download_lock_log(log, lockfile_path)
+        moshaf_pool.download_moshaf(
+            moshaf_id, redownload=False, save_on_disk=True)
+        # delete the download_lockfile
+        lockfile_path.unlink()
+
+    if not conf.DOWNLOAD_LOCK_FILE.is_file():
+        moshaf_item = st.session_state.moshaf_pool[moshaf_id]
+        if moshaf_item.is_downloaded:
+            pop_up_message('The moshaf is already Dwonloaded', 'info')
+            return
+        p = multiprocessing.Process(
+            target=download_moshaf_task,
+            args=(st.session_state.moshaf_pool, moshaf_id, conf.DOWNLOAD_LOCK_FILE))
+        p.start()  # Start the process
+        st.session_state.switch_to_download_page = True
+    else:
+        pop_up_message('There is a download is already running...', 'warn')
 
 
 @st.dialog("Delete Item?")
@@ -73,6 +131,8 @@ def pop_up_message(msg: str, msg_type: str = 'success'):
                 st.success(msg)
             case 'error':
                 st.error(msg)
+            case 'warn':
+                st.warning(msg)
             case 'info':
                 st.info(msg)
             case _:

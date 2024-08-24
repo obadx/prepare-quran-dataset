@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils import save_pools_with_confirmation, pop_up_message
+from utils import save_pools_with_confirmation, pop_up_message, download_all_moshaf_pool
 
 
 def style_buttons():
@@ -37,12 +37,16 @@ def menu():
     st.sidebar.page_link(
         'pages/view_moshaf_pool_page.py', label='View Moshaf Pool', icon="📖")
     st.sidebar.page_link(
-        'pages/insert_reciter_page.py', label='Insert Reciter', icon=':material/add_circle:')
+        'pages/insert_reciter_page.py', label='🧔 Insert Reciter', icon=':material/add_circle:')
     st.sidebar.page_link(
-        'pages/insert_moshaf_page.py', label='Insert Moshaf Item', icon=':material/add_circle:')
+        'pages/insert_moshaf_page.py', label='📖 Insert Moshaf Item', icon=':material/add_circle:')
+    st.sidebar.page_link(
+        'pages/download_page.py', label='📖 Download Page', icon='⬇️')
 
     st.sidebar.button(
         '💾 Save Pools', on_click=save_pools_with_confirmation, use_container_width=True)
+    st.sidebar.button(
+        '⬇️  Download All Moshaf Pool', on_click=download_all_moshaf_pool, use_container_width=True)
 
 
 def menu_with_redirect():

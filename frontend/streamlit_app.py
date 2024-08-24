@@ -36,6 +36,12 @@ def set_up() -> None:
     if 'switch_to_view_moshaf_pool' not in st.session_state:
         st.session_state.switch_to_view_moshaf_pool = False
 
+    if 'switch_to_download_page' not in st.session_state:
+        st.session_state.switch_to_download_page = False
+
+    if conf.DOWNLOAD_LOCK_FILE.is_file():
+        st.switch_page('pages/download_page.py')
+
 
 def main():
     menu()
