@@ -35,7 +35,38 @@ def get_download_lock_log(filepath: Path) -> DownloadLog:
 
 
 def download_all_moshaf_pool():
-    ...
+    """Download All moshaf pool callback
+    """
+    def download_all_moshaf_task(moshaf_pool: MoshafPool, to_download_ids: list[str], lockfile_path: Path):
+        finished_ids = []
+        for id in to_download_ids:
+            log = DownloadLog(
+                current_moshaf_id=id,
+                finished_count=len(finished_ids),
+                total_count=len(to_download_ids),
+                finished_moshaf_ids=finished_ids,
+                moshaf_ids=to_download_ids,
+            )
+            write_to_download_lock_log(log, lockfile_path)
+            moshaf_pool.download_moshaf(
+                id, redownload=False, save_on_disk=True)
+            finished_ids.append(id)
+
+        # End of download -> delete the download_lockfile
+        lockfile_path.unlink()
+
+    if not conf.DOWNLOAD_LOCK_FILE.is_file():
+        to_download_ids = [
+            m.id for m in st.session_state.moshaf_pool if not m.is_downloaded]
+        if len(to_download_ids) == 0:
+            pop_up_message('All Moshaf Pool is downloaded', 'info')
+            return
+        p = multiprocessing.Process(
+            target=download_all_moshaf_task,
+            args=(st.session_state.moshaf_pool, to_download_ids, conf.DOWNLOAD_LOCK_FILE))
+        p.start()  # Start the process
+    else:
+        pop_up_message('There is a download is already running...', 'warn')
 
 
 def download_single_msohaf(moshaf_id: str):
