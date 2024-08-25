@@ -1,6 +1,7 @@
 import streamlit as st
 
 from menu import menu_with_redirect
+import config as conf
 
 from utils import (
     get_field_name,
@@ -40,7 +41,7 @@ def view_moshaf_pool():
                     on_click=delete_item_from_pool_with_confirmation,
                     kwargs={'pool': st.session_state.moshaf_pool, 'item': moshaf})
 
-    if st.session_state.switch_to_download_page:
+    if conf.DOWNLOAD_LOCK_FILE.is_file():
         st.switch_page('pages/download_page.py')
 
 

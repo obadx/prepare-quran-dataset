@@ -62,7 +62,6 @@ def download_single_msohaf(moshaf_id: str):
             target=download_moshaf_task,
             args=(st.session_state.moshaf_pool, moshaf_id, conf.DOWNLOAD_LOCK_FILE))
         p.start()  # Start the process
-        st.session_state.switch_to_download_page = True
     else:
         pop_up_message('There is a download is already running...', 'warn')
 

@@ -2,7 +2,6 @@ import time
 
 import streamlit as st
 
-
 import config as conf
 from menu import menu_with_redirect
 from utils import get_download_lock_log
@@ -27,12 +26,17 @@ def download_page():
             st.markdown(
                 '<img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif" alt="Girl in a jacket" width="50" >', unsafe_allow_html=True)
 
+        # to recheck if the download if finished
+        time.sleep(30)
+        st.rerun()
+
     else:
         st.info('No Moshaf to download')
+        time.sleep(2)
+        menu_with_redirect(reset=True)
 
 
 # displays sidebar menu & redirect to main page if not initialized
 menu_with_redirect()
 
-st.streamlit.switch_to_download_page = False
 download_page()
