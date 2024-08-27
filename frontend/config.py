@@ -27,6 +27,7 @@ REQUIRED_MOSHAF_FIELDS = [
     'name',
     'reciter_id',
     'sources',
+    'is_sura_parted',
     'publisher',
     'comments',
     'rewaya',

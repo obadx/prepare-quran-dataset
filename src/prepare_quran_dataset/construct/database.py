@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import os
 from collections import defaultdict
+import urllib.parse
 
 
 from prepare_quran_dataset.construct.base import Pool
@@ -158,7 +159,9 @@ class MoshafPool(Pool):
             moshaf,
             database_path=self.dataset_path,
             download_path=self.download_path,
-            redownload=redownload)
+            redownload=redownload,
+            is_sura_parted=moshaf.is_sura_parted,
+        )
 
         # update the moshaf in the pool
         self.update(moshaf)
@@ -173,7 +176,6 @@ class MoshafPool(Pool):
             self.save()
             self._reciter_pool.save()
 
-    # TODO: Testing
     def download_all_moshaf(self, redownload=False, save_on_disk=True):
         """Download all moshaf and updae MohafPool and ReciterPool"""
         for moshaf in self:
@@ -186,10 +188,15 @@ def download_media_and_fill_metadata(
     database_path: Path | str,
     download_path: Path | str,
     redownload=False,
+    is_sura_parted=True,
 ) -> Moshaf:
     """
+    Downlaoad audio files from url, gather them in a single directory
+    and fill metadata of the moshaf
 
-    Downlaoad audio files from url, gather them in a single directory, and fill metadata of the moshaf
+    Args:
+        is_sura_parted (bool): if every recitation file is a sperate
+            sura or not
 
     Returns:
         (Moshaf): the moshaf filled with metadata
@@ -211,6 +218,7 @@ def download_media_and_fill_metadata(
         moshaf_name=item.id,
         moshaf_path=moshaf_path,
         download_path=download_path,
+        is_sura_parted=is_sura_parted,
     )
 
     # Fill Moshaf's Metadata
@@ -244,6 +252,7 @@ def download_moshaf_from_urls(
     moshaf_name: str,
     download_path: str | Path,
     remove_after_download=False,
+    is_sura_parted=True,
 ):
     """Download the moshaf media files and store it in `moshaf_path`
 
@@ -261,7 +270,16 @@ def download_moshaf_from_urls(
         moshaf_path (str | Path): path to storm moshaf media files
         moshaf_name (str): the moshaf name
         download_path (str): Base Path to download files
+        is_sura_parted (bool): if every recitation file is a sperate sura or not
     """
+    def get_file_name(name: str) -> str:
+
+        # converting unicode url name to Actual unicode
+        name = urllib.parse.unquote(name)
+        if is_sura_parted:
+            return get_sura_standard_name(name)
+        return name
+
     download_path = Path(download_path) / moshaf_name
     moshaf_path = Path(moshaf_path)
     downloaded_pathes: list[Path] = []
@@ -279,7 +297,7 @@ def download_moshaf_from_urls(
     file_names = [p.name for p in files_pathes]
     files_count = defaultdict(lambda: 0)
     for file in file_names:
-        files_count[get_sura_standard_name(file)] += 1
+        files_count[get_file_name(file)] += 1
     duplicate_files = [file for file,
                        count in files_count.items() if count > 1]
     assert duplicate_files == [], (
@@ -288,7 +306,7 @@ def download_moshaf_from_urls(
     # copy downloaded media into moshaf path
     for filepath in files_pathes:
         shutil.copy(
-            filepath, moshaf_path / get_sura_standard_name(filepath.name))
+            filepath, moshaf_path / get_file_name(filepath.name))
 
     if remove_after_download:
         shutil.rmtree(download_path)

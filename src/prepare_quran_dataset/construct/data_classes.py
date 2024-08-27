@@ -72,6 +72,11 @@ class Moshaf(BaseModel):
     reciter_english_name: str = ""
     sources: list[str] = Field(
         description='List of urls to download recitations')
+    is_sura_parted: bool = Field(
+        default=True,
+        description='If every recitation file is a sperate sura or not')
+
+    # Metadata Fields
     num_recitations: int = Field(
         default=0,
         description='Number of recitations inside the Moshaf')
