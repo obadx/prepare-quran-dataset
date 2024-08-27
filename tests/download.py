@@ -24,5 +24,7 @@ if __name__ == '__main__':
     out_path = download_file_fast(
         url=url,
         out_path='data/downloads',
-        num_download_segments=20)
+        num_download_segments=20,
+        redownload=False,
+    )
     print(out_path)

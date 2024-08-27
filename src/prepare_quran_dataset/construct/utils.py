@@ -74,6 +74,7 @@ def get_audiofile_info(audiofile_path: str | Path) -> AudioFileInfo:
         duration_seconds=audio.info.length)
 
 
+# TODO: add redownload
 def download_file_fast(
     url: str,
     out_path: str | Path,
@@ -81,12 +82,14 @@ def download_file_fast(
     num_download_segments=20,
     num_unzip_workers=12,
     remove_zipfile=True,
+    redownload=False,
 ) -> Path:
     """Downloads a file and extract if if it is zipfile
     Args:
         out_path (str | Path): the path to the Download (Directory)
         extract_zip (bool): if true extract a zip file to `out_path`
         remove_zipfile (bool): remove zipfile after downloading it
+        redownload (bool): redownload the file if it exists
     """
     out_path = Path(out_path)
     assert not out_path.is_file(), (
@@ -94,7 +97,7 @@ def download_file_fast(
     os.makedirs(out_path, exist_ok=True)
     filename = deduce_filename(url)
     out_path /= filename
-    if out_path.exists():
+    if out_path.exists() and not redownload:
         return out_path
 
     dl = Pypdl()
