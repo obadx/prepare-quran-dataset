@@ -74,7 +74,6 @@ def get_audiofile_info(audiofile_path: str | Path) -> AudioFileInfo:
         duration_seconds=audio.info.length)
 
 
-# TODO: add redownload
 def download_file_fast(
     url: str,
     out_path: str | Path,
@@ -103,7 +102,7 @@ def download_file_fast(
     dl = Pypdl()
     out = dl.start(url, file_path=out_path, segments=num_download_segments)
     if out is None:
-        raise DownloadError
+        raise DownloadError(f'Error while downloading or url: {url}')
     out_path = Path(out.path)
 
     if is_zipfile(out_path):

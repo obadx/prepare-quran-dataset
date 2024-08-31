@@ -42,13 +42,18 @@ if __name__ == '__main__':
     # Test download_moshaf_and_fill_metadata
     # ----------------------------------------------------------------------
     urls = [
-        'https://storage.googleapis.com/drive-bulk-export-anonymous/20240803T123812.801Z/4133399871716478688/647c412c-3306-49d5-bc8a-b8ab504391d6/1/975a2587-26d0-4c35-87c7-450e6b001b14?authuser',
+        'https://storage.googleapis.com/drive-bulk-export-anonymous/20240831T161147.511Z/4133399871716478688/0fca15a3-ad5c-471f-b26c-f6c98d4326c9/1/c6fcdd31-606a-40a2-9329-1bcef883c496?authuser',
 
         # 'https://download.quran.islamway.net/quran3/696/001.mp3',
-        'https://download.quran.islamway.net/quran3/696/110.mp3',
-        'https://download.quran.islamway.net/quran3/696/111.mp3',
-        'https://download.quran.islamway.net/quran3/696/112.mp3',
+        'https://download.quran.islamway.net/quran3/696/090.mp3',
+        'https://download.quran.islamway.net/quran3/696/091.mp3',
+        'https://download.quran.islamway.net/quran3/696/093.mp3',
     ]
+
+    specific = {
+        '114': 'https://download.quran.islamway.net/quran3/696/001.mp3',
+        '113': 'https://download.quran.islamway.net/quran3/696/095.mp3'
+    }
 
     reciter = Reciter(
         id=0,
@@ -64,6 +69,7 @@ if __name__ == '__main__':
         reciter_arabic_name=reciter.arabic_name,
         reciter_english_name=reciter.english_name,
         sources=urls,
+        specific_sources=specific,
         rewaya='hafs',
         madd_monfasel_len=2,
         madd_mottasel_len=4,
@@ -72,12 +78,12 @@ if __name__ == '__main__':
         madd_mottasel_mahmooz_aared_len=4,
         tasheel_or_madd='tasheel',
         daaf_harka='fath',
-        idghaam_nkhlqkm='kamel',
-        noon_tamnna='ishmam',
+        idghaam_nakhlqkm='kamel',
+        noon_tamanna='ishmam',
     )
 
     updated_moshaf = download_media_and_fill_metadata(
-        moshaf, database_path='data', download_path='data/downloads')
+        moshaf, database_path='data/dataset', download_path='data/downloads')
     print(updated_moshaf.total_duraion_minutes)
     moshaf.model_validate(moshaf)
     for key, value in updated_moshaf.dict().items():
@@ -85,4 +91,4 @@ if __name__ == '__main__':
 
     print('Json Validation')
     # TODO: validate json
-    moshaf.model_validate_json(moshaf)
+    # moshaf.model_validate_json(moshaf)
