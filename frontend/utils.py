@@ -316,6 +316,18 @@ def create_input_for_field(
             key=key,
             value='\n'.join(default_value) if default_value else '',
         )
+    elif field_info.annotation in [dict[str, str], Optional[dict[str, str]]]:
+        help = (
+            'Place the specifc downloads as a '
+            f'JSON\n{json.dumps({'002': 'https://example.com/003.mp3'}, indent=4)}')
+        return st.text_area(
+            label,
+            key=key,
+            value=json.dumps(default_value, indent=4) if default_value else '',
+            help=help,
+            placeholder=help,
+        )
+
     raise ValueError(
         f"Unsupported field type for {label}: {field_info.annotation}")
 

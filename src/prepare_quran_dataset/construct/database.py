@@ -203,7 +203,7 @@ def download_media_and_fill_metadata(
     """
     item = item.model_copy(deep=True)
 
-    # if the moshaf is already downloaded do not download it unless `redownload`
+    # if the moshaf is already downloaded do not download unless `redownload`
     if item.is_downloaded and not redownload:
         print(f'Mohaf({item.id} Downloaded and processed Existing ........')
         return item
@@ -215,6 +215,7 @@ def download_media_and_fill_metadata(
     os.makedirs(moshaf_path, exist_ok=True)
     download_moshaf_from_urls(
         urls=item.sources,
+        specific_sources=item.specific_sources,
         moshaf_name=item.id,
         moshaf_path=moshaf_path,
         download_path=download_path,
@@ -248,6 +249,7 @@ def download_media_and_fill_metadata(
 
 def download_moshaf_from_urls(
     urls: list[str],
+    specific_sources: dict[str, str],
     moshaf_path: str | Path,
     moshaf_name: str,
     download_path: str | Path,
@@ -267,49 +269,153 @@ def download_moshaf_from_urls(
 
     Args:
         urls list[str]: list of urls either zip or single medila files
+        specific_sources (dict[str, str]): "filename without extention like 002": "url of this file"
+            * each url has to be url to a file not zip file
         moshaf_path (str | Path): path to storm moshaf media files
         moshaf_name (str): the moshaf name
         download_path (str): Base Path to download files
         is_sura_parted (bool): if every recitation file is a sperate sura or not
     """
-    def get_file_name(name: str) -> str:
-
-        # converting unicode url name to Actual unicode
-        name = urllib.parse.unquote(name)
-        if is_sura_parted:
-            return get_sura_standard_name(name)
-        return name
-
     download_path = Path(download_path) / moshaf_name
     moshaf_path = Path(moshaf_path)
-    downloaded_pathes: list[Path] = []
-    for idx, url in enumerate(urls):
+
+    #  Download specifc_sources
+    # f"{file name}.extention": file path
+    name_to_specific_download_path = download_specifc_sources(
+        specific_sources=specific_sources,
+        download_path=download_path,
+        is_sura_parted=is_sura_parted)
+
+    # Download sources
+    # f"{file name}.extention": file path
+    name_to_download_path = download_normal_sources(
+        sources=urls,
+        download_path=download_path,
+        is_sura_parted=is_sura_parted)
+
+    # copy downloaded media into moshaf path
+    # making specifc download overwriting normal sources (urls)
+    for filename, filepath in (name_to_download_path | name_to_specific_download_path).items():
+        shutil.copy(
+            filepath, moshaf_path / filename)
+
+    if remove_after_download:
+        shutil.rmtree(download_path)
+
+
+def download_specifc_sources(
+    specific_sources: dict[str, str],
+    download_path: Path,
+    is_sura_parted: bool,
+) -> dict[str, Path]:
+    """Downloads specific sources and returns them
+
+    1. Downloads specfic sources urls (with redownloading)
+    2. Checks for duplicate files in specific sources
+    3. Returns "f{filename}.extention": Path(of the downloaded file)
+
+    Args:
+        specific_sources (dict[str, str]): "filename without extention like 002": url of this file
+            * each url has to be url to a file not zip file
+        download_path (Path):
+        is_sura_parted (bool): if every recitation file is a sperate sura or not
+
+    Returns:
+        dict[str, Path]: "f{filename}.extention": Path(of the downloaded file)
+    """
+    name_to_specific_download_pathes = {}  # f"{file name}.extention": file path
+    for name, url in specific_sources.items():
+        assert len(name.split('.')) == 1, (
+            'Input file name should not have extention just the'
+            f' file name, name={name}')
         url_path = download_file_fast(
             url=url,
             out_path=download_path,
             extract_zip=True,
-            remove_zipfile=True)
+            remove_zipfile=True,
+            redownload=True,
+        )
+        assert url_path.is_file(), (
+            'Your specific source must be media file not zip')
+        ext = url_path.name.split('.')[-1]
+        name_to_specific_download_pathes[f'{name}.{ext}'] = url_path
+    check_duplicate_files(list(name_to_specific_download_pathes.values()),
+                          download_path,
+                          is_sura_parted=is_sura_parted,
+                          error_source='Specific Sources',
+                          )
+    return name_to_specific_download_pathes
 
+
+def download_normal_sources(
+    sources: list[str],
+    download_path: Path,
+    is_sura_parted: bool,
+) -> dict[str, Path]:
+    """Downloads files and zipfiles from sources urls
+
+    1. Downloads files and zipfiles from sources
+    2. Checks for duplicate files in specific sources
+    3. Returns "f{filename}.extention": Path(of the downloaded file)
+
+    Args:
+        sources (list[str]): urls for the downloaed files/zipfiles
+        download_path (Path):
+        is_sura_parted (bool): if every recitation file is a sperate sura or not
+
+    Returns:
+        dict[str, Path]: "f{filename}.extention": Path(of the downloaded file)
+    """
+
+    # Download sources
+    downloaded_pathes: list[Path] = []
+    for url in sources:
+        url_path = download_file_fast(
+            url=url,
+            out_path=download_path,
+            extract_zip=True,
+            remove_zipfile=True,
+            redownload=False,
+        )
         downloaded_pathes.append(url_path)
-
-    # Check for duplicate files in downloaded media
     files_pathes = get_files(downloaded_pathes)
+    check_duplicate_files(files_pathes, download_path,
+                          is_sura_parted=is_sura_parted,
+                          error_source='original Sources',
+                          )
+    name_to_downloaded_path = {}
+    for p in files_pathes:
+        file_name = get_file_name(p.name, is_sura_parted=is_sura_parted)
+        name_to_downloaded_path[file_name] = p
+
+    return name_to_downloaded_path
+
+
+def check_duplicate_files(
+    files_pathes: list[Path],
+    download_path: Path,
+    is_sura_parted=True,
+    error_source='',
+) -> None:
+    """Assert if there is multiple urls for the smae sura"""
     file_names = [p.name for p in files_pathes]
     files_count = defaultdict(lambda: 0)
     for file in file_names:
-        files_count[get_file_name(file)] += 1
+        files_count[get_file_name(file, is_sura_parted=is_sura_parted)] += 1
     duplicate_files = [file for file,
                        count in files_count.items() if count > 1]
     assert duplicate_files == [], (
-        f'Duplicate Files. These files are duplicated {duplicate_files}. Download_path: {download_path.absolute()}')
+        f'Duplicate Files in {error_source}.'
+        f' These files are duplicated {duplicate_files}.'
+        f' Download_path: {download_path.absolute()}')
 
-    # copy downloaded media into moshaf path
-    for filepath in files_pathes:
-        shutil.copy(
-            filepath, moshaf_path / get_file_name(filepath.name))
 
-    if remove_after_download:
-        shutil.rmtree(download_path)
+def get_file_name(name: str, is_sura_parted=True) -> str:
+    # converting unicode url name to Actual unicode
+    name = urllib.parse.unquote(name)
+    if is_sura_parted:
+        return get_sura_standard_name(name)
+    return name
 
 
 def get_sura_standard_name(filename: str) -> str:

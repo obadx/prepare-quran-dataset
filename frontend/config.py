@@ -1,8 +1,9 @@
 from pathlib import Path
 import re
+import json
 
 
-def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'^(http)|\d+')):
+def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'^http')):
     """Creates a text area with each line is a sperate item identified by `line_determiner`
 
     Args:
@@ -16,6 +17,19 @@ def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'^(http)|\
     return clean_text_list
 
 
+def json_text_to_dict(text: str) -> dict[str, str]:
+    """
+    Args:
+        text(str): is JSON fromat of "sura name": "url" with new line with
+            Example:
+            {
+            "002": "https//example.com.002.mp3",
+            "004": "https//example.com.004.mp3"
+            }
+    """
+    return json.loads(text)
+
+
 BASE_DIR = Path('DEMO_DIR')
 RECITER_POOL_FILE = BASE_DIR / 'reciter_pool.jsonl'
 MOSHAF_POOL_FILE = BASE_DIR / 'moshaf_pool.jsonl'
@@ -27,6 +41,7 @@ REQUIRED_MOSHAF_FIELDS = [
     'name',
     'reciter_id',
     'sources',
+    'specific_sources',
     'is_sura_parted',
     'publisher',
     'comments',
@@ -44,5 +59,6 @@ REQUIRED_MOSHAF_FIELDS = [
 
 
 MOSHAF_FIELD_FUNCS_AFTER_SUBMIT = {
-    'sources': text_to_list
+    'sources': text_to_list,
+    'specific_sources': json_text_to_dict,
 }
