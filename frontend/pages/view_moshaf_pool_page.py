@@ -22,19 +22,24 @@ def view_moshaf_pool():
                 st.markdown(
                     f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
 
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
+                if st.button("Recitations", key=f"play_{moshaf.id}", use_container_width=True, help='Play Recitation Files'):
+                    st.session_state.played_moshaf_item = moshaf
+                    st.switch_page("pages/play_recitations_page.py")
+
+            with col2:
                 if st.button("Update", key=f"update_{moshaf.id}", use_container_width=True):
                     st.session_state.updated_moshaf = moshaf
                     st.switch_page("pages/update_moshaf_page.py")
-            with col2:
+            with col3:
                 st.button(
                     "Download",
                     key=f"download_{moshaf.id}", use_container_width=True,
                     on_click=download_single_msohaf,
                     args=(moshaf.id,),
                 )
-            with col3:
+            with col4:
                 st.button(
                     "Refresh",
                     key=f"refresh_{moshaf.id}", use_container_width=True,
@@ -48,7 +53,7 @@ def view_moshaf_pool():
 
                 )
 
-            with col4:
+            with col5:
                 st.button(
                     "Delete", key=f"delete_{moshaf.id}", use_container_width=True,
                     on_click=delete_item_from_pool_with_confirmation,
