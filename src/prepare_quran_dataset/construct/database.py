@@ -160,7 +160,7 @@ class MoshafPool(Pool):
             refresh (bool):
                 1. Deletes the moshaf_item directory
                 2. Reload rectiation files from `Downloads` directory
-                3. Redownload if neccssary
+                3. Redownload if neccssary (redownloads specififx sources & downloads sourcs if is not downloaded)
                 4. This is not a redownload
         """
         moshaf = self.__getitem__(id)
@@ -209,7 +209,7 @@ def download_media_and_fill_metadata(
         refresh (bool):
             1. Deletes the moshaf_item directory
             2. Reload rectiation files from `Downloads` directory
-            3. Redownload if neccssary
+            3. Redownload if neccssary (redownloads specififx sources & downloads sourcs if is not downloaded)
             4. This is not a redownload
 
     Returns:
