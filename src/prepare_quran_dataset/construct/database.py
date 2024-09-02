@@ -108,6 +108,7 @@ class MoshafPool(Pool):
             super().update(new_moshaf, generate_new_id=False)
 
     def process_new_item_before_update(self, new_item: Moshaf) -> Moshaf:
+        new_item.model_post_init()  # post init functions
         return self.update_reciter_metadata_in_moshaf(new_item)
 
     def update_reciter_metadata_in_moshaf(self, new_item: Moshaf) -> Moshaf:
@@ -152,15 +153,23 @@ class MoshafPool(Pool):
         if save_reciter_pool:
             self._reciter_pool.save()
 
-    def download_moshaf(self, id: str, redownload=False, save_on_disk=True):
-        """Download a moshaf and add it to the reciter"""
+    def download_moshaf(self, id: str, save_on_disk=True, refresh=False):
+        """Download a moshaf and add it to the reciter
+
+        Args:
+            refresh (bool):
+                1. Deletes the moshaf_item directory
+                2. Reload rectiation files from `Downloads` directory
+                3. Redownload if neccssary
+                4. This is not a redownload
+        """
         moshaf = self.__getitem__(id)
         moshaf = download_media_and_fill_metadata(
             moshaf,
             database_path=self.dataset_path,
             download_path=self.download_path,
-            redownload=redownload,
             is_sura_parted=moshaf.is_sura_parted,
+            refresh=refresh,
         )
 
         # update the moshaf in the pool
@@ -187,7 +196,7 @@ def download_media_and_fill_metadata(
     item: Moshaf,
     database_path: Path | str,
     download_path: Path | str,
-    redownload=False,
+    refresh=False,
     is_sura_parted=True,
 ) -> Moshaf:
     """
@@ -197,25 +206,35 @@ def download_media_and_fill_metadata(
     Args:
         is_sura_parted (bool): if every recitation file is a sperate
             sura or not
+        refresh (bool):
+            1. Deletes the moshaf_item directory
+            2. Reload rectiation files from `Downloads` directory
+            3. Redownload if neccssary
+            4. This is not a redownload
 
     Returns:
         (Moshaf): the moshaf filled with metadata
     """
     item = item.model_copy(deep=True)
 
-    # if the moshaf is already downloaded do not download unless `redownload`
-    if item.is_downloaded and not redownload:
-        print(f'Mohaf({item.id} Downloaded and processed Existing ........')
+    # if the moshaf is already downloaded do not download unless
+    if item.is_downloaded and not refresh:
+        print(f'Mohaf({item.id}) Downloaded and processed Existing ........')
         return item
 
     # Downloadint the moshaf and processing metadata
     database_path = Path(database_path)
     moshaf_path = database_path / item.id
     download_path = Path(download_path)
+
+    if refresh and moshaf_path.is_dir():
+        shutil.rmtree(moshaf_path)
+
     os.makedirs(moshaf_path, exist_ok=True)
     download_moshaf_from_urls(
         urls=item.sources,
         specific_sources=item.specific_sources,
+        downloaded_sources=[] if refresh else item.downloaded_sources,
         moshaf_name=item.id,
         moshaf_path=moshaf_path,
         download_path=download_path,
@@ -225,6 +244,7 @@ def download_media_and_fill_metadata(
     # Fill Moshaf's Metadata
     total_duration_minutes = 0.0
     total_size_megabytes = 0.0
+    recitation_files: list[AudioFile] = []
     for filepath in moshaf_path.iterdir():
         audio_file_info = get_audiofile_info(filepath)
         if audio_file_info:
@@ -233,15 +253,18 @@ def download_media_and_fill_metadata(
                 path=str(filepath.absolute()),
                 sample_rate=audio_file_info.sample_rate,
                 duration_minutes=audio_file_info.duration_seconds / 60.0)
-            item.recitation_files.append(audio_file)
+            recitation_files.append(audio_file)
             total_duration_minutes += audio_file_info.duration_seconds / 60.0
             total_size_megabytes += filepath.stat().st_size / (1024.0 * 1024.0)
 
+    item.recitation_files = recitation_files
     item.path = str(moshaf_path.absolute())
-    item.num_recitations = len(item.recitation_files)
+    item.num_recitations = len(recitation_files)
     item.total_duraion_minutes = total_duration_minutes
     item.is_complete = len(item.recitation_files) == 114
     item.total_size_mb = total_size_megabytes
+    item.downloaded_sources = list(
+        set(item.sources) | set(item.specific_sources.values()))
     item.is_downloaded = True
 
     return item
@@ -250,6 +273,7 @@ def download_media_and_fill_metadata(
 def download_moshaf_from_urls(
     urls: list[str],
     specific_sources: dict[str, str],
+    downloaded_sources: list[str],
     moshaf_path: str | Path,
     moshaf_name: str,
     download_path: str | Path,
@@ -276,6 +300,7 @@ def download_moshaf_from_urls(
         download_path (str): Base Path to download files
         is_sura_parted (bool): if every recitation file is a sperate sura or not
     """
+    downloaded_sources = set(downloaded_sources)
     download_path = Path(download_path) / moshaf_name
     moshaf_path = Path(moshaf_path)
 
@@ -284,6 +309,7 @@ def download_moshaf_from_urls(
     name_to_specific_download_path = download_specifc_sources(
         specific_sources=specific_sources,
         download_path=download_path,
+        downloaded_sources=downloaded_sources,
         is_sura_parted=is_sura_parted)
 
     # Download sources
@@ -291,6 +317,7 @@ def download_moshaf_from_urls(
     name_to_download_path = download_normal_sources(
         sources=urls,
         download_path=download_path,
+        downloaded_sources=downloaded_sources,
         is_sura_parted=is_sura_parted)
 
     # copy downloaded media into moshaf path
@@ -307,8 +334,9 @@ def download_specifc_sources(
     specific_sources: dict[str, str],
     download_path: Path,
     is_sura_parted: bool,
+    downloaded_sources: set[str],
 ) -> dict[str, Path]:
-    """Downloads specific sources and returns them
+    """Downloads specific sources and returns them if they are not downloaed
 
     1. Downloads specfic sources urls (with redownloading)
     2. Checks for duplicate files in specific sources
@@ -328,17 +356,18 @@ def download_specifc_sources(
         assert len(name.split('.')) == 1, (
             'Input file name should not have extention just the'
             f' file name, name={name}')
-        url_path = download_file_fast(
-            url=url,
-            out_path=download_path,
-            extract_zip=True,
-            remove_zipfile=True,
-            redownload=True,
-        )
-        assert url_path.is_file(), (
-            'Your specific source must be media file not zip')
-        ext = url_path.name.split('.')[-1]
-        name_to_specific_download_pathes[f'{name}.{ext}'] = url_path
+        if url not in downloaded_sources:
+            url_path = download_file_fast(
+                url=url,
+                out_path=download_path,
+                extract_zip=True,
+                remove_zipfile=True,
+                redownload=True,
+            )
+            assert url_path.is_file(), (
+                'Your specific source must be media file not zip')
+            ext = url_path.name.split('.')[-1]
+            name_to_specific_download_pathes[f'{name}.{ext}'] = url_path
     check_duplicate_files(list(name_to_specific_download_pathes.values()),
                           download_path,
                           is_sura_parted=is_sura_parted,
@@ -350,6 +379,7 @@ def download_specifc_sources(
 def download_normal_sources(
     sources: list[str],
     download_path: Path,
+    downloaded_sources: set[str],
     is_sura_parted: bool,
 ) -> dict[str, Path]:
     """Downloads files and zipfiles from sources urls
@@ -370,14 +400,15 @@ def download_normal_sources(
     # Download sources
     downloaded_pathes: list[Path] = []
     for url in sources:
-        url_path = download_file_fast(
-            url=url,
-            out_path=download_path,
-            extract_zip=True,
-            remove_zipfile=True,
-            redownload=False,
-        )
-        downloaded_pathes.append(url_path)
+        if url not in downloaded_sources:
+            url_path = download_file_fast(
+                url=url,
+                out_path=download_path,
+                extract_zip=True,
+                remove_zipfile=True,
+                redownload=False,
+            )
+            downloaded_pathes.append(url_path)
     files_pathes = get_files(downloaded_pathes)
     check_duplicate_files(files_pathes, download_path,
                           is_sura_parted=is_sura_parted,

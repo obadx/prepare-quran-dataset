@@ -27,7 +27,9 @@ def json_text_to_dict(text: str) -> dict[str, str]:
             "004": "https//example.com.004.mp3"
             }
     """
-    return json.loads(text)
+    if text:
+        return json.loads(text)
+    return {}
 
 
 BASE_DIR = Path('DEMO_DIR')

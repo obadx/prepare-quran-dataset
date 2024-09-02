@@ -69,7 +69,7 @@ def download_all_moshaf_pool():
         pop_up_message('There is a download is already running...', 'warn')
 
 
-def download_single_msohaf(moshaf_id: str):
+def download_single_msohaf(moshaf_id: str, refresh=False):
     def download_moshaf_task(moshaf_pool: MoshafPool, moshaf_id: str, lockfile_path: Path):
         log = DownloadLog(
             current_moshaf_id=moshaf_id,
@@ -80,13 +80,13 @@ def download_single_msohaf(moshaf_id: str):
         )
         write_to_download_lock_log(log, lockfile_path)
         moshaf_pool.download_moshaf(
-            moshaf_id, redownload=False, save_on_disk=True)
+            moshaf_id, save_on_disk=True, refresh=refresh)
         # delete the download_lockfile
         lockfile_path.unlink()
 
     if not conf.DOWNLOAD_LOCK_FILE.is_file():
         moshaf_item = st.session_state.moshaf_pool[moshaf_id]
-        if moshaf_item.is_downloaded:
+        if moshaf_item.is_downloaded and not refresh:
             pop_up_message('The moshaf is already Dwonloaded', 'info')
             return
         p = multiprocessing.Process(

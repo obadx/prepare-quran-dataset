@@ -48,6 +48,10 @@ class Moshaf(BaseModel):
         'Ex: {"002": "url_for_002"} will overwrite the recitation "002"'
         'downloaded by the `sources` attributes'
     )
+    downloaded_sources: list[str] = Field(
+        default=[],
+        description='List of downloaded urls (sources) either from'
+        ' sources or from specific sources')
     is_sura_parted: bool = Field(
         default=True,
         description='If every recitation file is a sperate sura or not')
@@ -109,3 +113,7 @@ class Moshaf(BaseModel):
         description='ArabicName(وجع تأمننا) Warys to recite word'
         ' tammna "تأمنا" ''in surah Yusuf Aya(11) "سورة يوسف".'
         ' Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
+
+    def model_post_init(self, *args, **kwargs):
+        self.is_downloaded = set(self.downloaded_sources) == (
+            set(self.sources) | set(self.specific_sources.values()))

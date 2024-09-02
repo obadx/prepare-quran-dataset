@@ -22,7 +22,7 @@ def view_moshaf_pool():
                 st.markdown(
                     f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 if st.button("Update", key=f"update_{moshaf.id}", use_container_width=True):
                     st.session_state.updated_moshaf = moshaf
@@ -34,8 +34,21 @@ def view_moshaf_pool():
                     on_click=download_single_msohaf,
                     args=(moshaf.id,),
                 )
-
             with col3:
+                st.button(
+                    "Refresh",
+                    key=f"refresh_{moshaf.id}", use_container_width=True,
+                    on_click=download_single_msohaf,
+                    args=(moshaf.id,),
+                    kwargs={'refresh': True},
+                    help='1. Deletes the moshaf_item directory\n'
+                    '2. Reload rectiation files from `Downloads` directory\n'
+                    '3. Redownload if neccssary\n'
+                    '4. This is not a redownload'
+
+                )
+
+            with col4:
                 st.button(
                     "Delete", key=f"delete_{moshaf.id}", use_container_width=True,
                     on_click=delete_item_from_pool_with_confirmation,
