@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool, MoshafPool
+from prepare_quran_dataset.construct.utils import get_suar_list
 import config as conf
 
 
@@ -21,6 +22,11 @@ class DownloadLog:
     total_count: int
     moshaf_ids: list[str]
     finished_moshaf_ids: list[str] = field(default_factory=[])
+
+
+@st.cache_data
+def get_suar_names() -> list[str]:
+    return get_suar_list()
 
 
 def write_to_download_lock_log(log: DownloadLog, filepath: Path):
