@@ -1,10 +1,9 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from collections import defaultdict
 
 from menu import menu_with_redirect
-from prepare_quran_dataset.construct.database import MoshafPool
+from prepare_quran_dataset.construct.database import MoshafPool, ReciterPool
 
 
 def get_total_moshf_hours(moshaf_pool: MoshafPool) -> float:
@@ -21,13 +20,18 @@ def get_total_size_gb(moshaf_pool: MoshafPool) -> float:
     return round(total_size, 2)
 
 
-def get_reciter_to_hours(moshaf_pool: MoshafPool) -> dict[str, float]:
+def get_reciter_to_hours(moshaf_pool: MoshafPool, reciter_pool: ReciterPool) -> dict[str, float]:
     """Returns a dict for {"reciter": "total hours"}
     """
-    reciter_to_hours = defaultdict(lambda: 0.0)
-    for moshaf in moshaf_pool:
-        key = f'{moshaf.reciter_id} / {moshaf.reciter_arabic_name}'
-        reciter_to_hours[key] += moshaf.total_duraion_minutes / 60.0
+    reciter_to_hours = {}
+    for reciter in reciter_pool:
+        key = f'{reciter.id} / {reciter.arabic_name}'
+        reciter_to_hours[key] = 0.0
+        for moshaf_id in reciter.moshaf_set_ids:
+            moshaf = moshaf_pool[moshaf_id]
+            reciter_to_hours[key] += moshaf.total_duraion_minutes / 60.0
+
+    # rounding to 2 digits
     for k in reciter_to_hours:
         reciter_to_hours[k] = round(reciter_to_hours[k], 2)
     return reciter_to_hours
@@ -85,7 +89,8 @@ def dashboard():
             f"<div class='stat-box'><span class='title-size'>Total Size (GB)</span><br>{total_size_gb}</div>", unsafe_allow_html=True)
 
     # Create an interactive Plotly bar chart for reciters and total hours
-    reciters_data = get_reciter_to_hours(st.session_state.moshaf_pool)
+    reciters_data = get_reciter_to_hours(
+        st.session_state.moshaf_pool, st.session_state.reciter_pool)
     reciters_data = {
         'Reciter': list(reciters_data.keys()),
         'Total Hours': list(reciters_data.values())
