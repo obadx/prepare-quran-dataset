@@ -242,30 +242,7 @@ def download_media_and_fill_metadata(
     )
 
     # Fill Moshaf's Metadata
-    total_duration_minutes = 0.0
-    total_size_megabytes = 0.0
-    recitation_files: list[AudioFile] = []
-    for filepath in moshaf_path.iterdir():
-        audio_file_info = get_audiofile_info(filepath)
-        if audio_file_info:
-            audio_file = AudioFile(
-                name=filepath.name,
-                path=str(filepath.absolute()),
-                sample_rate=audio_file_info.sample_rate,
-                duration_minutes=audio_file_info.duration_seconds / 60.0)
-            recitation_files.append(audio_file)
-            total_duration_minutes += audio_file_info.duration_seconds / 60.0
-            total_size_megabytes += filepath.stat().st_size / (1024.0 * 1024.0)
-
-    item.recitation_files = recitation_files
-    item.path = str(moshaf_path.absolute())
-    item.num_recitations = len(recitation_files)
-    item.total_duraion_minutes = total_duration_minutes
-    item.is_complete = len(item.recitation_files) == 114
-    item.total_size_mb = total_size_megabytes
-    item.downloaded_sources = list(
-        set(item.sources) | set(item.specific_sources.values()))
-    item.is_downloaded = True
+    item.fill_metadata_after_download(moshaf_path=moshaf_path)
 
     return item
 

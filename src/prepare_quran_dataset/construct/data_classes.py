@@ -1,12 +1,15 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
+from pathlib import Path
 
 
+from .utils import get_audiofile_info
 # class FooBarModel(BaseModel):
 #     # do not modify attributes once object is created
 #     model_config = ConfigDict(frozen=True)
 #
 #     id: int
+
 
 class Reciter(BaseModel):
     id: int = Field(
@@ -55,6 +58,11 @@ class Moshaf(BaseModel):
     is_sura_parted: bool = Field(
         default=True,
         description='If every recitation file is a sperate sura or not')
+    missing_recitations: set = Field(
+        default=set(),
+        description="The missing recitations from the Downloaded Moshaf"
+        "It will filled if only `is_sura_parted==True` "
+    )
 
     # Metadata Fields
     num_recitations: int = Field(
@@ -115,5 +123,63 @@ class Moshaf(BaseModel):
         ' Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
 
     def model_post_init(self, *args, **kwargs):
+        ...
+        # self.is_downloaded = set(self.downloaded_sources) == (
+        #     set(self.sources) | set(self.specific_sources.values()))
+        #
+        # if self.is_sura_parted:
+        #     self.missing_recitations = (
+        #         self.get_all_sura_names() - self.get_downloaded_suar_names())
+        #     print(self.missing_recitations)
+
+    def fill_metadata_after_download(self, moshaf_path: Path):
+
+        total_duration_minutes = 0.0
+        total_size_megabytes = 0.0
+        recitation_files: list[AudioFile] = []
+        for filepath in moshaf_path.iterdir():
+            audio_file_info = get_audiofile_info(filepath)
+            if audio_file_info:
+                audio_file = AudioFile(
+                    name=filepath.name,
+                    path=str(filepath.absolute()),
+                    sample_rate=audio_file_info.sample_rate,
+                    duration_minutes=audio_file_info.duration_seconds / 60.0)
+                recitation_files.append(audio_file)
+                total_duration_minutes += audio_file_info.duration_seconds / 60.0
+                total_size_megabytes += filepath.stat().st_size / (1024.0 * 1024.0)
+
+        self.recitation_files = recitation_files
+        self.path = str(moshaf_path.absolute())
+        self.num_recitations = len(recitation_files)
+        self.total_duraion_minutes = total_duration_minutes
+        self.total_size_mb = total_size_megabytes
+        self.downloaded_sources = list(
+            set(self.sources) | set(self.specific_sources.values()))
         self.is_downloaded = set(self.downloaded_sources) == (
             set(self.sources) | set(self.specific_sources.values()))
+
+        if self.is_sura_parted:
+            self.is_complete = (self.get_all_sura_names() ==
+                                self.get_downloaded_suar_names())
+        else:
+            self.is_complete = self.is_downloaded
+
+        if self.is_sura_parted:
+            self.missing_recitations = (
+                self.get_all_sura_names() - self.get_downloaded_suar_names())
+
+    def get_downloaded_suar_names(self) -> set[str]:
+        """Gets the sura names of the dwonloaded recitations"""
+        suar_names_set = set()
+        for audiofile in self.recitation_files:
+            sura_name = audiofile.name.split('.')[0]
+            suar_names_set.add(sura_name)
+        return suar_names_set
+
+    def get_all_sura_names(self) -> set[str]:
+        """Retruns the suar names as set of '001', '002', ...'114' """
+        suar_names = set()
+        for idx in range(1, 115, 1):
+            suar_names.add(f'{idx:0{3}}')
+        return suar_names
