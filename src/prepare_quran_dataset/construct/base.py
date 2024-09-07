@@ -4,6 +4,8 @@ from datasets import load_dataset, Dataset
 from pydantic import BaseModel
 from typing import Any, Iterable
 
+from .utils import load_jsonl, save_jsonl
+
 
 class ItemExistsInPoolError(Exception):
     pass
@@ -38,8 +40,11 @@ class Pool(ABC):
         with open(self.path, 'r') as f:
             file_content = f.read()
         if file_content:
-            dataset = load_dataset(
-                'json', data_files=self.path.absolute().__str__())['train']
+            # dataset = load_dataset(
+            #     'json', data_files=self.path.absolute().__str__(),
+            #     encoding='utf8',
+            # )['train']
+            dataset = load_jsonl(self.path)
 
         for item in dataset:
             self.dataset_dict[item[self.id_column]] = item
@@ -177,12 +182,27 @@ class Pool(ABC):
     def __len__(self):
         return len(self.dataset_dict)
 
-    def save(self):
-        self.get_huggingface_dataset().to_json(self.path, force_ascii=False)
-
     def __str__(self):
         return self.get_huggingface_dataset().__str__()
 
     def __iter__(self) -> Iterable[BaseModel]:
         for item in self.dataset_dict.values():
             yield self.item_type(**item)
+
+    def to_jsonl(self) -> str:
+        """Converts the model to JSON Line string
+
+        Returns:
+            (str) the JSON Line represntation of the pool
+        """
+        text = ""
+        for item in self.__iter__():
+            text += item.model_dump_json() + '\n'
+        if text:
+            text = text[:-1]  # removes '\n' from last line
+        return text
+
+    def save(self):
+        json_line_pool = self.to_jsonl()
+        with open(self.path, 'w+', encoding='utf-8') as f:
+            f.write(json_line_pool)

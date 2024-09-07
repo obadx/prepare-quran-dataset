@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 import json
 import re
+from typing import Any
+import copy
 
 
 from tqdm import tqdm
@@ -21,6 +23,27 @@ DATA_PATH = Path(__file__).parent.parent / 'data'
 
 class DownloadError(Exception):
     ...
+
+
+def load_jsonl(filepath: str | Path) -> list[Any]:
+    """Loads a Json file data"""
+    data = []
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for line in f:
+            data.append(json.loads(line.strip()))
+    return data
+
+
+def save_jsonl(data: list[Any], filepath: str | Path) -> None:
+    """Saves list[Any] data into a `filepath` ins JSON line format"""
+    data_str = ""
+    for item in data:
+        data_str += json.dumps(item, ensure_ascii=False) + '\n'
+    if data_str:
+        data_str = data_str[:-1]  # removes '\n' from last line
+
+    with open(filepath, 'w+', encoding='utf-8') as f:
+        f.write(data_str)
 
 
 def timer(func):

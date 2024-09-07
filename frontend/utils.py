@@ -49,7 +49,7 @@ def download_all_moshaf_pool():
             )
             write_to_download_lock_log(log, lockfile_path)
             moshaf_pool.download_moshaf(
-                id, redownload=False, save_on_disk=True)
+                id, refresh=False, save_on_disk=True)
             finished_ids.append(id)
 
         # End of download -> delete the download_lockfile
