@@ -69,6 +69,8 @@ def menu():
 
     st.set_page_config(page_title="Recitation Database Manager", page_icon="📖")
     st.sidebar.page_link(
+        'streamlit_app.py', label='Home', icon=':material/home:')
+    st.sidebar.page_link(
         'pages/view_reciters_page.py', label='View Reciters', icon="🧔")
     st.sidebar.page_link(
         'pages/view_moshaf_pool_page.py', label='View Moshaf Pool', icon="📖")
