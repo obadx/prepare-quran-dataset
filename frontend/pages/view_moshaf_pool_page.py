@@ -7,6 +7,7 @@ from utils import (
     get_field_name,
     delete_item_from_pool_with_confirmation,
     download_single_msohaf,
+    get_arabic_attributes,
 )
 
 
@@ -20,6 +21,10 @@ def view_moshaf_pool():
                 if field not in conf.EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW:
                     label = get_field_name(
                         field, moshaf.model_fields[field])
+                    arabic_attributes = get_arabic_attributes(
+                        moshaf.model_fields[field])
+                    if arabic_attributes:
+                        value = arabic_attributes[value]
                     st.markdown(
                         f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
 

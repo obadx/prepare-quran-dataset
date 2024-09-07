@@ -301,9 +301,11 @@ def create_input_for_field(
     # the args of a Literal typs > 0 EX: Literal[3, 4]
     if get_origin(field_info.annotation) is Literal:
         choices = list(get_args(field_info.annotation))
+        arabic_attributes = get_arabic_attributes(field_info)
         return st.selectbox(
             label,
             choices,
+            format_func=lambda x: arabic_attributes[x] if arabic_attributes else x,
             index=choices.index(default_value) if default_value else 0,
             key=key,
         )
@@ -348,6 +350,21 @@ def get_arabic_name(field_info: FieldInfo) -> str:
         if match:
             return match.group(1)
     return ''
+
+
+def get_arabic_attributes(field_info: FieldInfo) -> dict[str, str] | None:
+    """get the Arabic attributes for `Literal` type fields
+
+    Returns:
+        dict[str: str] if found else `None`
+    """
+    if field_info.description:
+        match = re.search(
+            r'ArabicAttr\((.*?)\)',
+            field_info.description, re.DOTALL)
+        if match:
+            return json.loads(match.group(1))
+    return None
 
 
 def get_field_name(field_name: str, field_info: FieldInfo) -> str:

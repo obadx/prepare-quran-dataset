@@ -114,12 +114,20 @@ class Moshaf(BaseModel):
         description='ArabicName(وجه كلمة ضعف) The Haraka of "ضعف" in'
         ' surah AlRoom "الروم" aya(54)')
     idghaam_nakhlqkm: Literal['kamel', 'nakes'] = Field(
-        description='ArabicName(نوع الإدغام في كلمة نخلقكم) The Idghaof of'
-        ' word "نخلقكم" in suran Almurslat "المرسلات" Aya (20)'
+        description='ArabicName(نوع الإدغام في كلمة نخلقكم)'
+        """ArabicAttr({
+        "kamel": "كامل",
+        "nakes": "ناقص"
+        })"""
+        ' The Idghaof o fword "نخلقكم" in suran Almurslat "المرسلات" Aya (20)'
         ' Either Idgham nakes "إدغام نافص" or Idghtam kamel "إدغام كامل"')
     noon_tamanna: Literal['ishmam', 'ikhtlas'] = Field(
-        description='ArabicName(وجع تأمننا) Warys to recite word'
-        ' tammna "تأمنا" ''in surah Yusuf Aya(11) "سورة يوسف".'
+        description='ArabicName(وجه تأمنا)'
+        """ArabicAttr({
+        "ishmam": "إشمام",
+        "ikhtlas": "اختلاس"
+        })"""
+        ' Ways to recite word tammna "تأمنا" ''in surah Yusuf Aya(11) "سورة يوسف".'
         ' Eeither Ishmam "إشمام" or Ikhtlas "اختلاس"')
 
     def model_post_init(self, *args, **kwargs):
