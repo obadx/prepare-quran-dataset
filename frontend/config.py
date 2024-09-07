@@ -59,6 +59,10 @@ REQUIRED_MOSHAF_FIELDS = [
     'noon_tamanna',
 ]
 
+EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW = [
+    'recitation_files',
+]
+
 
 MOSHAF_FIELD_FUNCS_AFTER_SUBMIT = {
     'sources': text_to_list,

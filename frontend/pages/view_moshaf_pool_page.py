@@ -17,10 +17,11 @@ def view_moshaf_pool():
             f"{moshaf.name} / {moshaf.reciter_arabic_name} / (ID: {moshaf.id})")
         with expander:
             for field, value in moshaf.model_dump().items():
-                label = get_field_name(
-                    field, moshaf.model_fields[field])
-                st.markdown(
-                    f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
+                if field not in conf.EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW:
+                    label = get_field_name(
+                        field, moshaf.model_fields[field])
+                    st.markdown(
+                        f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
 
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
