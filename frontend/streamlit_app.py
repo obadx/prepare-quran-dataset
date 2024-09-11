@@ -74,7 +74,7 @@ def dashboard():
     # Display statistics with styling
     with col1:
         st.markdown(
-            f"<div class='stat-box'><span class='title-moshaf'>Number of Moshaf</span><br>{number_of_moshaf}</div>", unsafe_allow_html=True)
+            f"<div class='stat-box'><span class='title-moshaf'>Number of Moshaf Items</span><br>{number_of_moshaf}</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown(
