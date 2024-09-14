@@ -1,3 +1,5 @@
 # prepare-quran-dataset
 Preparing and chuncking quran dataset
-{% include hafs_ways.md %}
+
+# Table of Content
+* [Hafs Ways](#hafs_wyas.md)
