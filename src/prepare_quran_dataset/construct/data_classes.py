@@ -445,7 +445,7 @@ class Moshaf(BaseModel):
         "Emphasis and softening of the letter 'Ra' in the word {يسر} in Surah Al-Fajr when pausing (waqf)."
         'This refers to the recitation rules regarding whether the letter "Ra"'
         ' (ر) in the word "يسر" is pronounced with emphasis (`tafkheem`)'
-        ' or softening (tarqeeq) when pausing at this word in Surah Al-Fajr.'
+        ' or softening (`tarqeeq`) when pausing at this word in Surah Al-Fajr.'
         ' `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)'
     )
 
