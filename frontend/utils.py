@@ -345,7 +345,7 @@ def get_arabic_name(field_info: FieldInfo) -> str:
     """
     if field_info.description:
         match = re.search(
-            r'ArabicName\(\s*(\w+(?:\s+\w+)*)\s*\)',
+            r'ArabicName\((.*)\)',
             field_info.description, re.UNICODE)
         if match:
             return match.group(1)
