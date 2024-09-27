@@ -311,26 +311,30 @@ class Moshaf(BaseModel):
         ' Tasheel of Madd'
         ' "وجع التسهيل أو المد" for 6 words in The Holy Quran:'
         ' "ءالذكرين", "ءالله", "ءائن".')
-    yalhath_dhalik: Literal['izhar', 'idgham'] = Field(
+    yalhath_dhalik: Literal['izhar', 'idgham', 'waqf'] = Field(
         default='idgham',
         description='ArabicName(الإدغام وعدمه في قوله تعالى: {يلهث ذلك} بالأعراف)'
         """ArabicAttr({
         "izhar": "إظهار",
-        "idgham": "إدغام"
+        "idgham": "إدغام",
+        "waqf": "وقف"
         })"""
         "The assimilation (`idgham`) and non-assimilation (`izhar`) in the verse {يلهث ذلك} in Surah Al-A'raf."
+        " `waqf`: means the rectier has paused on (يلهث)"
     )
-    irkab_maana: Literal['izhar', 'idgham'] = Field(
+    irkab_maana: Literal['izhar', 'idgham', 'waqf'] = Field(
         default='idgham',
         description='ArabicName(الإدغام والإظهار في قوله تعالى: {اركب معنا} بهود)'
         """ArabicAttr({
         "izhar": "إظهار",
-        "idgham": "إدغام"
+        "idgham": "إدغام",
+        "waqf": "وقف"
         })"""
         "The assimilation and clear pronunciation in the verse {اركب معنا} in Surah Hud."
         'This refers to the recitation rules concerning whether the letter'
         ' "Noon" (ن) is assimilated into the following letter or pronounced'
         ' clearly when reciting this specific verse.'
+        " `waqf`: means the rectier has paused on (اركب)"
     )
     noon_tamnna: Literal['ishmam', 'rawm'] = Field(
         default='ishmam',
