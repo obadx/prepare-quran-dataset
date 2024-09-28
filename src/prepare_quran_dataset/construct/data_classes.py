@@ -455,13 +455,8 @@ class Moshaf(BaseModel):
 
     def model_post_init(self, *args, **kwargs):
         ...
-        # self.is_downloaded = set(self.downloaded_sources) == (
-        #     set(self.sources) | set(self.specific_sources.values()))
-        #
-        # if self.is_sura_parted:
-        #     self.missing_recitations = (
-        #         self.get_all_sura_names() - self.get_downloaded_suar_names())
-        #     print(self.missing_recitations)
+        self.is_downloaded = set(self.downloaded_sources) == (
+            set(self.sources) | set(self.specific_sources.values()))
 
     def fill_metadata_after_download(self, moshaf_path: Path):
 
