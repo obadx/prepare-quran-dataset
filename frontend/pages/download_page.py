@@ -11,7 +11,12 @@ from utils import get_download_lock_log
 def download_page():
     st.header('Download Moshaf Page')
 
-    if conf.DOWNLOAD_LOCK_FILE.is_file():
+    if conf.DOWNLOAD_ERROR_LOG.is_file():
+        with open(conf.DOWNLOAD_ERROR_LOG, 'r') as f:
+            st.error('Download Error')
+            st.code(f.read(), language='log')
+
+    elif conf.DOWNLOAD_LOCK_FILE.is_file():
         log = get_download_lock_log(conf.DOWNLOAD_LOCK_FILE)
         if log.total_count == 1:
             st.info(f'Downloading Moshaf ID={log.current_moshaf_id}')
@@ -27,7 +32,7 @@ def download_page():
                 '<img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif" alt="Girl in a jacket" width="50" >', unsafe_allow_html=True)
 
         # to recheck if the download if finished
-        time.sleep(30)
+        time.sleep(2)
         st.rerun()
 
     else:
