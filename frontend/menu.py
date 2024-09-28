@@ -86,6 +86,12 @@ def menu():
     st.sidebar.button(
         '⬇️  Download All Moshaf Pool', on_click=download_all_moshaf_pool, use_container_width=True)
 
+    st.sidebar.page_link(
+        'pages/from_zekr_page.py', label='From zekr')
+
+
+
+
 
 def menu_with_redirect(reset=False):
     if 'started' not in st.session_state or reset:

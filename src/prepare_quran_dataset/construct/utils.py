@@ -10,15 +10,63 @@ from urllib.parse import urlparse
 import json
 import re
 from typing import Any
-import copy
 
 
 from tqdm import tqdm
 from pypdl import Pypdl
 from mutagen import File
+from bs4 import BeautifulSoup
 from quran_transcript.utils import normalize_aya
 
 DATA_PATH = Path(__file__).parent.parent / 'data'
+
+
+def extract_sura_from_zekr(url):
+    """Extract sepecific Moshaf from https://zekr.online/ as:
+    {
+        "sura_id": "sura_link",
+    }
+    Example:
+        {
+            "109": "https://cdns1.zekr.online/quran/5403/109/32.mp3",
+            "110": "https://cdns1.zekr.online/quran/5403/110/32.mp3",
+            "111": "https://cdns1.zekr.online/quran/5403/111/32.mp3",
+            "112": "https://cdns1.zekr.online/quran/5403/112/32.mp3",
+            "113": "https://cdns1.zekr.online/quran/5403/113/32.mp3",
+            "114": "https://cdns1.zekr.online/quran/5403/114/32.mp3"
+        }
+
+        Args:
+            url (str): the url of the moshaf example:
+                https://zekr.online/ar/author/61/mhmod-khll-lhsr/quran?mushaf_id=5403
+    """
+    # Send a GET request to the provided URL
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code != 200:
+        raise Exception(f"Failed to load page: {
+                        response.status_code}, url={url}")
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    sura_links = {}
+
+    # Find all the list items that contain both data-url and an image tag
+    sura_items = soup.find_all(
+        'li', class_='sura-item', attrs={'data-url': True, 'data-image': True})
+
+    for item in sura_items:
+        # Extract the data-url attribute for the audio link
+        audio_link = item['data-url']
+
+        # Extract the sura index from the image URL
+        img_src = item['data-image']
+        sura_index = img_src.split('/')[-1].replace('.svg', '')
+
+        sura_links[f'{int(sura_index):0{3}}'] = audio_link
+
+    return sura_links
 
 
 class DownloadError(Exception):
