@@ -134,16 +134,22 @@ Preparing and chuncking quran dataset
 
 ## أوجه لكل طرق حفص
 
+### 19. ميم آل عمران في قوله تعالى: {الم الله} وصلا
+وجهان وصلا ووجه واحد وقفا
+* فتح الميم ومدها مدا طبيعيا (حركتان) وصلا
+* فتح الميم ومدها مدا مشبعا (6 حركات) وصلا
+* الوقوف على الميم ومدها مدا مشبعا (6 حركات)
 
 
-### 19. السكت والإدغام في قوله تعالى: {ماليه هلك} بالأحقاف
+
+### 20. السكت والإدغام في قوله تعالى: {ماليه هلك} بالأحقاف
 وجهان:
 * إدغام الهاء في الهاء
 * السكت على الهاء الأولى
 
 
 
-### 20. الأوجه بين الأنفال والتوبة
+### 21. الأوجه بين الأنفال والتوبة
 ثلاثة أوجه 
 * قطع الجميع (الوقف)
 * السكت
@@ -151,7 +157,7 @@ Preparing and chuncking quran dataset
 
 
 
-### 21. التفخيم والترقيق في الراء في قوله تعالى: {القطر} بسبأ و{مصر} و{نذر} بالقمر و{يسر} بالفجر
+### 22. التفخيم والترقيق في الراء في قوله تعالى: {القطر} بسبأ و{مصر} و{نذر} بالقمر و{يسر} بالفجر
 بكل منها وجهان وقفا:
 * التفخيم
 * الترقيف  
@@ -181,13 +187,14 @@ Preparing and chuncking quran dataset
 |madd_mottasel_waqf|مقدار المد المتصل وقفا|- `4`<br>- `5`<br>- `6`<br>|| The length of Madd Almotasel at pause for Hafs.. Example "السماء".|
 |madd_aared_len|مقدار المد العارض|- `2`<br>- `4`<br>- `6`<br>|| The length of Mad Al Aared "مد العارض للسكون".|
 |ghonna_lam_and_raa|غنة اللام و الراء|- `ghonna` (`غنة`)<br>- `no_ghonna` (`لا غنة`)<br>|`no_ghonna` (`لا غنة`)|The ghonna for merging (Idghaam) noon with Lam and Raa for Hafs.|
+|meem_aal_imran|ميم آل عمران في قوله تعالى: {الم الله} وصلا|- `waqf` (`وقف`)<br>- `wasl_2` (`فتح الميم ومدها حركتين`)<br>- `wasl_6` (`فتح الميم ومدها ستة حركات`)<br>|`waqf` (`وقف`)|The ways to recite the word meem Aal Imran (الم الله) at connected recitation. `waqf`: Pause with a prolonged madd (elongation) of 6 harakat (beats). `wasl_2` Pronounce "meem" with fathah (a short "a" sound) and stretch it for 2 harakat. `wasl_6` Pronounce "meem" with fathah and stretch it for 6 harakat.|
 |madd_yaa_alayn_alharfy|مقدار   المد اللازم الحرفي للعين|- `2`<br>- `4`<br>- `6`<br>|`6`| The length of Lzem Harfy of Yaa in letter Al-Ayen Madd "المد الحرفي اللازم لحرف العين" in surar: Maryam "مريم", AlShura "الشورى".|
 |saken_before_hamz|الساكن قبل الهمز|- `tahqeek` (`تحقيق`)<br>- `general_sakt` (`سكت عام`)<br>- `local_sakt` (`سكت خاص`)<br>|`tahqeek` (`تحقيق`)|The ways of Hafs for saken before hamz. "The letter with sukoon before the hamzah (ء)".And it has three forms: full articulation (`tahqeeq`), general pause (`general_sakt`), and specific pause (`local_skat`).|
-|sakt_iwaja|السكت عند عوجا في الكهف|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`waqf` (`وقف`)|The ways to to recite the word "عوجا" (Iwaja). `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
-|sakt_marqdena|السكت عند مرقدنا  في يس|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`waqf` (`وقف`)|The ways to to recite the word "مرقدنا" (Marqadena) in Surat Yassen. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
-|sakt_man_raq|السكت عند  من راق في القيامة|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`sakt` (`سكت`)|The ways to to recite the word "من راق" (Man Raq) in Surat Al Qiyama. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
-|sakt_bal_ran|السكت عند  بل ران في  المطففين|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`sakt` (`سكت`)|The ways to to recite the word "بل ران" (Bal Ran) in Surat Al Motaffin. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
-|sakt_maleeyah|وجه  قوله تعالى {ماليه هلك} بالأحقاف|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idgham` (`إدغام`)<br>|`waqf` (`وقف`)|The ways to to recite the word {ماليه هلك} in Surah Al-Ahqaf. `sakt` means slight pause. `idgham` Assimilation of the letter 'Ha' (ه) into the letter 'Ha' (ه) with complete assimilation.`waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idgham`.|
+|sakt_iwaja|السكت عند عوجا في الكهف|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`waqf` (`وقف`)|The ways to recite the word "عوجا" (Iwaja). `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
+|sakt_marqdena|السكت عند مرقدنا  في يس|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`waqf` (`وقف`)|The ways to recite the word "مرقدنا" (Marqadena) in Surat Yassen. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
+|sakt_man_raq|السكت عند  من راق في القيامة|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`sakt` (`سكت`)|The ways to recite the word "من راق" (Man Raq) in Surat Al Qiyama. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
+|sakt_bal_ran|السكت عند  بل ران في  المطففين|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idraj` (`إدراج`)<br>|`sakt` (`سكت`)|The ways to recite the word "بل ران" (Bal Ran) in Surat Al Motaffin. `sakt` means slight pause. `idraj` means not `sakt`. `waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idraj` (no sakt).|
+|sakt_maleeyah|وجه  قوله تعالى {ماليه هلك} بالأحقاف|- `sakt` (`سكت`)<br>- `waqf` (`وقف`)<br>- `idgham` (`إدغام`)<br>|`waqf` (`وقف`)|The ways to recite the word {ماليه هلك} in Surah Al-Ahqaf. `sakt` means slight pause. `idgham` Assimilation of the letter 'Ha' (ه) into the letter 'Ha' (ه) with complete assimilation.`waqf`:  means full pause, so we can not determine weither the reciter uses `sakt` or `idgham`.|
 |between_anfal_and_tawba|وجه بين الأنفال والتوبة|- `waqf` (`وقف`)<br>- `sakt` (`سكت`)<br>- `wasl` (`وصل`)<br>|`waqf` (`وقف`)|The ways to recite end of Surah Al-Anfal and beginning of Surah At-Tawbah.|
 |noon_and_yaseen|الإدغام والإظهار في النون عند الواو من قوله تعالى: {يس والقرآن}و {ن والقلم}|- `izhar` (`إظهار`)<br>- `idgham` (`إدغام`)<br>|`izhar` (`إظهار`)|Weither to merge noon of both: {يس} and {ن} with (و) "`idgham`" or not "`izhar`".|
 |yaa_ataan| إثبات الياء وحذفها وقفا في قوله تعالى {آتان} بالنمل|- `wasl` (`وصل`)<br>- `hadhf` (`حذف`)<br>- `ithbat` (`إثبات`)<br>|`wasl` (`وصل`)|The affirmation and omission of the letter 'Yaa' in the pause of the verse {آتاني} in Surah An-Naml.`wasl`: means connected recitation without pasuding as (آتانيَ).`hadhf`: means deletion of letter (ي) at puase so recited as (آتان).`ithbat`: means confirmation reciting letter (ي) at puase as (آتاني).|
@@ -208,6 +215,7 @@ Preparing and chuncking quran dataset
 |raa_misr|التفخيم والترقيق في راء {مصر} في يونس وموضعي يوسف والزخرف  وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`wasl` (`وصل`)|Emphasis and softening of the letter 'Ra' in the word {مصر} in Surah Yunus, and in the locations of Surah Yusuf and Surah Az-Zukhruf when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "مصر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) at the specific pauses in these Surahs. `wasl`: means not pasuing so we only have one way (tafkheem of Raa)|
 |raa_nudhur|التفخيم والترقيق  في راء {نذر} بالقمر وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`tafkheem` (`تفخيم`)|Emphasis and softening of the letter 'Ra' in the word {نذر} in Surah Al-Qamar when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "نذر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) when pausing at this word in Surah Al-Qamar. `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)|
 |raa_yasr|التفخيم والترقيق في راء {يسر} في الفجر  وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`tafkheem` (`تفخيم`)|Emphasis and softening of the letter 'Ra' in the word {يسر} in Surah Al-Fajr when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "يسر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) when pausing at this word in Surah Al-Fajr. `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)|
+
 
 > **Note:** This documentation is auto generated using `python generate_moshaf_docs.py`.
 
