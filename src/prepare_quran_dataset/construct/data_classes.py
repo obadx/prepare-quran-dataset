@@ -125,6 +125,20 @@ class Moshaf(BaseModel):
     )
 
     # (الجزئيات)
+    meem_aal_imran: Literal['waqf', 'wasl_2', 'wasl_6'] = Field(
+        default='waqf',
+        description='ArabicName(ميم آل عمران في قوله تعالى: {الم الله} وصلا)'
+        """ArabicAttr({
+        "waqf": "وقف",
+        "wasl_2": "فتح الميم ومدها حركتين",
+        "wasl_6": "فتح الميم ومدها ستة حركات"
+        })"""
+        'The ways to recite the word meem Aal Imran (الم الله)'
+        ' at connected recitation.'
+        ' `waqf`: Pause with a prolonged madd (elongation) of 6 harakat (beats).'
+        ' `wasl_2` Pronounce "meem" with fathah (a short "a" sound) and stretch it for 2 harakat.'
+        ' `wasl_6` Pronounce "meem" with fathah and stretch it for 6 harakat.'
+    )
     madd_yaa_alayn_alharfy: Literal[2, 4, 6] = Field(
         default=6,
         description='ArabicName(مقدار   المد اللازم الحرفي للعين)'
@@ -153,7 +167,7 @@ class Moshaf(BaseModel):
         "waqf": "وقف",
         "idraj": "إدراج"
         })"""
-        'The ways to to recite the word "عوجا" (Iwaja).'
+        'The ways to recite the word "عوجا" (Iwaja).'
         ' `sakt` means slight pause.'
         ' `idraj` means not `sakt`.'
         ' `waqf`:  means full pause, so we can not determine weither'
@@ -167,7 +181,7 @@ class Moshaf(BaseModel):
         "waqf": "وقف",
         "idraj": "إدراج"
         })"""
-        'The ways to to recite the word "مرقدنا" (Marqadena) in Surat Yassen.'
+        'The ways to recite the word "مرقدنا" (Marqadena) in Surat Yassen.'
         ' `sakt` means slight pause.'
         ' `idraj` means not `sakt`.'
         ' `waqf`:  means full pause, so we can not determine weither'
@@ -182,7 +196,7 @@ class Moshaf(BaseModel):
         "waqf": "وقف",
         "idraj": "إدراج"
         })"""
-        'The ways to to recite the word "من راق" (Man Raq) in Surat Al Qiyama.'
+        'The ways to recite the word "من راق" (Man Raq) in Surat Al Qiyama.'
         ' `sakt` means slight pause.'
         ' `idraj` means not `sakt`.'
         ' `waqf`:  means full pause, so we can not determine weither'
@@ -197,7 +211,7 @@ class Moshaf(BaseModel):
         "waqf": "وقف",
         "idraj": "إدراج"
         })"""
-        'The ways to to recite the word "بل ران" (Bal Ran) in Surat Al Motaffin.'
+        'The ways to recite the word "بل ران" (Bal Ran) in Surat Al Motaffin.'
         ' `sakt` means slight pause.'
         ' `idraj` means not `sakt`.'
         ' `waqf`:  means full pause, so we can not determine weither'
@@ -212,7 +226,7 @@ class Moshaf(BaseModel):
         "waqf": "وقف",
         "idgham": "إدغام"
         })"""
-        'The ways to to recite the word {ماليه هلك} in Surah Al-Ahqaf.'
+        'The ways to recite the word {ماليه هلك} in Surah Al-Ahqaf.'
         ' `sakt` means slight pause.'
         " `idgham` Assimilation of the letter 'Ha' (ه) into the letter 'Ha' (ه) with complete assimilation."
         '`waqf`:  means full pause, so we can not determine weither'
