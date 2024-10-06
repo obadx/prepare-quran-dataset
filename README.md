@@ -12,6 +12,11 @@ Preparing and chuncking quran dataset
 # أوجه حفص
 ## الكليات
 ### 1. التكبير
+ثلاث مذاهب:
+* التكبير من أول (ألم نشرح) وما بعدها إلي أول (الناس)
+* التكبير من آخر (الضحى) وما بعدها إلى آخر (الناس)
+* التكبير أول كل سورة سوى براءة (التوبة)
+
 
 
 ### 2. المد المنفصل والمتصل
@@ -190,6 +195,7 @@ Preparing and chuncking quran dataset
 |Attribute Name|Arabic Name|Values|Default Value|More Info|
 |-|-|-|-|-|
 |rewaya|الرواية|- `hafs` (`حفص`)<br>||The type of the quran Rewaya.|
+|takbeer|التكبير|- `no_takbeer` (`لا تكبير`)<br>- `beginning_of_sharh` (`التكبير من أول الشرح لأول الناس`)<br>- `end_of_doha` (`التكبير من آخر الضحى لآخر الناس`)<br>- `general_takbeer` (`التكبير أول كل سورة إلا التوبة`)<br>|`no_takbeer` (`لا تكبير`)|The ways to add takbeer (الله أكبر) after Istiaatha (استعاذة) and between end of the surah and beginning of the surah. `no_takbeer`: "لا تكبير" — No Takbeer (No proclamation of greatness, i.e., there is no Takbeer recitation) `beginning_of_sharh`: "التكبير من أول الشرح لأول الناس" — Takbeer from the beginning of Surah Ash-Sharh to the beginning of Surah An-Nas `end_of_dohaf`: "التكبير من آخر الضحى لآخر الناس" — Takbeer from the end of Surah Ad-Duha to the end of Surah An-Nas `general_takbeer`: "التكبير أول كل سورة إلا التوبة" — Takbeer at the beginning of every Surah except Surah At-Tawbah|
 |madd_monfasel_len|مد المنفصل|- `2`<br>- `3`<br>- `4`<br>- `5`<br>|| The length of Mad Al Monfasel "مد النفصل" for Hafs Rewaya.|
 |madd_mottasel_len|مقدار المد المتصل|- `4`<br>- `5`<br>- `6`<br>|| The length of Mad Al Motasel "مد المتصل" for Hafs.|
 |madd_mottasel_waqf|مقدار المد المتصل وقفا|- `4`<br>- `5`<br>- `6`<br>|| The length of Madd Almotasel at pause for Hafs.. Example "السماء".|
@@ -223,6 +229,7 @@ Preparing and chuncking quran dataset
 |raa_misr|التفخيم والترقيق في راء {مصر} في يونس وموضعي يوسف والزخرف  وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`wasl` (`وصل`)|Emphasis and softening of the letter 'Ra' in the word {مصر} in Surah Yunus, and in the locations of Surah Yusuf and Surah Az-Zukhruf when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "مصر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) at the specific pauses in these Surahs. `wasl`: means not pasuing so we only have one way (tafkheem of Raa)|
 |raa_nudhur|التفخيم والترقيق  في راء {نذر} بالقمر وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`tafkheem` (`تفخيم`)|Emphasis and softening of the letter 'Ra' in the word {نذر} in Surah Al-Qamar when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "نذر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) when pausing at this word in Surah Al-Qamar. `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)|
 |raa_yasr|التفخيم والترقيق في راء {يسر} في الفجر  وقفا|- `wasl` (`وصل`)<br>- `tafkheem` (`تفخيم`)<br>- `tarqeeq` (`ترقيق`)<br>|`tafkheem` (`تفخيم`)|Emphasis and softening of the letter 'Ra' in the word {يسر} in Surah Al-Fajr when pausing (waqf).This refers to the recitation rules regarding whether the letter "Ra" (ر) in the word "يسر" is pronounced with emphasis (`tafkheem`) or softening (`tarqeeq`) when pausing at this word in Surah Al-Fajr. `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)|
+
 
 
 > **Note:** This documentation is auto generated using `python generate_moshaf_docs.py`.
