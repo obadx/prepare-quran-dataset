@@ -49,6 +49,7 @@ REQUIRED_MOSHAF_FIELDS = [
     'publisher',
     'comments',
     'rewaya',
+    'takbeer',
     'madd_monfasel_len',
     'madd_mottasel_len',
     'madd_mottasel_waqf',

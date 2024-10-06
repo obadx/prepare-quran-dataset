@@ -101,6 +101,23 @@ class Moshaf(BaseModel):
         'The type of the quran Rewaya.'
 
     )
+    takbeer: Literal['no_takbeer', 'beginning_of_sharh', 'end_of_doha', 'general_takbeer'] = Field(
+        default='no_takbeer',
+        description='ArabicName(التكبير)'
+        """ArabicAttr({
+        "no_takbeer": "لا تكبير",
+        "beginning_of_sharh": "التكبير من أول الشرح لأول الناس",
+        "end_of_doha": "التكبير من آخر الضحى لآخر الناس",
+        "general_takbeer": "التكبير أول كل سورة إلا التوبة"
+        })"""
+        'The ways to add takbeer (الله أكبر) after Istiaatha'
+        ' (استعاذة) and between end of the surah and beginning of the surah.'
+        ' `no_takbeer`: "لا تكبير" — No Takbeer (No proclamation of greatness, i.e., there is no Takbeer recitation)'
+        ' `beginning_of_sharh`: "التكبير من أول الشرح لأول الناس" — Takbeer from the beginning of Surah Ash-Sharh to the beginning of Surah An-Nas'
+        ' `end_of_dohaf`: "التكبير من آخر الضحى لآخر الناس" — Takbeer from the end of Surah Ad-Duha to the end of Surah An-Nas'
+        ' `general_takbeer`: "التكبير أول كل سورة إلا التوبة" — Takbeer at the beginning of every Surah except Surah At-Tawbah'
+    )
+
     madd_monfasel_len: Literal[2, 3, 4, 5] = Field(
         description='ArabicName(مد المنفصل)'
         ' The length of Mad Al Monfasel "مد النفصل" for Hafs Rewaya.')
