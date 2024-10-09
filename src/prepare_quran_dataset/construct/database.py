@@ -138,7 +138,7 @@ class MoshafPool(Pool):
         self.save()
 
         # delete moshsf_item media files
-        if Path(deleted_moshaf.path).is_dir():
+        if deleted_moshaf.path and Path(deleted_moshaf.path).is_dir():
             shutil.rmtree(deleted_moshaf.path)
 
     def _add_moshaf_to_reciter(

@@ -132,7 +132,8 @@ def delete_item_from_pool(pool: Pool, item: BaseModel, placeholder):
         placeholder.success(
             f"ID={item.id} is deleted successfully")
     except Exception as e:
-        placeholder.error(f"Error Deleteing item: {str(e)}", 'error')
+        placeholder.error(f"Error Deleteing item: {str(e)}")
+        # placeholder.error(f"Error Deleteing item: {str(e)}", 'error')
         raise e
 
 
