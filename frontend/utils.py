@@ -95,6 +95,7 @@ def download_all_moshaf_task(
         download_error_path.unlink()
 
     finished_ids = []
+    error_logs = {}
     for id in to_download_ids:
         try:
             log = DownloadLog(
@@ -109,10 +110,11 @@ def download_all_moshaf_task(
                 id, refresh=refresh, save_on_disk=True)
             finished_ids.append(id)
         except Exception as e:
-            with open(download_error_path, 'w+') as f:
-                f.write(
-                    f'Error while downloading Moshaf: {id}\n\n{e}')
-                traceback.print_exc(file=f)
+            error_logs[id] = traceback.format_exc()
+
+    if error_logs:
+        with open(download_error_path, 'w+') as f:
+            json.dump(error_logs, f, indent=4)
 
     # End of download -> delete the download_lockfile
     lockfile_path.unlink()

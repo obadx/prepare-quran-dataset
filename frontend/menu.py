@@ -35,7 +35,7 @@ def set_up(reset=False) -> None:
     if 'switch_to_view_moshaf_pool' not in st.session_state:
         st.session_state.switch_to_view_moshaf_pool = False
 
-    if conf.DOWNLOAD_LOCK_FILE.is_file():
+    if conf.DOWNLOAD_LOCK_FILE.is_file() or conf.DOWNLOAD_ERROR_LOG.is_file():
         st.switch_page('pages/download_page.py')
 
 
@@ -88,9 +88,6 @@ def menu():
 
     st.sidebar.page_link(
         'pages/from_zekr_page.py', label='From zekr')
-
-
-
 
 
 def menu_with_redirect(reset=False):

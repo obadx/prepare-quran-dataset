@@ -1,4 +1,5 @@
 import time
+import json
 
 import streamlit as st
 
@@ -13,8 +14,10 @@ def download_page():
 
     if conf.DOWNLOAD_ERROR_LOG.is_file():
         with open(conf.DOWNLOAD_ERROR_LOG, 'r') as f:
-            st.error('Download Error')
-            st.code(f.read(), language='log')
+            error_log = json.load(f)
+            for id, error in error_log.items():
+                st.error(f'Error while downloading Moshaf ID={id}')
+                st.code(error, language='log')
 
     elif conf.DOWNLOAD_LOCK_FILE.is_file():
         log = get_download_lock_log(conf.DOWNLOAD_LOCK_FILE)
