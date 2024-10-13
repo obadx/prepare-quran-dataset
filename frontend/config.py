@@ -32,8 +32,7 @@ def json_text_to_dict(text: str) -> dict[str, str]:
     return {}
 
 
-# BASE_DIR = Path('../../quran-dataset')
-BASE_DIR = Path('../../test-ds')
+BASE_DIR = Path('../../../quran-dataset')
 RECITER_POOL_FILE = BASE_DIR / 'reciter_pool.jsonl'
 MOSHAF_POOL_FILE = BASE_DIR / 'moshaf_pool.jsonl'
 DOWNLOAD_PATH = BASE_DIR / 'Downloads'
