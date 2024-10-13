@@ -6,7 +6,7 @@ import config as conf
 from utils import (
     get_field_name,
     delete_item_from_pool_with_confirmation,
-    download_single_msohaf,
+    download_all_moshaf_pool,
     get_arabic_attributes,
 )
 
@@ -42,16 +42,15 @@ def view_moshaf_pool():
                 st.button(
                     "Download",
                     key=f"download_{moshaf.id}", use_container_width=True,
-                    on_click=download_single_msohaf,
-                    args=(moshaf.id,),
+                    on_click=download_all_moshaf_pool,
+                    kwargs={'moshaf_ids': [moshaf.id]},
                 )
             with col4:
                 st.button(
                     "Refresh",
                     key=f"refresh_{moshaf.id}", use_container_width=True,
-                    on_click=download_single_msohaf,
-                    args=(moshaf.id,),
-                    kwargs={'refresh': True},
+                    on_click=download_all_moshaf_pool,
+                    kwargs={'moshaf_ids': [moshaf.id], 'refresh': True},
                     help='1. Deletes the moshaf_item directory\n'
                     '2. Reload rectiation files from `Downloads` directory\n'
                     '3. Redownload if neccssary\n'

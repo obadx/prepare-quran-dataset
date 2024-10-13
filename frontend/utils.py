@@ -41,43 +41,54 @@ def get_download_lock_log(filepath: Path) -> DownloadLog:
     return DownloadLog(**log)
 
 
-def download_all_moshaf_pool():
+def download_all_moshaf_pool(moshaf_ids: list[str] = None, refresh=False):
     """Download All moshaf pool callback
+    Args:
+        moshaf_ids (list[str]): if None will download all moshaf objects with
+            attribute `is_downloaded` is True else will download the moshaf ids
+        refresh (bool): refresh delete and recreate moshaf directory and redownload if necessary
     """
     if not conf.DOWNLOAD_LOCK_FILE.is_file():
-        to_download_ids = [
-            m.id for m in st.session_state.moshaf_pool if not m.is_downloaded]
+        if moshaf_ids is None:
+            to_download_ids = [
+                m.id for m in st.session_state.moshaf_pool if not m.is_downloaded or refresh]
+        elif isinstance(moshaf_ids, list):
+            to_download_ids = [
+                id for id in moshaf_ids if not st.session_state.moshaf_pool[id].is_downloaded or refresh]
+        else:
+            raise ValueError(
+                f'"moshaf_ids should be list[str] but got: {type(moshaf_ids)}')
+
         if len(to_download_ids) == 0:
-            pop_up_message('All Moshaf Pool is downloaded', 'info')
+            if isinstance(moshaf_ids, list):
+                if len(moshaf_ids) == 1:
+                    pop_up_message(
+                        f'Moshaf id={moshaf_ids[0]} is downloaded', 'info')
+            else:
+                pop_up_message('All Moshaf Pool is downloaded', 'info')
             return
+
         p = multiprocessing.Process(
             target=download_all_moshaf_task,
-            args=(st.session_state.moshaf_pool, to_download_ids, conf.DOWNLOAD_LOCK_FILE, conf.DOWNLOAD_ERROR_LOG))
+            kwargs={
+                'moshaf_pool': st.session_state.moshaf_pool,
+                'to_download_ids': to_download_ids,
+                'lockfile_path': conf.DOWNLOAD_LOCK_FILE,
+                'download_error_path': conf.DOWNLOAD_ERROR_LOG,
+                'refresh': refresh,
+            })
         p.start()  # Start the process
     else:
         pop_up_message('There is a download is already running...', 'warn')
 
 
-def download_single_msohaf(moshaf_id: str, refresh=False):
-    if not conf.DOWNLOAD_LOCK_FILE.is_file():
-        moshaf_item = st.session_state.moshaf_pool[moshaf_id]
-        if moshaf_item.is_downloaded and not refresh:
-            pop_up_message('The moshaf is already Dwonloaded', 'info')
-            return
-        p = multiprocessing.Process(
-            target=download_all_moshaf_task,
-            args=(st.session_state.moshaf_pool, [moshaf_id], conf.DOWNLOAD_LOCK_FILE, conf.DOWNLOAD_ERROR_LOG))
-        p.start()  # Start the process
-    else:
-        pop_up_message('There is a download is already running...', 'warn')
-
-
+# TODO:Errro handeling
 def download_all_moshaf_task(
-        moshaf_pool: MoshafPool,
-        to_download_ids: list[str],
-        lockfile_path: Path,
-        download_error_path: Path,
-
+    moshaf_pool: MoshafPool,
+    to_download_ids: list[str],
+    lockfile_path: Path,
+    download_error_path: Path,
+    refresh=False,
 ):
     # remove error file
     if download_error_path.is_file():
@@ -95,7 +106,7 @@ def download_all_moshaf_task(
             )
             write_to_download_lock_log(log, lockfile_path)
             moshaf_pool.download_moshaf(
-                id, refresh=False, save_on_disk=True)
+                id, refresh=refresh, save_on_disk=True)
             finished_ids.append(id)
         except Exception as e:
             with open(download_error_path, 'w+') as f:
