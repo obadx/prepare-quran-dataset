@@ -97,24 +97,26 @@ def download_all_moshaf_task(
     finished_ids = []
     error_logs = {}
     for id in to_download_ids:
+        log = DownloadLog(
+            current_moshaf_id=id,
+            finished_count=len(finished_ids),
+            total_count=len(to_download_ids),
+            finished_moshaf_ids=finished_ids,
+            moshaf_ids=to_download_ids,
+        )
+        write_to_download_lock_log(log, lockfile_path)
+
         try:
-            log = DownloadLog(
-                current_moshaf_id=id,
-                finished_count=len(finished_ids),
-                total_count=len(to_download_ids),
-                finished_moshaf_ids=finished_ids,
-                moshaf_ids=to_download_ids,
-            )
-            write_to_download_lock_log(log, lockfile_path)
             moshaf_pool.download_moshaf(
                 id, refresh=refresh, save_on_disk=True)
             finished_ids.append(id)
         except Exception as e:
             error_logs[id] = traceback.format_exc()
 
-    if error_logs:
-        with open(download_error_path, 'w+') as f:
-            json.dump(error_logs, f, indent=4)
+        # write logs for each iteration
+        if error_logs:
+            with open(download_error_path, 'w+') as f:
+                json.dump(error_logs, f, indent=4)
 
     # End of download -> delete the download_lockfile
     lockfile_path.unlink()
