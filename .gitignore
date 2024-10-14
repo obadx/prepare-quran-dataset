@@ -9,3 +9,12 @@
 
 # slurmoutput
 *.out
+
+# logs
+*.log
+
+# vim swap
+*.swp
+
+# ngrok url
+hpc-scripts/ngrok_url.txt
