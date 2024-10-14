@@ -26,9 +26,11 @@ def show_progress():
             '<img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif" alt="Girl in a jacket" width="50" >', unsafe_allow_html=True)
     else:
         st.progress(log.finished_count / log.total_count,
-                    text=f'Downloading Moshaf ID={log.current_moshaf_id}, '
-                    f'finished: {log.finished_moshaf_ids}, reamaining: '
-                    f'{set(log.moshaf_ids) - set(log.finished_moshaf_ids)}'
+                    text=f'Downloading Moshaf ID={log.current_moshaf_id}\n '
+                    f'finished: {log.finished_moshaf_ids}\nReamaining: '
+                    f'{set(log.moshaf_ids) -
+                       set(log.finished_moshaf_ids) - set(log.error_ids)}\n'
+                    f'Error IDs: {log.error_ids}'
                     )
         st.markdown(
             '<img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif" alt="Girl in a jacket" width="50" >', unsafe_allow_html=True)
@@ -36,8 +38,6 @@ def show_progress():
 
 def download_page():
     st.header('Download Moshaf Page')
-
-    # FIX: show erros while downloading
 
     if conf.DOWNLOAD_LOCK_FILE.is_file():
         show_progress()
