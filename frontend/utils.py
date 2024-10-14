@@ -109,7 +109,6 @@ def download_all_moshaf_task(
         try:
             moshaf_pool.download_moshaf(
                 id, refresh=refresh, save_on_disk=True)
-            finished_ids.append(id)
         except Exception as e:
             error_logs[id] = traceback.format_exc()
 
@@ -117,6 +116,9 @@ def download_all_moshaf_task(
         if error_logs:
             with open(download_error_path, 'w+') as f:
                 json.dump(error_logs, f, indent=4)
+
+        # NOTE: moving the porgress bar regradless of error or success
+        finished_ids.append(id)
 
     # End of download -> delete the download_lockfile
     lockfile_path.unlink()
