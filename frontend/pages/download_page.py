@@ -26,10 +26,10 @@ def show_progress():
             '<img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif" alt="Girl in a jacket" width="50" >', unsafe_allow_html=True)
     else:
         st.progress(log.finished_count / log.total_count,
-                    text=f'Downloading Moshaf ID={log.current_moshaf_id}\n '
-                    f'finished: {log.finished_moshaf_ids}\nReamaining: '
+                    text=f'Downloading Moshaf ID={log.current_moshaf_id}, '
+                    f'finished: {log.finished_moshaf_ids}, Reamaining: '
                     f'{set(log.moshaf_ids) -
-                       set(log.finished_moshaf_ids) - set(log.error_ids)}\n'
+                       set(log.finished_moshaf_ids) - set(log.error_ids)}, '
                     f'Error IDs: {log.error_ids}'
                     )
         st.markdown(
