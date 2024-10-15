@@ -340,10 +340,15 @@ def download_specifc_sources(
                 extract_zip=True,
                 remove_zipfile=True,
                 redownload=True,
+                hash_download=True,
             )
             assert url_path.is_file(), (
                 'Your specific source must be media file not zip')
             ext = url_path.name.split('.')[-1]
+
+            # renamaing url_pathes from url_hash to its numercal name
+            url_path = url_path.rename(url_path.parent / f'{name}.{ext}')
+
             name_to_specific_download_pathes[f'{name}.{ext}'] = url_path
     check_duplicate_files(list(name_to_specific_download_pathes.values()),
                           download_path,
@@ -445,7 +450,7 @@ def get_sura_standard_name(filename: str) -> str:
     sura_idx = None
 
     # search first for numbers "002", or "2"
-    re_result = re.search(r'\d+', name)
+    re_result = re.search(r'\d+$', name)
     if re_result:
         sura_idx = int(re_result.group())
 
