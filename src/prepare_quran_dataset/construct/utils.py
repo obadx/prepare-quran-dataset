@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 import json
 import re
 from typing import Any
+import urllib
+from hashlib import sha256
 
 
 from tqdm import tqdm
@@ -149,6 +151,7 @@ def download_file_fast(
     url: str,
     out_path: str | Path,
     extract_zip=True,
+    hash_download=False,
     num_download_segments=20,
     num_unzip_workers=12,
     remove_zipfile=True,
@@ -160,12 +163,22 @@ def download_file_fast(
         extract_zip (bool): if true extract a zip file to `out_path`
         remove_zipfile (bool): remove zipfile after downloading it
         redownload (bool): redownload the file if it exists
+        hash_download (bool): if True will the file name will be the hash(url).
+            if False it will deduce the file name from the url like "001.mp3"
     """
     out_path = Path(out_path)
     assert not out_path.is_file(), (
         'Download Path `out_path` has to be a directory not a file')
     os.makedirs(out_path, exist_ok=True)
+
     filename = deduce_filename(url)
+    if hash_download:
+        splits = filename.split('.')
+        if len(splits) == 1:
+            raise ValueError(f'The file has to extention for url: {url}')
+        ext = splits[-1]
+        filename = sha256(url.encode()).hexdigest() + f'.{ext}'
+
     out_path /= filename
     if out_path.exists() and not redownload:
         return out_path
@@ -195,6 +208,11 @@ def deduce_filename(url) -> str:
     parsed_url = urlparse(url)
     filename = parsed_url.path.split('/')[-1]
 
+    # paterns to get the filename from http header
+    # The priority is for the Arabic name i.e paatterns[0]
+    # then ofr the English name i.e: patterns[1]
+    patterns = [r'filename\*=utf-8\'\'(.*)$', r'filename="?([^$]+)"?$']
+
     # Make a HEAD request to get headers
     try:
         response = requests.head(url, allow_redirects=True)
@@ -202,11 +220,21 @@ def deduce_filename(url) -> str:
         # Check for Content-Disposition header
         if 'content-disposition' in response.headers:
             content_disposition = response.headers['content-disposition']
-            filename = content_disposition.split('filename=')[1].strip('"')
+
+            parts = content_disposition.split(';')
+            for pattern in patterns:
+                for part in parts:
+                    match = re.search(pattern, part)
+                    if match:
+                        filename = match.group(1)
+                        if filename.endswith('"'):
+                            filename = filename[:-1]
+                        return urllib.parse.unquote(filename)
+
     except Exception as e:
         print(f'Error connecting to the url: {e}')
 
-    return filename
+    return urllib.parse.unquote(filename)
 
 
 def download_file_slow(
