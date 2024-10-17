@@ -447,25 +447,25 @@ def get_sura_standard_name(filename: str) -> str:
         f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
     name = splits[0]
     extention = splits[1]
-    sura_idx = None
-
-    # search first for numbers "002", or "2"
-    re_result = re.search(r'\d+$', name)
-    if re_result:
-        sura_idx = int(re_result.group())
 
     # searching for the Arabic name of the sura
-    else:
-        name_normalized = normalize_text(name)
-        suar_list = get_suar_list()
-        for idx, sura_name in enumerate(suar_list):
-            sura_name_normalized = normalize_text(sura_name)
-            if re.search(sura_name_normalized, name_normalized):
-                sura_idx = idx + 1
+    name_normalized = normalize_text(name)
+    suar_list = get_suar_list()
+    for idx, sura_name in enumerate(suar_list):
+        sura_name_normalized = normalize_text(sura_name)
+        if re.search(sura_name_normalized, name_normalized):
+            sura_idx = idx + 1
+            return f'{sura_idx:0{3}}.{extention}'
 
-    assert sura_idx is not None, (
-        f'Sura name is not handeled in this case. name={name}')
-    return f'{sura_idx:0{3}}.{extention}'
+    # search first for numbers "002", or "2"
+    # TODO: refine this regs to be specific
+    re_result = re.search(r'\d+', name)
+    if re_result:
+        num = int(re_result.group())
+        if num >= 1 and num <= 114:
+            return f'{num:0{3}}.{extention}'
+
+    raise ValueError(f'Sura name is not handeled in this case. name="{name}"')
 
 
 def get_files(pathes: list[Path]) -> list[Path]:

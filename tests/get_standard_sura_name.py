@@ -10,3 +10,5 @@ if __name__ == '__main__':
     print(get_sura_standard_name('المائدة  أحمد' + '.mp3'))
     print(get_sura_standard_name('المائدة  004' + '.mp3'))
     print(get_sura_standard_name('المائدة  4' + '.mp3'))
+    print(get_sura_standard_name('  4  maidaa' + '.mp3'))
+    print(get_sura_standard_name('  444  maidaa' + '.mp3'))
