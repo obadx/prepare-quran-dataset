@@ -87,7 +87,7 @@ def menu():
         '⬇️  Download All Moshaf Pool', on_click=download_all_moshaf_pool, use_container_width=True)
 
     st.sidebar.page_link(
-        'pages/from_zekr_page.py', label='From zekr')
+        'pages/get_moshaf_links_page.py', label='Suar Links from Online Websites', icon='🌲')
 
 
 def menu_with_redirect(reset=False):

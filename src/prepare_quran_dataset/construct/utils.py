@@ -23,6 +23,65 @@ from quran_transcript.utils import normalize_aya
 DATA_PATH = Path(__file__).parent.parent / 'data'
 
 
+def extract_suar_from_mp3quran(url):
+    """Extract sepecific Moshaf from https://mp3quran.net/ as:
+    {
+        "sura_id": "sura_link",
+    }
+    Example:
+    {
+        "108": "https://server10.mp3quran.net/download/Aamer/108.mp3",
+        "109": "https://server10.mp3quran.net/download/Aamer/109.mp3",
+        "110": "https://server10.mp3quran.net/download/Aamer/110.mp3",
+        "111": "https://server10.mp3quran.net/download/Aamer/111.mp3",
+        "112": "https://server10.mp3quran.net/download/Aamer/112.mp3",
+        "113": "https://server10.mp3quran.net/download/Aamer/113.mp3",
+        "114": "https://server10.mp3quran.net/download/Aamer/114.mp3"
+    }
+
+        Args:
+            url (str): the url of the moshaf example:
+                https://mp3quran.net/ar/Aamer
+    """
+    # Send a GET request to the provided URL
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code != 200:
+        raise Exception(f"Failed to load page: {
+                        response.status_code}, url={url}")
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    sura_links = {}
+
+    # Find all the list items that contain both data-url and an image tag
+    sura_items = soup.find_all(
+        'div', class_='sora-item')
+
+    for item in sura_items:
+        # find_all instead of find_next because find_all searches within
+        # the same tag unlike find_next is searches for items on the whole soup
+        sura_num_item = item.find_all('div', class_='sora-num')
+        if sura_num_item:
+            assert len(sura_num_item) == 1, (
+                f'Found more than sura number for the item:\n{item}'
+                f'\nResults: {sura_num_item}\nURL: {url}'
+            )
+            sura_index = sura_num_item[0].string
+
+            sura_url = item.find_all(
+                'a', class_=["sora-bt", "download-btn"], attrs={'href': True})
+            if sura_url:
+                assert len(sura_url) == 1, (
+                    f'Found more than sura url for the item:\n{item}'
+                    f'\nResults: {sura_url}\nURL: {url}'
+                )
+                sura_links[sura_index] = sura_url[0]['href']
+
+    return sura_links
+
+
 def extract_sura_from_zekr(url):
     """Extract sepecific Moshaf from https://zekr.online/ as:
     {
