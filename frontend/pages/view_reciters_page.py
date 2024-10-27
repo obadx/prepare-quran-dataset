@@ -31,8 +31,9 @@ def view_reciters():
                     kwargs={'pool': st.session_state.reciter_pool, 'item': reciter})
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
 
-st.session_state.switch_to_view_reciters = False
-view_reciters()
+    st.session_state.switch_to_view_reciters = False
+    view_reciters()

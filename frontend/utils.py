@@ -6,18 +6,21 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 import json
 import traceback
+import os
+import copy
 
 import streamlit as st
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool, MoshafPool
-from prepare_quran_dataset.construct.utils import get_suar_list
+from prepare_quran_dataset.construct.utils import get_suar_list, kill_process
 import config as conf
 
 
 @dataclass
 class DownloadLog:
+    process_pid: int
     current_moshaf_id: str
     finished_count: int
     total_count: int
@@ -31,11 +34,35 @@ def get_suar_names() -> list[str]:
     return get_suar_list()
 
 
+@st.dialog("Cancel Download?")
+def cancel_download_with_confirmation(pid: int):
+    col1, col2 = st.columns(2)
+    placeholder = st.empty()
+
+    with placeholder.container():
+        with col1:
+            if st.button("Yes", use_container_width=True,):
+                try:
+                    kill_process(pid)
+                    conf.DOWNLOAD_LOCK_FILE.unlink()  # remove the download.lock file
+                    placeholder.success('Download is canceled')
+                except Exception as e:
+                    placeholder.error(f'Error While canceling Download: {e}')
+                    raise e
+                st.rerun()
+        with col2:
+            if st.button("No", use_container_width=True):
+                placeholder.info("Aborting ...")
+                time.sleep(1)
+                st.rerun()
+
+
 def write_to_download_lock_log(log: DownloadLog, filepath: Path):
     with open(filepath, 'w+') as f:
         json.dump(asdict(log), f)
 
 
+@st.cache_data(ttl=1)
 def get_download_lock_log(filepath: Path) -> DownloadLog:
     with open(filepath, 'r') as f:
         log = json.load(f)
@@ -69,21 +96,31 @@ def download_all_moshaf_pool(moshaf_ids: list[str] = None, refresh=False):
                 pop_up_message('All Moshaf Pool is downloaded', 'info')
             return
 
-        p = multiprocessing.Process(
+        # saving moshaf & reciter pool before start downloading
+        st.session_state.moshaf_pool.save()
+        st.session_state.reciter_pool.save()
+
+        # start a new INDEPENDENT download process aks: `spawn`
+        # to be easy for termination & run in background
+        ctx = multiprocessing.get_context('spawn')
+        p = ctx.Process(
             target=download_all_moshaf_task,
             kwargs={
-                'moshaf_pool': st.session_state.moshaf_pool,
+                'moshaf_pool': copy.deepcopy(st.session_state.moshaf_pool),
                 'to_download_ids': to_download_ids,
                 'lockfile_path': conf.DOWNLOAD_LOCK_FILE,
                 'download_error_path': conf.DOWNLOAD_ERROR_LOG,
                 'refresh': refresh,
             })
+        # Detach the process to prevent it from being terminated with the main program
+        p.daemon = True
         p.start()  # Start the process
+        pop_up_message(
+            'Download has started switch to **Download Page** or refresh the Page', 'success')
     else:
         pop_up_message('There is a download is already running...', 'warn')
 
 
-# TODO:Errro handeling
 def download_all_moshaf_task(
     moshaf_pool: MoshafPool,
     to_download_ids: list[str],
@@ -98,8 +135,10 @@ def download_all_moshaf_task(
     finished_ids = []
     error_ids = []
     error_logs = {}
+    pid = os.getpid()
     for id in to_download_ids:
         log = DownloadLog(
+            process_pid=pid,
             current_moshaf_id=id,
             finished_count=len(finished_ids),
             total_count=len(to_download_ids),

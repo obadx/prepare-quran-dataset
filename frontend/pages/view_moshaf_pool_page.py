@@ -68,8 +68,9 @@ def view_moshaf_pool():
         st.switch_page('pages/download_page.py')
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
 
-st.session_state.switch_to_view_moshaf_pool = False
-view_moshaf_pool()
+    st.session_state.switch_to_view_moshaf_pool = False
+    view_moshaf_pool()

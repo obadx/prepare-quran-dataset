@@ -12,6 +12,7 @@ import re
 from typing import Any
 import urllib
 from hashlib import sha256
+import signal
 
 
 from tqdm import tqdm
@@ -128,6 +129,11 @@ def extract_sura_from_zekr(url):
         sura_links[f'{int(sura_index):0{3}}'] = audio_link
 
     return sura_links
+
+
+def kill_process(pid):
+    os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL for force killing
+    print(f"Process {pid} has been terminated.")
 
 
 class DownloadError(Exception):
