@@ -5,7 +5,7 @@ import streamlit as st
 
 import config as conf
 from menu import menu_with_redirect
-from utils import get_download_lock_log
+from utils import get_download_lock_log, cancel_download_with_confirmation
 
 
 def show_error():
@@ -45,9 +45,20 @@ def download_page():
         if conf.DOWNLOAD_ERROR_LOG.is_file():
             show_error()
 
+        # cancel download
+        if st.button('Cancel Download'):
+            st.session_state.cancel_download = True
+
         # to recheck if the download if finished
-        time.sleep(2)
-        st.rerun()
+        # we need NO st.rerun in cancelation because rerun stops the
+        # cancelation function and start over again
+        if 'cancel_download' in st.session_state:
+            cancel_download_with_confirmation(
+                get_download_lock_log(conf.DOWNLOAD_LOCK_FILE).process_pid)
+            del st.session_state['cancel_download']
+        else:
+            time.sleep(2)
+            st.rerun()
 
     elif conf.DOWNLOAD_ERROR_LOG.is_file():
         show_error()
@@ -58,7 +69,8 @@ def download_page():
         menu_with_redirect(reset=True)
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
 
-download_page()
+    download_page()

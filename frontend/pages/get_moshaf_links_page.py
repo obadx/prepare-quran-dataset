@@ -81,6 +81,7 @@ def suar_links_main():
             from_mp3quran()
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
-suar_links_main()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
+    suar_links_main()

@@ -26,6 +26,7 @@ def play_recitations():
                 st.audio(file_info.path, loop=False)
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
-play_recitations()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
+    play_recitations()

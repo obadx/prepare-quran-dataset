@@ -27,6 +27,7 @@ def insert_reciter():
         st.switch_page('pages/view_reciters_page.py')
 
 
-# displays sidebar menu & redirect to main page if not initialized
-menu_with_redirect()
-insert_reciter()
+if __name__ == '__main__':
+    # displays sidebar menu & redirect to main page if not initialized
+    menu_with_redirect()
+    insert_reciter()
