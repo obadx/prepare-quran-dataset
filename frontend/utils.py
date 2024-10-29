@@ -382,10 +382,18 @@ def create_input_for_field(
     elif field_info.annotation in [bool, Optional[bool]]:
         return st.checkbox(label, value=default_value or False, key=key)
     elif field_info.annotation in [list[str], Optional[list[str]]]:
+        # TODO: help should be input for every field
+        help = (
+            'Please enter every link in seprate line i.e: hit enter. Example:'
+            '\nhttps://example.com/003.mp3\nhttps://example.com/004.mp3'
+        )
+
         return st.text_area(
             label,
             key=key,
             value='\n'.join(default_value) if default_value else '',
+            help=help,
+            placeholder=help,
         )
     elif field_info.annotation in [dict[str, str], Optional[dict[str, str]]]:
         help = (
