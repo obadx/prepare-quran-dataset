@@ -75,7 +75,8 @@ class MoshafPool(Pool):
         """We will use url and reciter's ID as a unique Identifier"""
         if isinstance(item, dict):
             item = Moshaf(**item)
-        urls_text = '_'.join(item.sources)
+        urls_text = '_'.join(
+            item.sources + list(item.specific_sources.values()))
         return f'{item.reciter_id}_{urls_text}'
 
     def generate_id(self, new_moshaf: Moshaf) -> int:

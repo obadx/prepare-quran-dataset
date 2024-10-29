@@ -153,7 +153,10 @@ class TestMoshafPool(unittest.TestCase):
             arabic_name="عبد الباسط عبد الصمد",
             english_name="Abdelbasset Abdelsamad",
             country_code="EG"),
-
+            Reciter(
+            arabic_name="محمود على البنا",
+            english_name="Mahomoud Ali Albanna",
+            country_code="EG"),
         ]
         for reciter in reciters:
             self.reciter_pool.insert(reciter)
@@ -170,13 +173,8 @@ class TestMoshafPool(unittest.TestCase):
                 rewaya='hafs',
                 madd_monfasel_len=2,
                 madd_mottasel_len=4,
-                madd_alayn_lazem_len=6,
-                madd_aared_len=2,
-                madd_mottasel_mahmooz_aared_len=4,
-                tasheel_or_madd='tasheel',
-                daaf_harka='fath',
-                idghaam_nkhlqkm='kamel',
-                noon_tamnna='ishmam',
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
             ),
                 '0.1':
             Moshaf(
@@ -189,13 +187,8 @@ class TestMoshafPool(unittest.TestCase):
                 rewaya='hafs',
                 madd_monfasel_len=2,
                 madd_mottasel_len=4,
-                madd_alayn_lazem_len=6,
-                madd_aared_len=2,
-                madd_mottasel_mahmooz_aared_len=4,
-                tasheel_or_madd='tasheel',
-                daaf_harka='fath',
-                idghaam_nkhlqkm='kamel',
-                noon_tamnna='ishmam',
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
             ),
             '1.0':
             Moshaf(
@@ -208,14 +201,44 @@ class TestMoshafPool(unittest.TestCase):
                 rewaya='hafs',
                 madd_monfasel_len=2,
                 madd_mottasel_len=4,
-                madd_alayn_lazem_len=6,
-                madd_aared_len=2,
-                madd_mottasel_mahmooz_aared_len=4,
-                tasheel_or_madd='tasheel',
-                daaf_harka='fath',
-                idghaam_nkhlqkm='kamel',
-                noon_tamnna='ishmam',
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
             ),
+            '3.0':
+            Moshaf(
+                name='المصحف المرتل',
+                reciter_id=3,
+                reciter_arabic_name=self.reciter_pool[3].arabic_name,
+                reciter_english_name=self.reciter_pool[3].english_name,
+                sources=[],
+                specific_sources={
+                    '001': 'https://download.quran.islamway.net/quran3/965/212/128/001.mp3',
+                    '110': 'https://download.quran.islamway.net/quran3/965/212/128/110.mp3',
+                },
+                rewaya='hafs',
+                madd_monfasel_len=2,
+                madd_mottasel_len=4,
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
+            ),
+            '3.1':
+            Moshaf(
+                name='المصحف المرتل',
+                reciter_id=3,
+                reciter_arabic_name=self.reciter_pool[3].arabic_name,
+                reciter_english_name=self.reciter_pool[3].english_name,
+                sources=[],
+                specific_sources={
+                    '002': 'https://download.quran.islamway.net/quran3/965/212/128/002.mp3',
+                    '111': 'https://download.quran.islamway.net/quran3/965/212/128/111.mp3',
+                },
+                rewaya='hafs',
+                madd_monfasel_len=2,
+                madd_mottasel_len=4,
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
+            ),
+
         }
 
     def tearDown(self):
@@ -229,6 +252,7 @@ class TestMoshafPool(unittest.TestCase):
         self.assertEqual(len(self.reciter_pool[0].moshaf_set_ids), 2)
         self.assertEqual(len(self.reciter_pool[1].moshaf_set_ids), 1)
         self.assertEqual(len(self.reciter_pool[2].moshaf_set_ids), 0)
+        self.assertEqual(len(self.reciter_pool[3].moshaf_set_ids), 2)
     #
 
     def test_iteration(self):
@@ -279,6 +303,7 @@ class TestMoshafPool(unittest.TestCase):
         self.assertEqual(len(self.reciter_pool[0].moshaf_set_ids), 3)
         self.assertEqual(len(self.reciter_pool[1].moshaf_set_ids), 0)
         self.assertEqual(len(self.reciter_pool[2].moshaf_set_ids), 0)
+        self.assertEqual(len(self.reciter_pool[3].moshaf_set_ids), 2)
 
         moshaf = self.moshaf_pool['0.2']
         self.assertEqual(
@@ -291,7 +316,7 @@ class TestMoshafPool(unittest.TestCase):
         self.test_insert_moshaf()
 
         deleted_item = self.moshaf_pool.delete('0.0')
-        self.assertEqual(len(self.moshaf_pool), 2)
+        self.assertEqual(len(self.moshaf_pool), len(self.moshaf_dict) - 1)
         self.assertEqual(len(self.reciter_pool[0].moshaf_set_ids), 1)
         self.assertNotIn('0.0', self.reciter_pool[0].moshaf_set_ids)
         with self.assertRaises(KeyError):
@@ -299,7 +324,7 @@ class TestMoshafPool(unittest.TestCase):
 
         deleted_item.reciter_id = 1
         self.moshaf_pool.insert(deleted_item)
-        self.assertEqual(len(self.moshaf_pool), 3)
+        self.assertEqual(len(self.moshaf_pool), len(self.moshaf_dict))
         self.assertEqual(len(self.reciter_pool[1].moshaf_set_ids), 2)
         self.assertEqual(
             self.reciter_pool[1].arabic_name,
