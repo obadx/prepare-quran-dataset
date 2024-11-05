@@ -2,7 +2,7 @@ import re
 from typing import Type, Literal, Optional, Any, Callable, get_args, get_origin
 import time
 import multiprocessing
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from pathlib import Path
 import json
 import traceback
@@ -14,8 +14,87 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool, MoshafPool
+from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
 from prepare_quran_dataset.construct.utils import get_suar_list, kill_process
 import config as conf
+
+
+@dataclass
+class MoshafFilter:
+    complete: bool = True
+    not_complete: bool = True
+    downloaded: bool = True
+    not_downloaded: bool = True
+    download_error: bool = True
+    not_download_error: bool = True
+    reciters: list[Reciter] = None
+
+    @classmethod
+    def get_boolean_fields(cls) -> list[str]:
+        # Filter and list field names with type bool
+        return [field.name for field in fields(cls) if field.type == bool]
+
+
+def filter_moshaf_pool(
+    moshaf_pool: MoshafPool,
+    filter: MoshafFilter,
+    download_error_file: Path = conf.DOWNLOAD_ERROR_LOG
+) -> list[Moshaf]:
+    """Filter Moshaf with moshaf pool with filters see MoshafFilter
+        Default is to chose all moshaf
+
+        When a filter with its complement is set or not i.e (0, 0) or (1, 1)
+        the element is chosen
+    """
+    def chose(chose, not_chose, var) -> bool:
+        """
+        | not_chose | chose | var || Ouput |
+        | ----------|-------|-----||-------|
+        |     0     |   0   |   0 ||   1   |
+        |     0     |   0   |   1 ||   1   |
+        |     0     |   1   |   0 ||   0   |
+        |     0     |   1   |   1 ||   1   |
+        |     1     |   0   |   0 ||   1   |
+        |     1     |   0   |   1 ||   0   |
+        |     1     |   1   |   0 ||   1   |
+        |     1     |   1   |   1 ||   1   |
+        """
+        return (
+            (chose and not_chose) or
+            (not chose and not var) or
+            (not not_chose and var))
+
+    comp_flag = True
+    selected_moshaf = []
+    reciter_ids = {r.id for r in filter.reciters} if filter.reciters else None
+    error_ids = set()
+    download_error_file = Path(download_error_file)
+    if download_error_file.is_file():
+        with open(download_error_file, 'r') as f:
+            error_log = json.load(f)
+            error_ids = set(error_log.keys())
+
+    for moshaf in moshaf_pool:
+        # complete nd not_complete
+        comp_flag = comp_flag and chose(
+            filter.complete, filter.not_complete, moshaf.is_complete)
+
+        # download and not download
+        comp_flag = comp_flag and chose(
+            filter.downloaded, filter.not_downloaded, moshaf.is_downloaded)
+
+        # downlaod_error
+        if error_ids:
+            comp_flag = comp_flag and chose(
+                filter.download_error, filter.not_download_error, moshaf.id in error_ids)
+
+        # selected reciters
+        if reciter_ids:
+            comp_flag = comp_flag and (moshaf.reciter_id in reciter_ids)
+
+        if comp_flag:
+            selected_moshaf.append(moshaf)
+    return selected_moshaf
 
 
 @dataclass

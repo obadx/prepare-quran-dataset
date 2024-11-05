@@ -1,19 +1,64 @@
+from pathlib import Path
+
 import streamlit as st
+from prepare_quran_dataset.construct.database import MoshafPool, ReciterPool
 
 from menu import menu_with_redirect
 import config as conf
-
 from utils import (
     get_field_name,
     delete_item_from_pool_with_confirmation,
     download_all_moshaf_pool,
     get_arabic_attributes,
+    filter_moshaf_pool,
+    MoshafFilter,
 )
+
+
+def filter_moshaf_pool_view(
+    moshaf_pool: MoshafPool,
+    reciter_pool: ReciterPool,
+    download_error_file: Path = conf.DOWNLOAD_ERROR_LOG
+):
+    """Applying filter to chose moshaf using `MoshafFilter`
+    """
+    if 'chosen_moshaf_list' not in st.session_state:
+        st.session_state.chosen_moshaf_list = [m for m in moshaf_pool]
+
+    level1 = st.columns(2)
+    level2 = st.columns(2)
+
+    with level1[0]:
+        filters_list = st.multiselect(
+            'Please Select filter to apply',
+            MoshafFilter.get_boolean_fields(),
+        )
+
+    with level1[1]:
+        reciters = st.multiselect(
+            'Please Selsec Reciter',
+            [r for r in reciter_pool],
+            format_func=lambda r: f"{r.id} / {r.arabic_name}",
+        )
+
+    with level2[1]:
+        if st.button('Apply', use_container_width=True):
+            bools = {
+                f: True if f in filters_list else False for f in MoshafFilter.get_boolean_fields()}
+            st.session_state.chosen_moshaf_list = filter_moshaf_pool(
+                moshaf_pool,
+                MoshafFilter(reciters=reciters, **bools),
+                download_error_file=download_error_file,
+            )
 
 
 def view_moshaf_pool():
     st.header("View Moshaf Pool")
-    for moshaf in st.session_state.moshaf_pool:
+    filter_moshaf_pool_view(
+        st.session_state.moshaf_pool,
+        st.session_state.reciter_pool,
+    )
+    for moshaf in st.session_state.chosen_moshaf_list:
         expander = st.expander(
             f"{moshaf.name} / {moshaf.reciter_arabic_name} / (ID: {moshaf.id})")
         with expander:
