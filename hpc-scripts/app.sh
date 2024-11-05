@@ -5,7 +5,7 @@
 #SBATCH --output=app.out
 #SBATCH --time=3-01:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=24
 
 
 echo 'Starting QuranDataset App #########'
