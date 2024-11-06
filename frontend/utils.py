@@ -64,7 +64,6 @@ def filter_moshaf_pool(
             (not chose and not var) or
             (not not_chose and var))
 
-    comp_flag = True
     selected_moshaf = []
     reciter_ids = {r.id for r in filter.reciters} if filter.reciters else None
     error_ids = set()
@@ -75,6 +74,7 @@ def filter_moshaf_pool(
             error_ids = set(error_log.keys())
 
     for moshaf in moshaf_pool:
+        comp_flag = True
         # complete nd not_complete
         comp_flag = comp_flag and chose(
             filter.complete, filter.not_complete, moshaf.is_complete)
