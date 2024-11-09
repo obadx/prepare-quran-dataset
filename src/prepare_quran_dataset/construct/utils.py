@@ -4,7 +4,7 @@ import os
 import functools
 import time
 from zipfile import ZipFile, is_zipfile
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from urllib.parse import urlparse
 import json
@@ -426,7 +426,7 @@ def extract_zipfile(
     # determine chunksize
     chunksize = max(len(files) // num_workers, 1)
     # start the thread pool
-    with ProcessPoolExecutor(num_workers) as exe:
+    with ThreadPoolExecutor(max_workers=num_workers) as exe:
         # split the copy operations into chunks
         for i in range(0, len(files), chunksize):
             # select a chunk of filenames
