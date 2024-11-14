@@ -2,6 +2,7 @@ from pathlib import Path
 
 import streamlit as st
 from prepare_quran_dataset.construct.database import MoshafPool, ReciterPool
+from prepare_quran_dataset.construct.data_classes import Moshaf
 
 from menu import menu_with_redirect
 import config as conf
@@ -12,7 +13,25 @@ from utils import (
     get_arabic_attributes,
     filter_moshaf_pool,
     MoshafFilter,
+    get_download_lock_log,
+    popup_message,
+    DownloadLog,
 )
+
+
+def valid_action(dl_log: DownloadLog | None, moshaf: Moshaf, action_name: str) -> bool:
+    """checks if the moshaf is being downloaded or not
+
+    There are some operation must not update unitl the download is complete
+    Return:
+        bool: `True`: if the action is a valid, `False` otherwise
+    """
+    if dl_log:
+        if moshaf.id == dl_log.current_moshaf_id:
+            popup_message(
+                f'Can not **{action_name}** as Moshaf **({moshaf.id} / {moshaf.name})** is downloadding ...', 'warn')
+            return False
+    return True
 
 
 def filter_moshaf_pool_view(
@@ -58,6 +77,10 @@ def view_moshaf_pool():
         st.session_state.moshaf_pool,
         st.session_state.reciter_pool,
     )
+
+    dl_log = None
+    if conf.DOWNLOAD_LOCK_FILE.is_file():
+        dl_log = get_download_lock_log(conf.DOWNLOAD_LOCK_FILE)
     for moshaf in st.session_state.chosen_moshaf_list:
         expander = st.expander(
             f"{moshaf.name} / {moshaf.reciter_arabic_name} / (ID: {moshaf.id})")
@@ -76,13 +99,15 @@ def view_moshaf_pool():
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
                 if st.button("Recitations", key=f"play_{moshaf.id}", use_container_width=True, help='Play Recitation Files'):
-                    st.session_state.played_moshaf_item = moshaf
-                    st.switch_page("pages/play_recitations_page.py")
+                    if valid_action(dl_log, moshaf, 'view recitations'):
+                        st.session_state.played_moshaf_item = moshaf
+                        st.switch_page("pages/play_recitations_page.py")
 
             with col2:
                 if st.button("Update", key=f"update_{moshaf.id}", use_container_width=True):
-                    st.session_state.updated_moshaf = moshaf
-                    st.switch_page("pages/update_moshaf_page.py")
+                    if valid_action(dl_log, moshaf, 'Update'):
+                        st.session_state.updated_moshaf = moshaf
+                        st.switch_page("pages/update_moshaf_page.py")
             with col3:
                 if st.button(
                     "Download",
@@ -103,8 +128,9 @@ def view_moshaf_pool():
 
             with col5:
                 if st.button("Delete", key=f"delete_{moshaf.id}", use_container_width=True):
-                    delete_item_from_pool_with_confirmation(
-                        st.session_state.moshaf_pool, moshaf)
+                    if valid_action(dl_log, moshaf, 'Delete'):
+                        delete_item_from_pool_with_confirmation(
+                            st.session_state.moshaf_pool, moshaf)
 
     # if conf.DOWNLOAD_LOCK_FILE.is_file():
     #     st.switch_page('pages/download_page.py')
