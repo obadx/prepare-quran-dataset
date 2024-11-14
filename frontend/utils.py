@@ -20,6 +20,39 @@ import config as conf
 
 
 @dataclass
+class PopupMessage:
+    msg: str
+    msg_type: str
+
+    def post_init(self):
+        if self.msg_type not in conf.POPUP_MSG_ICONS:
+            raise ValueError(
+                f'`msg_type` should be one of {list(conf.POPUP_MSG_ICONS.keys())} got {self.msg_type}')
+
+    def show(self):
+        popup_message(
+            self.msg,
+            msg_type=self.msg_type, icons_dict=conf.POPUP_MSG_ICONS)
+
+
+def popup_message(msg: str, msg_type: str = 'success', icons_dict=conf.POPUP_MSG_ICONS):
+    """Displays a popup message on the right side as `st.toast`
+    Args:
+        msg (str): the message to display
+        msg_type (str): either ['success', 'error', 'warn', 'info']
+    """
+    if msg_type not in icons_dict:
+        raise ValueError(
+            f'`msg_type` should be one of {list(icons_dict.keys())} got {msg_type}')
+    st.toast(msg, icon=icons_dict[msg_type])
+
+
+def popup_message_rerun(msg: str, msg_type: str = 'success'):
+    """Displays a popup message after rerun"""
+    st.session_state.popup_messages.append(PopupMessage(msg, msg_type))
+
+
+@dataclass
 class MoshafFilter:
     complete: bool = True
     not_complete: bool = True
@@ -166,38 +199,85 @@ def download_all_moshaf_pool(moshaf_ids: list[str] = None, refresh=False):
             raise ValueError(
                 f'"moshaf_ids should be list[str] but got: {type(moshaf_ids)}')
 
+        # all moshaf is downloaded -> (Redownload popup)
         if len(to_download_ids) == 0:
-            if isinstance(moshaf_ids, list):
-                if len(moshaf_ids) == 1:
-                    pop_up_message(
-                        f'Moshaf id={moshaf_ids[0]} is downloaded', 'info')
+            if moshaf_ids:
+                to_download_ids = moshaf_ids
             else:
-                pop_up_message('All Moshaf Pool is downloaded', 'info')
+                # Check to redownload the whole Moshaf Pool
+                to_download_ids = [m.id for m in st.session_state.moshaf_pool]
+            redownload_confirmation(
+                st.session_state.moshaf_pool, to_download_ids)
             return
 
-        # saving moshaf & reciter pool before start downloading
-        st.session_state.moshaf_pool.save()
-        st.session_state.reciter_pool.save()
+        start_download(to_download_ids, refresh)
 
-        # start a new INDEPENDENT download process aks: `spawn`
-        # to be easy for termination & run in background
-        ctx = multiprocessing.get_context('spawn')
-        p = ctx.Process(
-            target=download_all_moshaf_task,
-            kwargs={
-                'moshaf_pool': copy.deepcopy(st.session_state.moshaf_pool),
-                'to_download_ids': to_download_ids,
-                'lockfile_path': conf.DOWNLOAD_LOCK_FILE,
-                'download_error_path': conf.DOWNLOAD_ERROR_LOG,
-                'refresh': refresh,
-            })
-        # Detach the process to prevent it from being terminated with the main program
-        p.daemon = True
-        p.start()  # Start the process
-        pop_up_message(
-            'Download has started switch to **Download Page** or refresh the Page', 'success')
     else:
-        pop_up_message('There is a download is already running...', 'warn')
+        popup_message('There is a download is already running...', 'warn')
+
+
+@st.dialog("Already downloaded!")
+def redownload_confirmation(
+    moshaf_pool: MoshafPool,
+    moshaf_ids: list[str] = [],
+):
+    """
+    Returns:
+        bool: True if re download, False otherwise
+    """
+    if not isinstance(moshaf_ids, list):
+        raise ValueError(
+            f'`moshaf_ids` should be list of strings not: {type(moshaf_ids)}')
+    st.warning('The following Moshaf Items are downloaded:')
+    str_ids = ""
+    for idx in moshaf_ids:
+        str_ids += (
+            f'* {idx} -> {moshaf_pool[idx].name} / {moshaf_pool[idx].reciter_arabic_name}\n')
+    st.markdown(str_ids)
+    st.warning('Are you sure you want to redownload them ?')
+
+    col1, col2 = st.columns(2)
+    placeholder = st.empty()
+
+    with placeholder.container():
+        with col1:
+            if st.button("Yes", use_container_width=True,):
+                start_download(moshaf_ids, redownload=True)
+        with col2:
+            if st.button("No", use_container_width=True):
+                st.rerun()
+
+
+def start_download(
+    to_download_ids: list[str] = None,
+    refresh=False,
+    redownload=False,
+):
+    # saving moshaf & reciter pool before start downloading
+    st.session_state.moshaf_pool.save()
+    st.session_state.reciter_pool.save()
+
+    # start a new INDEPENDENT download process aks: `spawn`
+    # to be easy for termination & run in background
+    ctx = multiprocessing.get_context('spawn')
+    p = ctx.Process(
+        target=download_all_moshaf_task,
+        kwargs={
+            'moshaf_pool': copy.deepcopy(st.session_state.moshaf_pool),
+            'to_download_ids': to_download_ids,
+            'lockfile_path': conf.DOWNLOAD_LOCK_FILE,
+            'download_error_path': conf.DOWNLOAD_ERROR_LOG,
+            'refresh': refresh,
+            'redownload': redownload,
+        })
+    # Detach the process to prevent it from being terminated with the main program
+    p.daemon = True
+    p.start()  # Start the process
+    popup_message_rerun(
+        'Download has started switch to **Download Page** or refresh the Page',
+        msg_type='success',
+    )
+    st.rerun()
 
 
 def download_all_moshaf_task(
@@ -206,7 +286,9 @@ def download_all_moshaf_task(
     lockfile_path: Path,
     download_error_path: Path,
     refresh=False,
+    redownload=False,
 ):
+    print('Start Download ...........................')
     # remove error file
     if download_error_path.is_file():
         download_error_path.unlink()
@@ -229,7 +311,8 @@ def download_all_moshaf_task(
 
         try:
             moshaf_pool.download_moshaf(
-                id, refresh=refresh, save_on_disk=True)
+                id,
+                refresh=refresh, redownload=redownload, save_on_disk=True)
             finished_ids.append(id)
         except Exception as e:
             error_logs[id] = traceback.format_exc()
@@ -283,10 +366,10 @@ def save_pools_with_confirmation():
         with col1:
             if st.button("Yes", use_container_width=True,):
                 save_pools(placeholder)
+                st.rerun()
         with col2:
             if st.button("No", use_container_width=True):
-                placeholder.info("Save Operation is canceled")
-                time.sleep(1)
+                popup_message_rerun("Save Operation is canceled", 'info')
                 st.rerun()
 
 
@@ -294,30 +377,38 @@ def save_pools(placeholder):
     try:
         st.session_state.reciter_pool.save()
         st.session_state.moshaf_pool.save()
-
-        placeholder.success("All data saved successfully!")
+        popup_message_rerun("All data saved successfully!", 'success')
     except Exception as e:
-        placeholder.error(f"Error saving data: {str(e)}", 'error')
+        popup_message_rerun(f"Error saving data: {str(e)}", 'error')
         raise e
 
-
-def pop_up_message(msg: str, msg_type: str = 'success'):
-    @ st.dialog(msg)
-    def display_popup():
-        match msg_type:
-            case 'success':
-                st.success(msg)
-            case 'error':
-                st.error(msg)
-            case 'warn':
-                st.warning(msg)
-            case 'info':
-                st.info(msg)
-            case _:
-                raise ValueError(
-                    "Not valid selection, vlaid selections ['success', 'error', 'info']")
-
-    display_popup()
+# @st.dialog("Save Pools?")
+# def save_pools_with_confirmation():
+#     col1, col2 = st.columns(2)
+#     placeholder = st.empty()
+#
+#     with placeholder.container():
+#         with col1:
+#             if st.button("Yes", use_container_width=True,):
+#                 save_pools(placeholder)
+#                 time.sleep(2)
+#                 st.rerun()
+#         with col2:
+#             if st.button("No", use_container_width=True):
+#                 placeholder.info("Save Operation is canceled")
+#                 time.sleep(2)
+#                 st.rerun()
+#
+#
+# def save_pools(placeholder):
+#     try:
+#         st.session_state.reciter_pool.save()
+#         st.session_state.moshaf_pool.save()
+#
+#         placeholder.success("All data saved successfully!")
+#     except Exception as e:
+#         placeholder.error(f"Error saving data: {str(e)}", 'error')
+#         raise e
 
 
 def insert_or_update_item_in_pool(
@@ -389,7 +480,7 @@ def insert_update_form_submit(
         if item_name_in_session_state is None:
             new_item = model(**form_data)
             pool.insert(new_item)
-            pop_up_message("Insertion is successfully!", msg_type='success')
+            popup_message("Insertion is successfully!", msg_type='success')
 
         # Update Operation
         else:
@@ -397,7 +488,7 @@ def insert_update_form_submit(
                 setattr(
                     st.session_state[item_name_in_session_state], field_name, val)
             pool.update(st.session_state[item_name_in_session_state])
-            pop_up_message("Update is successfully!", msg_type='success')
+            popup_message("Update is successfully!", msg_type='success')
     except Exception as e:
         st.error(f"Error in the update/insert: {str(e)}")
         raise e

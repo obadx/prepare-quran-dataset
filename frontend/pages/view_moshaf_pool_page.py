@@ -84,12 +84,17 @@ def view_moshaf_pool():
                     st.session_state.updated_moshaf = moshaf
                     st.switch_page("pages/update_moshaf_page.py")
             with col3:
-                st.button(
+                # st.button(
+                #     "Download",
+                #     key=f"download_{moshaf.id}", use_container_width=True,
+                #     on_click=download_all_moshaf_pool,
+                #     kwargs={'moshaf_ids': [moshaf.id]},
+                # )
+                if st.button(
                     "Download",
-                    key=f"download_{moshaf.id}", use_container_width=True,
-                    on_click=download_all_moshaf_pool,
-                    kwargs={'moshaf_ids': [moshaf.id]},
-                )
+                        key=f"download_{moshaf.id}", use_container_width=True):
+                    download_all_moshaf_pool(moshaf_ids=[moshaf.id])
+
             with col4:
                 st.button(
                     "Refresh",
@@ -109,8 +114,8 @@ def view_moshaf_pool():
                     on_click=delete_item_from_pool_with_confirmation,
                     kwargs={'pool': st.session_state.moshaf_pool, 'item': moshaf})
 
-    if conf.DOWNLOAD_LOCK_FILE.is_file():
-        st.switch_page('pages/download_page.py')
+    # if conf.DOWNLOAD_LOCK_FILE.is_file():
+    #     st.switch_page('pages/download_page.py')
 
 
 if __name__ == '__main__':

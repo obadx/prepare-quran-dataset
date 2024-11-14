@@ -1,8 +1,13 @@
 import os
+import time
 
 import streamlit as st
 
-from utils import save_pools_with_confirmation, pop_up_message, download_all_moshaf_pool
+from utils import (
+    save_pools_with_confirmation,
+    download_all_moshaf_pool,
+    PopupMessage,
+)
 from prepare_quran_dataset.construct.database import ReciterPool, MoshafPool
 import config as conf
 
@@ -35,34 +40,11 @@ def set_up(reset=False) -> None:
     if 'switch_to_view_moshaf_pool' not in st.session_state:
         st.session_state.switch_to_view_moshaf_pool = False
 
+    if 'popup_messages' not in st.session_state:
+        st.session_state.popup_messages: list[PopupMessage] = []
+
     if conf.DOWNLOAD_LOCK_FILE.is_file() or conf.DOWNLOAD_ERROR_LOG.is_file():
         st.switch_page('pages/download_page.py')
-
-
-# def style_buttons():
-#     st.markdown("""
-# <style>
-#     .stButton button {
-#         width: 100%;
-#         text-align: left;
-#         padding: 10px;
-#         background-color: #f0f2f6;
-#         color: #000000;
-#         font-weight: normal;
-#         border: none;
-#         border-radius: 4px;
-#         margin-bottom: 5px;
-#     }
-#     .stButton button:hover {
-#         background-color: #e0e2e6;
-#     }
-#     .stButton button:focus {
-#         background-color: #d0d2d6;
-#         font-weight: bold;
-#         box-shadow: none;
-#     }
-# </style>
-#     """, unsafe_allow_html=True)
 
 
 def menu():
@@ -81,10 +63,11 @@ def menu():
     st.sidebar.page_link(
         'pages/download_page.py', label='📖 Download Page', icon='⬇️')
 
-    st.sidebar.button(
-        '💾 Save Pools', on_click=save_pools_with_confirmation, use_container_width=True)
-    st.sidebar.button(
-        '⬇️  Download All Moshaf Pool', on_click=download_all_moshaf_pool, use_container_width=True)
+    if st.sidebar.button('💾 Save Pools', use_container_width=True):
+        save_pools_with_confirmation()
+
+    if st.sidebar.button('⬇️  Download All Moshaf Pool', use_container_width=True):
+        download_all_moshaf_pool()
 
     st.sidebar.page_link(
         'pages/get_moshaf_links_page.py', label='Suar Links from Online Websites', icon='🌲')
@@ -96,3 +79,9 @@ def menu_with_redirect(reset=False):
         st.switch_page('streamlit_app.py')
     else:
         menu()
+
+    # displaying popupmessages
+    if st.session_state.popup_messages:
+        for msg in st.session_state.popup_messages:
+            msg.show()
+        st.session_state.popup_messages = []
