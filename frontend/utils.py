@@ -13,7 +13,7 @@ import streamlit as st
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
-from prepare_quran_dataset.construct.database import Pool, MoshafPool
+from prepare_quran_dataset.construct.database import Pool, MoshafPool, ReciterPool
 from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
 from prepare_quran_dataset.construct.utils import get_suar_list, kill_process
 import config as conf
@@ -341,19 +341,33 @@ def delete_item_from_pool_with_confirmation(pool: Pool, item: BaseModel):
                 st.rerun()
         with col2:
             if st.button("No", use_container_width=True):
-                placeholder.info("Delete Operation is canceled")
-                time.sleep(1)
+                if isinstance(pool, MoshafPool):
+                    popup_message_rerun(
+                        f'Delete Operation of **{item.id} / {item.name}** is canceled!', 'info')
+                elif isinstance(pool, ReciterPool):
+                    popup_message_rerun(
+                        f'Delete Operation of **{item.id} / {item.arabic_name}** is canceled!', 'info')
                 st.rerun()
 
 
 def delete_item_from_pool(pool: Pool, item: BaseModel, placeholder):
     try:
         pool.delete(item.id)
-        placeholder.success(
-            f"ID={item.id} is deleted successfully")
+        pool.save()
+
+        if isinstance(pool, MoshafPool):
+            popup_message_rerun(
+                f'**{item.id} / {item.name}** is deleted successfully!' 'success')
+        elif isinstance(pool, ReciterPool):
+            popup_message_rerun(
+                f'**{item.id} / {item.arabic_name}** is deleted successfully!', 'success')
     except Exception as e:
-        placeholder.error(f"Error Deleteing item: {str(e)}")
-        # placeholder.error(f"Error Deleteing item: {str(e)}", 'error')
+        if isinstance(pool, MoshafPool):
+            placeholder.error(
+                f"Error Deleteing Moshaf: **{item.id} / {item.name}**: {str(e)}")
+        elif isinstance(pool, ReciterPool):
+            placeholder.error(
+                f"Error Deleteing Reciter: **{item.id} / {item.arabic_name}**: {str(e)}")
         raise e
 
 
