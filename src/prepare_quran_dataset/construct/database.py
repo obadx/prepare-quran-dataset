@@ -154,8 +154,11 @@ class MoshafPool(Pool):
         if save_reciter_pool:
             self._reciter_pool.save()
 
-    def download_moshaf(self, id: str, save_on_disk=True, refresh=False):
+    def download_moshaf(
+            self, id: str, save_on_disk=True, refresh=False, redownload=False):
         """Download a moshaf and add it to the reciter
+
+        User can not set refresh and redownload at the same time
 
         Args:
             refresh (bool):
@@ -163,7 +166,13 @@ class MoshafPool(Pool):
                 2. Reload rectiation files from `Downloads` directory
                 3. Redownload if neccssary (redownloads specififx sources & downloads sourcs if is not downloaded)
                 4. This is not a redownload
+            redownload (bool):
+                1. delete the moshaf directory from dataset directory
+                2. delete the moshaf directory from Downloads directory
+                3. start new fresh download
         """
+        assert not (refresh and redownload), (
+            'You can not set `refresh` and `redownload` at the same time')
         moshaf = self.__getitem__(id)
         moshaf = download_media_and_fill_metadata(
             moshaf,
@@ -171,6 +180,7 @@ class MoshafPool(Pool):
             download_path=self.download_path,
             is_sura_parted=moshaf.is_sura_parted,
             refresh=refresh,
+            redownload=redownload,
         )
 
         # update the moshaf in the pool
@@ -186,18 +196,13 @@ class MoshafPool(Pool):
             self.save()
             self._reciter_pool.save()
 
-    def download_all_moshaf(self, redownload=False, save_on_disk=True):
-        """Download all moshaf and updae MohafPool and ReciterPool"""
-        for moshaf in self:
-            self.download_moshaf(
-                moshaf.id, redownload=redownload, save_on_disk=save_on_disk)
-
 
 def download_media_and_fill_metadata(
     item: Moshaf,
     database_path: Path | str,
     download_path: Path | str,
     refresh=False,
+    redownload=False,
     is_sura_parted=True,
 ) -> Moshaf:
     """
@@ -212,6 +217,10 @@ def download_media_and_fill_metadata(
             2. Reload rectiation files from `Downloads` directory
             3. Redownload if neccssary (redownloads specififx sources & downloads sourcs if is not downloaded)
             4. This is not a redownload
+        redownload (bool):
+            1. delete the moshaf directory from dataset directory
+            2. delete the moshaf directory from Downloads directory
+            3. start new fresh download
 
     Returns:
         (Moshaf): the moshaf filled with metadata
@@ -219,26 +228,28 @@ def download_media_and_fill_metadata(
     item = item.model_copy(deep=True)
 
     # if the moshaf is already downloaded do not download unless
-    if item.is_downloaded and not refresh:
+    # precedence order not 1. not 2. and 3. or
+    if not redownload and item.is_downloaded and not refresh:
         print(f'Mohaf({item.id}) Downloaded and processed Existing ........')
         return item
 
     # Downloadint the moshaf and processing metadata
     database_path = Path(database_path)
     moshaf_path = database_path / item.id
-    download_path = Path(download_path)
+    moshaf_download_path = Path(download_path) / item.id
 
-    if refresh and moshaf_path.is_dir():
+    if (refresh or redownload) and moshaf_path.is_dir():
         shutil.rmtree(moshaf_path)
+    if redownload and moshaf_download_path.is_dir():
+        shutil.rmtree(moshaf_download_path)
 
     os.makedirs(moshaf_path, exist_ok=True)
     download_moshaf_from_urls(
         urls=item.sources,
         specific_sources=item.specific_sources,
-        downloaded_sources=[] if refresh else item.downloaded_sources,
-        moshaf_name=item.id,
+        downloaded_sources=[] if refresh or redownload else item.downloaded_sources,
         moshaf_path=moshaf_path,
-        download_path=download_path,
+        download_path=moshaf_download_path,
         is_sura_parted=is_sura_parted,
     )
 
@@ -253,7 +264,6 @@ def download_moshaf_from_urls(
     specific_sources: dict[str, str],
     downloaded_sources: list[str],
     moshaf_path: str | Path,
-    moshaf_name: str,
     download_path: str | Path,
     remove_after_download=False,
     is_sura_parted=True,
@@ -271,15 +281,15 @@ def download_moshaf_from_urls(
 
     Args:
         urls list[str]: list of urls either zip or single medila files
-        specific_sources (dict[str, str]): "filename without extention like 002": "url of this file"
-            * each url has to be url to a file not zip file
+        specific_sources (dict[str, str]): filename without extention like "002": "url of this file".
+            Each url has to be url to a file not zip file.
         moshaf_path (str | Path): path to storm moshaf media files
-        moshaf_name (str): the moshaf name
-        download_path (str): Base Path to download files
+        download_path (str): The Directory to store the moshaf downloads (specific for every moshaf)
         is_sura_parted (bool): if every recitation file is a sperate sura or not
+        remove_after_download (bool): If True remove the directory where we downloaded the modhaf
     """
     downloaded_sources = set(downloaded_sources)
-    download_path = Path(download_path) / moshaf_name
+    download_path = Path(download_path)
     moshaf_path = Path(moshaf_path)
 
     #  Download specifc_sources

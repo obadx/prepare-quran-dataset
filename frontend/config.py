@@ -32,6 +32,13 @@ def json_text_to_dict(text: str) -> dict[str, str]:
     return {}
 
 
+POPUP_MSG_ICONS: dict[str, str] = {
+    'success': '✅',
+    'error': '❌',
+    'warn': '⚠️',
+    'info': 'ℹ️',
+}
+
 BASE_DIR = Path('../../../quran-dataset')
 RECITER_POOL_FILE = BASE_DIR / 'reciter_pool.jsonl'
 MOSHAF_POOL_FILE = BASE_DIR / 'moshaf_pool.jsonl'
