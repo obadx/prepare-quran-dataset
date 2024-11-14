@@ -84,35 +84,27 @@ def view_moshaf_pool():
                     st.session_state.updated_moshaf = moshaf
                     st.switch_page("pages/update_moshaf_page.py")
             with col3:
-                # st.button(
-                #     "Download",
-                #     key=f"download_{moshaf.id}", use_container_width=True,
-                #     on_click=download_all_moshaf_pool,
-                #     kwargs={'moshaf_ids': [moshaf.id]},
-                # )
                 if st.button(
                     "Download",
                         key=f"download_{moshaf.id}", use_container_width=True):
                     download_all_moshaf_pool(moshaf_ids=[moshaf.id])
 
             with col4:
-                st.button(
+                if st.button(
                     "Refresh",
                     key=f"refresh_{moshaf.id}", use_container_width=True,
-                    on_click=download_all_moshaf_pool,
-                    kwargs={'moshaf_ids': [moshaf.id], 'refresh': True},
                     help='1. Deletes the moshaf_item directory\n'
                     '2. Reload rectiation files from `Downloads` directory\n'
                     '3. Redownload if neccssary\n'
                     '4. This is not a redownload'
-
-                )
+                ):
+                    download_all_moshaf_pool(
+                        moshaf_ids=[moshaf.id], refresh=True)
 
             with col5:
-                st.button(
-                    "Delete", key=f"delete_{moshaf.id}", use_container_width=True,
-                    on_click=delete_item_from_pool_with_confirmation,
-                    kwargs={'pool': st.session_state.moshaf_pool, 'item': moshaf})
+                if st.button("Delete", key=f"delete_{moshaf.id}", use_container_width=True):
+                    delete_item_from_pool_with_confirmation(
+                        st.session_state.moshaf_pool, moshaf)
 
     # if conf.DOWNLOAD_LOCK_FILE.is_file():
     #     st.switch_page('pages/download_page.py')
