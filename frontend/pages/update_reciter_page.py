@@ -2,9 +2,22 @@ import time
 
 import streamlit as st
 
-from prepare_quran_dataset.construct.database import Reciter
+from prepare_quran_dataset.construct.data_classes import Reciter
+from prepare_quran_dataset.construct.base import Pool
 from utils import insert_or_update_item_in_pool
 from menu import menu_with_redirect
+
+
+def after_reciter_update(pool: Pool, reciter: Reciter):
+    """update the reciter related field into every Moshaf
+    which are: `reciter_arabic_name`, `reciter_english_name`
+    """
+    for moshaf_id in reciter.moshaf_set_ids:
+        moshaf = st.session_state.moshaf_pool[moshaf_id]
+        moshaf.reciter_arabic_name = reciter.arabic_name
+        moshaf.reciter_english_name = reciter.english_name
+
+        st.session_state.moshaf_pool.update(moshaf)
 
 
 def update_reciter():
@@ -24,6 +37,7 @@ def update_reciter():
             key_prefix='reciter_',
             item_name_in_session_state='updated_reciter',
             states_values_after_submit={'switch_to_view_reciters': True},
+            after_submit_callback=after_reciter_update,
         )
     else:
         st.error('No Reciter No Update')

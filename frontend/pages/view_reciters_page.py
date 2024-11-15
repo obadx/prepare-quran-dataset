@@ -5,6 +5,7 @@ from menu import menu_with_redirect
 from utils import (
     get_field_name,
     delete_item_from_pool_with_confirmation,
+    popup_message,
 )
 
 
@@ -25,10 +26,15 @@ def view_reciters():
                     st.session_state.updated_reciter = reciter
                     st.switch_page("pages/update_reciter_page.py")
             with col2:
-                st.button(
-                    "Delete", key=f"delete_{reciter.id}", use_container_width=True,
-                    on_click=delete_item_from_pool_with_confirmation,
-                    kwargs={'pool': st.session_state.reciter_pool, 'item': reciter})
+                if st.button("Delete", key=f"delete_{reciter.id}", use_container_width=True):
+                    if len(reciter.moshaf_set_ids) > 0:
+                        popup_message(
+                            (
+                                f'Can not **delete** reciter: **{reciter.id} / {reciter.arabic_name}** as it has the following moshaf ids: **{reciter.moshaf_set_ids}**'),
+                            'warn')
+                    else:
+                        delete_item_from_pool_with_confirmation(
+                            st.session_state.reciter_pool, reciter)
 
 
 if __name__ == '__main__':

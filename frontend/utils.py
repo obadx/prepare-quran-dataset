@@ -396,34 +396,6 @@ def save_pools(placeholder):
         popup_message_rerun(f"Error saving data: {str(e)}", 'error')
         raise e
 
-# @st.dialog("Save Pools?")
-# def save_pools_with_confirmation():
-#     col1, col2 = st.columns(2)
-#     placeholder = st.empty()
-#
-#     with placeholder.container():
-#         with col1:
-#             if st.button("Yes", use_container_width=True,):
-#                 save_pools(placeholder)
-#                 time.sleep(2)
-#                 st.rerun()
-#         with col2:
-#             if st.button("No", use_container_width=True):
-#                 placeholder.info("Save Operation is canceled")
-#                 time.sleep(2)
-#                 st.rerun()
-#
-#
-# def save_pools(placeholder):
-#     try:
-#         st.session_state.reciter_pool.save()
-#         st.session_state.moshaf_pool.save()
-#
-#         placeholder.success("All data saved successfully!")
-#     except Exception as e:
-#         placeholder.error(f"Error saving data: {str(e)}", 'error')
-#         raise e
-
 
 def insert_or_update_item_in_pool(
     model: Type[BaseModel],
@@ -433,12 +405,19 @@ def insert_or_update_item_in_pool(
     item_name_in_session_state: str = None,
     states_values_after_submit: Optional[dict[str, Any]] = {},
     field_funcs_after_submit: Optional[dict[str, Callable[[Any], Any]]] = {},
+    after_submit_callback: Optional[Callable[[Pool, BaseModel], None]] = None,
 ):
-    """
+    """Insert or update item in either `MoshafPool` or `ReciterPool` form with submit button
+
     Args:
         field_funcs_after_submit ( Optional[dict[str, Callable[[Any], Any]]]):
             dict[str, func], dict to aggregate field value after from
             submition, Ex: {'id': lambda x: str(x)}
+        after_submit_callbak: (Optional[Callable[[Pool, BaseModel]]]): a function is called
+            after the submitions runs successfully
+            def ex_callback(pool, new_item):
+                print(pool)
+                print(new_item)
     """
 
     with st.form("insert_or_update_form"):
@@ -448,19 +427,18 @@ def insert_or_update_item_in_pool(
                 field_name, field_info, key_prefix=key_prefix,
                 default_value=getattr(st.session_state[item_name_in_session_state], field_name) if item_name_in_session_state else None)
 
-        st.form_submit_button(
-            f"Confirm {model.__name__}",
-            on_click=insert_update_form_submit,
-            kwargs={
-                'model': model,
-                'pool': pool,
-                'key_prefix': key_prefix,
-                'required_field_names': required_field_names,
-                'item_name_in_session_state': item_name_in_session_state,
-                'states_values_after_submit': states_values_after_submit,
-                'field_funcs_after_submit': field_funcs_after_submit,
-            }
-        )
+        if st.form_submit_button(f"Confirm {model.__name__}"):
+            new_item = insert_update_form_submit(
+                model=model,
+                pool=pool,
+                key_prefix=key_prefix,
+                required_field_names=required_field_names,
+                item_name_in_session_state=item_name_in_session_state,
+                states_values_after_submit=states_values_after_submit,
+                field_funcs_after_submit=field_funcs_after_submit,
+            )
+            if after_submit_callback is not None:
+                after_submit_callback(pool, new_item)
 
 
 def insert_update_form_submit(
@@ -471,12 +449,16 @@ def insert_update_form_submit(
     item_name_in_session_state: str = None,
     states_values_after_submit: Optional[dict[str, Any]] = {},
     field_funcs_after_submit: Optional[dict[str, Callable[[Any], Any]]] = {},
-):
-    """
+) -> BaseModel:
+    """Insert or update item in either `MoshafPool` or `ReciterPool`
+
     Args:
         field_funcs_after_submit ( Optional[dict[str, Callable[[Any], Any]]]):
             dict[str, func], dict to aggregate field value after from
             submition, Ex: {'id': lambda x: str(x)}
+
+    Returns:
+        BaseModel: the new item either the updated or the inserted
     """
 
     # Saveing values in dict
@@ -490,6 +472,8 @@ def insert_update_form_submit(
             form_data[field_name] = st.session_state[key_prefix + field_name]
 
     try:
+        new_item: BaseModel = None
+
         # Insertion Operation
         if item_name_in_session_state is None:
             new_item = model(**form_data)
@@ -502,6 +486,7 @@ def insert_update_form_submit(
                 setattr(
                     st.session_state[item_name_in_session_state], field_name, val)
             pool.update(st.session_state[item_name_in_session_state])
+            new_item = st.session_state[item_name_in_session_state]
             popup_message("Update is successfully!", msg_type='success')
     except Exception as e:
         st.error(f"Error in the update/insert: {str(e)}")
@@ -513,8 +498,11 @@ def insert_update_form_submit(
     for field_name in required_field_names:
         del st.session_state[key_prefix + field_name]
 
+    # setting keys after submit
     for key, val in states_values_after_submit.items():
         st.session_state[key] = val
+
+    return new_item
 
 
 def create_input_for_field(
