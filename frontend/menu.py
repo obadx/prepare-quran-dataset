@@ -43,6 +43,9 @@ def set_up(reset=False) -> None:
     if 'popup_messages' not in st.session_state:
         st.session_state.popup_messages: list[PopupMessage] = []
 
+    if 'refresh_moshaf_filters' not in st.session_state:
+        st.session_state.refresh_moshaf_filters = False
+
     if conf.DOWNLOAD_LOCK_FILE.is_file() or conf.DOWNLOAD_ERROR_LOG.is_file():
         st.switch_page('pages/download_page.py')
 

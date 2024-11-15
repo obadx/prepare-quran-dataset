@@ -37,24 +37,27 @@ def valid_action(dl_log: DownloadLog | None, moshaf: Moshaf, action_name: str) -
 def filter_moshaf_pool_view(
     moshaf_pool: MoshafPool,
     reciter_pool: ReciterPool,
-    download_error_file: Path = conf.DOWNLOAD_ERROR_LOG
+    download_error_file: Path = conf.DOWNLOAD_ERROR_LOG,
 ):
     """Applying filter to chose moshaf using `MoshafFilter`
+
+    Global session_state varibles:
+    * `refresh_moshaf_filters` (bool): if `True` as if you clicked `Apply` button
     """
     if 'chosen_moshaf_list' not in st.session_state:
         st.session_state.chosen_moshaf_list = [m for m in moshaf_pool]
 
-    if 'chosen_reciters' not in st.session_state:
-        st.session_state.chosen_reciters = []
+    if 'chosen_reciters_ids' not in st.session_state:
+        st.session_state.chosen_reciters_ids: list[str] = []
 
     if 'chosen_filters' not in st.session_state:
-        st.session_state.chosen_filters = []
+        st.session_state.chosen_filters: list[str] = []
 
     level1 = st.columns(2)
     level2 = st.columns(2)
 
     with level1[0]:
-        filters_list = st.multiselect(
+        filters_list: list[str] = st.multiselect(
             'Please Select filter to apply',
             MoshafFilter.get_boolean_fields(),
             key='moshaf_filters',
@@ -62,27 +65,31 @@ def filter_moshaf_pool_view(
         )
 
     with level1[1]:
-        reciters = st.multiselect(
+        reciters_ids: list[str] = st.multiselect(
             'Please Selsec Reciter',
-            [r for r in reciter_pool],
-            key='filter_moshaf_reciters',
-            default=st.session_state.chosen_reciters,
-            format_func=lambda r: f"{r.id} / {r.arabic_name}",
+            [r.id for r in reciter_pool],
+            key='filter_moshaf_reciters_ids',
+            default=st.session_state.chosen_reciters_ids,
+            format_func=lambda id: f"{id} / {reciter_pool[id].arabic_name}",
         )
 
     with level2[1]:
-        if st.button('Apply', use_container_width=True):
+        if st.button('Apply', use_container_width=True) or st.session_state.refresh_moshaf_filters:
             bools = {
                 f: True if f in filters_list else False for f in MoshafFilter.get_boolean_fields()}
             st.session_state.chosen_moshaf_list = filter_moshaf_pool(
                 moshaf_pool,
-                MoshafFilter(reciters=reciters, **bools),
+                MoshafFilter(
+                    reciters=[reciter_pool[id] for id in reciters_ids], **bools),
                 download_error_file=download_error_file,
             )
 
             # rember choeces, so when we go back again display the last filters
-            st.session_state.chosen_reciters = reciters
+            st.session_state.chosen_reciters_ids = reciters_ids
             st.session_state.chosen_filters = filters_list
+
+            # reset refresh variable
+            st.session_state.refresh_moshaf_filters = False
 
     with level2[0]:
         st.button(
@@ -94,7 +101,7 @@ def filter_moshaf_pool_view(
 def reset_filers():
     st.session_state.chosen_moshaf_list = [
         m for m in st.session_state.moshaf_pool]
-    st.session_state.filter_moshaf_reciters = []
+    st.session_state.filter_moshaf_reciters_ids = []
     st.session_state.moshaf_filters = []
 
 
@@ -158,6 +165,7 @@ def view_moshaf_pool():
                     if valid_action(dl_log, moshaf, 'Delete'):
                         delete_item_from_pool_with_confirmation(
                             st.session_state.moshaf_pool, moshaf)
+                        st.session_state.refresh_moshaf_filters = True
 
     # if conf.DOWNLOAD_LOCK_FILE.is_file():
     #     st.switch_page('pages/download_page.py')
