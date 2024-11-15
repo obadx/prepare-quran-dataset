@@ -44,6 +44,12 @@ def filter_moshaf_pool_view(
     if 'chosen_moshaf_list' not in st.session_state:
         st.session_state.chosen_moshaf_list = [m for m in moshaf_pool]
 
+    if 'chosen_reciters' not in st.session_state:
+        st.session_state.chosen_reciters = []
+
+    if 'chosen_filters' not in st.session_state:
+        st.session_state.chosen_filters = []
+
     level1 = st.columns(2)
     level2 = st.columns(2)
 
@@ -51,12 +57,16 @@ def filter_moshaf_pool_view(
         filters_list = st.multiselect(
             'Please Select filter to apply',
             MoshafFilter.get_boolean_fields(),
+            key='moshaf_filters',
+            default=st.session_state.chosen_filters,
         )
 
     with level1[1]:
         reciters = st.multiselect(
             'Please Selsec Reciter',
             [r for r in reciter_pool],
+            key='filter_moshaf_reciters',
+            default=st.session_state.chosen_reciters,
             format_func=lambda r: f"{r.id} / {r.arabic_name}",
         )
 
@@ -69,6 +79,23 @@ def filter_moshaf_pool_view(
                 MoshafFilter(reciters=reciters, **bools),
                 download_error_file=download_error_file,
             )
+
+            # rember choeces, so when we go back again display the last filters
+            st.session_state.chosen_reciters = reciters
+            st.session_state.chosen_filters = filters_list
+
+    with level2[0]:
+        st.button(
+            'Reset', use_container_width=True,
+            on_click=reset_filers,
+        )
+
+
+def reset_filers():
+    st.session_state.chosen_moshaf_list = [
+        m for m in st.session_state.moshaf_pool]
+    st.session_state.filter_moshaf_reciters = []
+    st.session_state.moshaf_filters = []
 
 
 def view_moshaf_pool():
