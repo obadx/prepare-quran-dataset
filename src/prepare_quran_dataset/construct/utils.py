@@ -24,7 +24,68 @@ from quran_transcript.utils import normalize_aya
 DATA_PATH = Path(__file__).parent.parent / 'data'
 
 
-def extract_suar_from_mp3quran(url):
+def extract_suar_from_archive(
+        url: str, prefared_types: list[str] = ['mp3', 'oog']
+) -> list[str]:
+    """Extract sepecific Moshaf from https://mp3quran.net/ as list of Audio links:
+
+        Args:
+            url (str): the url of the moshaf example:
+                https://archive.org/
+            prefared_list: (list[str]): list of prefresh audio file types.
+                default= ['mp3', 'ogg'] if the media type is not in the prefared list
+                it will be returned
+
+        Returns:
+            list[str]: list of media links. Example:
+            [
+            ]
+    """
+    def get_media_type(url: str) -> str:
+        return url.split('/')[-1].split('.')[-1]
+
+    # Send a GET request to the provided URL
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code != 200:
+        raise Exception(f"Failed to load page: {
+                        response.status_code}, url={url}")
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    suar_links: list[str] = []
+
+    # Find all the list items that contain both data-url and an image tag
+    sura_items = soup.find_all(
+        'div', attrs={'itemprop': 'hasPart', 'itemscope': True, 'itemtype': 'http://schema.org/AudioObject'})
+
+    for item in sura_items:
+        # find_all instead of find_next because find_all searches within
+        # the same tag unlike find_next is searches for items on the whole soup
+        track_url = None
+        media_items = item.find_all(
+            'link', attrs={'itemprop': 'associatedMedia', 'href': True})
+        type_to_url = {get_media_type(m['href']): m['href']
+                       for m in media_items}
+        assert type_to_url != {}, 'There has to be media types'
+
+        for prefred_t in prefared_types:
+            if prefred_t in type_to_url:
+                track_url = type_to_url[prefred_t]
+                break
+
+        # if the track_type is not in the prefred_type
+        # then get the first media type
+        if track_url is None:
+            track_url = list(type_to_url.values())[0]
+
+        suar_links.append(track_url)
+
+    return suar_links
+
+
+def extract_suar_from_mp3quran(url) -> dict[str, str]:
     """Extract sepecific Moshaf from https://mp3quran.net/ as:
     {
         "sura_id": "sura_link",
@@ -83,7 +144,7 @@ def extract_suar_from_mp3quran(url):
     return sura_links
 
 
-def extract_sura_from_zekr(url):
+def extract_sura_from_zekr(url) -> dict[str, str]:
     """Extract sepecific Moshaf from https://zekr.online/ as:
     {
         "sura_id": "sura_link",
