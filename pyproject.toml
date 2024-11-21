@@ -22,6 +22,7 @@ dependencies = [
   "mutagen",
   "quran-transcript @ git+https://github.com/Abdullahaml1/quran-transcript.git",
   "beautifulsoup4",
+  "filetype",
 ]
 requires-python = ">=3.10"
 classifiers = [

@@ -19,6 +19,7 @@ from tqdm import tqdm
 from pypdl import Pypdl
 from mutagen import File
 from bs4 import BeautifulSoup
+import filetype
 from quran_transcript.utils import normalize_aya
 
 DATA_PATH = Path(__file__).parent.parent / 'data'
@@ -328,39 +329,105 @@ def download_file_fast(
     return out_path
 
 
-def deduce_filename(url) -> str:
-    """extracts file name from url"""
-    # Extract filename from URL
-    parsed_url = urlparse(url)
-    filename = parsed_url.path.split('/')[-1]
+def deduce_extention_from_url(url: str) -> str | None:
+    """Tries to guess the extention of a media file from its url
+    by downloading the first 2 bytes
 
+    Returns:
+        str if we successfully extracts extention else `None`
+    Raises:
+        TypeError: if obj is not a supported type.
+    """
+    response = requests.get(url, stream=True, allow_redirects=True)
+    response.raise_for_status()
+    # Read the first 2 KB of the file
+    first_bytes = response.raw.read(2048)
+    return filetype.guess_extension(first_bytes)
+
+
+def deduce_filename(url, verbose=False) -> str:
+    """extracts filename from url
+    * if the url in reachable:
+        1. take the last redirected url
+        2. extract file name from the last url
+        3. extract extention using `filetype` package
+    * if there is not internet or the url in not reachable:
+        - it returns the filename the url
+    """
+
+    try:
+        filename = None
+        response = requests.get(url, stream=True, allow_redirects=True)
+        response.raise_for_status()
+        # Read the first 2 KB of the file
+        first_bytes = response.raw.read(2048)
+
+        # Check for Content-Disposition header
+        if 'content-disposition' in response.headers:
+            filename = get_filename_from_header(
+                response.headers['content-disposition'])
+        if filename is None:
+            # get filename from the redirected url
+            filename = get_filename_from_url(response.url)
+            if verbose:
+                print(f'Faild to read header {response.url}, {filename}')
+        else:
+            if verbose:
+                print(
+                    f'Success in reading Header, header filename: {filename}')
+
+        try:
+            # trying to guess extention form first_bytes
+            segs = filename.split('.')
+            # old_ext = segs[-1]
+            name = ''.join(segs[:-1]) if len(segs) > 1 else filename
+            ext = filetype.guess_extension(first_bytes)
+            if ext:
+                if verbose:
+                    print('Success in reading mime type')
+                return name + '.' + ext
+            else:
+                return filename
+        except Exception as e:
+            if verbose:
+                print(f'Error {e} while extracting file exctention for {url}')
+            return filename
+
+    except Exception as e:
+        print(f'Error {e} connecting to {url}')
+        return get_filename_from_url(url)
+
+
+def get_filename_from_header(content_disposition) -> str | None:
+    """ Gets the filename from content-disposition in GET request header
+    Args:
+        contnet_disposition: The respose.headers['content-disposition']
+
+    Return:
+        str | None: the filename in the header if found else `None`
+    """
     # paterns to get the filename from http header
     # The priority is for the Arabic name i.e paatterns[0]
     # then ofr the English name i.e: patterns[1]
     patterns = [r'filename\*=utf-8\'\'(.*)$', r'filename="?([^$]+)"?$']
+    parts = content_disposition.split(';')
+    for pattern in patterns:
+        for part in parts:
+            match = re.search(pattern, part)
+            if match:
+                filename = match.group(1)
+                if filename.endswith('"'):
+                    filename = filename[:-1]
+                return urllib.parse.unquote(filename)
+    return None
 
-    # Make a HEAD request to get headers
-    try:
-        response = requests.head(url, allow_redirects=True)
 
-        # Check for Content-Disposition header
-        if 'content-disposition' in response.headers:
-            content_disposition = response.headers['content-disposition']
-
-            parts = content_disposition.split(';')
-            for pattern in patterns:
-                for part in parts:
-                    match = re.search(pattern, part)
-                    if match:
-                        filename = match.group(1)
-                        if filename.endswith('"'):
-                            filename = filename[:-1]
-                        return urllib.parse.unquote(filename)
-
-    except Exception as e:
-        print(f'Error connecting to the url: {e}')
-
-    return urllib.parse.unquote(filename)
+def get_filename_from_url(url_link) -> str:
+    """Extract filename from URL"""
+    segments = urlparse(url_link).path.split('/')
+    for name in segments[::-1]:
+        if name:
+            return urllib.parse.unquote(name)
 
 
 def download_file_slow(
