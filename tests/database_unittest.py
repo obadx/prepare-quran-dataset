@@ -175,6 +175,7 @@ class TestMoshafPool(unittest.TestCase):
                 madd_mottasel_len=4,
                 madd_mottasel_waqf=5,
                 madd_aared_len=4,
+                madd_alleen_len=4,
             ),
                 '0.1':
             Moshaf(
@@ -189,6 +190,7 @@ class TestMoshafPool(unittest.TestCase):
                 madd_mottasel_len=4,
                 madd_mottasel_waqf=5,
                 madd_aared_len=4,
+                madd_alleen_len=4,
             ),
             '1.0':
             Moshaf(
@@ -243,6 +245,29 @@ class TestMoshafPool(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
+
+    def test_madd_aleen_validation(self):
+        """validates the `Moshaf` rasies ValueError when
+        `madd_alleen_len` > `madd_aared_len`
+        """
+        with self.assertRaises(ValueError):
+            Moshaf(
+                name='المصحف المرتل',
+                reciter_id=3,
+                reciter_arabic_name=self.reciter_pool[3].arabic_name,
+                reciter_english_name=self.reciter_pool[3].english_name,
+                sources=[],
+                specific_sources={
+                    '002': 'https://download.quran.islamway.net/quran3/965/212/128/002.mp3',
+                    '111': 'https://download.quran.islamway.net/quran3/965/212/128/111.mp3',
+                },
+                rewaya='hafs',
+                madd_monfasel_len=2,
+                madd_mottasel_len=4,
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
+                madd_alleen_len=6,
+            ),
 
     def test_insert_moshaf(self):
         for idx, moshaf in enumerate(self.moshaf_dict.values()):

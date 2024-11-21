@@ -1,5 +1,5 @@
-from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from typing import Literal, Optional, Self
+from pydantic import BaseModel, Field, model_validator
 from pydantic.fields import FieldInfo, PydanticUndefined
 from pathlib import Path
 
@@ -131,6 +131,16 @@ class Moshaf(BaseModel):
     madd_aared_len: Literal[2, 4, 6] = Field(
         description='ArabicName(مقدار المد العارض)'
         ' The length of Mad Al Aared "مد العارض للسكون".')
+    madd_alleen_len: Literal[2, 4, 6] = Field(
+        default=None,
+        description='ArabicName(مقدار مد اللين)'
+        '\nThe length of the Madd al-Leen when stopping at the end of a word'
+        ' (for a sakin waw or ya preceded by a letter with a fatha) should be'
+        " less than or equal to the length of Madd al-'Arid (the temporary stretch due to stopping)."
+        ' **Default Value is equal to `madd_aared_len`**.'
+        ' مقدرا مع اللين عن القوف (للواو الساكنة والياء الساكنة وقبلها حرف مفتوح) ويجب أن يكون مقدار مد اللين أقل من أو يساوي مع العارض'
+
+    )
     ghonna_lam_and_raa: Literal['ghonna', 'no_ghonna'] = Field(
         default='no_ghonna',
         description='ArabicName(غنة اللام و الراء)'
@@ -484,10 +494,19 @@ class Moshaf(BaseModel):
         ' `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)'
     )
 
+    @model_validator(mode='after')
+    def check_madd_alleen(self) -> Self:
+        if self.madd_alleen_len > self.madd_aared_len:
+            raise ValueError(
+                f'مد  اللين يجب أن يكون أقل من أو يساوي مد العارض للسكون. مد العارض ({self.madd_aared_len})و مد اللين ({self.madd_alleen_len}).')
+        return self
+
     def model_post_init(self, *args, **kwargs):
-        ...
         self.is_downloaded = set(self.downloaded_sources) == (
             set(self.sources) | set(self.specific_sources.values()))
+
+        if self.madd_alleen_len is None:
+            self.madd_alleen_len = self.madd_aared_len
 
     def fill_metadata_after_download(self, moshaf_path: Path):
 
@@ -569,11 +588,14 @@ class Moshaf(BaseModel):
             if fieldinfo.default == PydanticUndefined:
                 md_table += '|'
             else:
-                ar_val = docs.english2arabic_map[fieldinfo.default]
-                if ar_val == fieldinfo.default:
-                    md_table += f'`{ar_val}`|'
+                if fieldinfo.default is None:
+                    md_table += '`None`|'
                 else:
-                    md_table += f'`{fieldinfo.default}` (`{ar_val}`)|'
+                    ar_val = docs.english2arabic_map[fieldinfo.default]
+                    if ar_val == fieldinfo.default:
+                        md_table += f'`{ar_val}`|'
+                    else:
+                        md_table += f'`{fieldinfo.default}` (`{ar_val}`)|'
 
             md_table += docs.more_info + '|'
 

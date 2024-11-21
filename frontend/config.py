@@ -61,6 +61,7 @@ REQUIRED_MOSHAF_FIELDS = [
     'madd_mottasel_len',
     'madd_mottasel_waqf',
     'madd_aared_len',
+    'madd_alleen_len',
     'ghonna_lam_and_raa',
     'meem_aal_imran',
     'madd_yaa_alayn_alharfy',
