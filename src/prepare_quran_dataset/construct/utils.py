@@ -4,7 +4,7 @@ import os
 import functools
 import time
 from zipfile import ZipFile, is_zipfile
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from urllib.parse import urlparse
 import json
@@ -274,6 +274,53 @@ def get_audiofile_info(audiofile_path: str | Path) -> AudioFileInfo:
         duration_seconds=audio.info.length)
 
 
+def download_multi_file_fast(
+    urls: list[str],
+    out_pathes: list[str | Path],
+    max_dl_workers=10,
+    extract_zip=True,
+    hash_download=False,
+    num_download_segments=20,
+    num_unzip_workers=12,
+    remove_zipfile=True,
+    redownload=False,
+    show_progress=True,
+) -> dict[str, Path]:
+    """ same as `download_file_fast` but with multithreading
+    Args:
+        max_dl_workers (int): the max number of threads to run downloads
+
+    Return:
+        dict[str, Path]: {url: the output download path}
+    """
+    if len(urls) == 0:
+        return []
+    max_workers = min(len(urls), max_dl_workers)
+    with ThreadPoolExecutor(max_workers=max_workers) as exe:
+        future_to_url = {}
+        for url, out_path in zip(urls, out_pathes):
+            future = exe.submit(
+                download_file_fast,
+                url,
+                out_path,
+                extract_zip=extract_zip,
+                hash_download=hash_download,
+                num_download_segments=num_download_segments,
+                num_unzip_workers=num_unzip_workers,
+                remove_zipfile=remove_zipfile,
+                redownload=redownload,
+                show_progress=show_progress,
+            )
+            future_to_url[future] = url
+
+        # Collect results as they complete
+        url_to_path = {}
+        for future in as_completed(future_to_url.keys()):
+            url = future_to_url[future]
+            url_to_path[url] = future.result()
+        return url_to_path
+
+
 def download_file_fast(
     url: str,
     out_path: str | Path,
@@ -283,6 +330,7 @@ def download_file_fast(
     num_unzip_workers=12,
     remove_zipfile=True,
     redownload=False,
+    show_progress=True,
 ) -> Path:
     """Downloads a file and extract if if it is zipfile
     Args:
@@ -290,7 +338,7 @@ def download_file_fast(
         extract_zip (bool): if true extract a zip file to `out_path`
         remove_zipfile (bool): remove zipfile after downloading it
         redownload (bool): redownload the file if it exists
-        hash_download (bool): if True will the file name will be the hash(url).
+        hash_download (bool): if True the file name will be the hash(url).
             if False it will deduce the file name from the url like "001.mp3"
     """
     out_path = Path(out_path)
@@ -311,7 +359,8 @@ def download_file_fast(
         return out_path
 
     dl = Pypdl()
-    out = dl.start(url, file_path=out_path, segments=num_download_segments)
+    out = dl.start(url, file_path=out_path,
+                   segments=num_download_segments, display=show_progress)
     if out is None:
         raise DownloadError(f'Error while downloading or url: {url}')
     out_path = Path(out.path)
