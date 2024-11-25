@@ -331,6 +331,7 @@ def download_file_fast(
     remove_zipfile=True,
     redownload=False,
     show_progress=True,
+    max_retries: int = 0,
 ) -> Path:
     """Downloads a file and extract if if it is zipfile
     Args:
@@ -340,6 +341,8 @@ def download_file_fast(
         redownload (bool): redownload the file if it exists
         hash_download (bool): if True the file name will be the hash(url).
             if False it will deduce the file name from the url like "001.mp3"
+        max_retries (int): the number of times to try download if an error occured
+            default is 0
     """
     out_path = Path(out_path)
     assert not out_path.is_file(), (
@@ -359,8 +362,13 @@ def download_file_fast(
         return out_path
 
     dl = Pypdl()
-    out = dl.start(url, file_path=out_path,
-                   segments=num_download_segments, display=show_progress)
+    out = dl.start(
+        url,
+        file_path=out_path,
+        segments=num_download_segments,
+        display=show_progress,
+        retries=max_retries,
+    )
     if out is None:
         raise DownloadError(f'Error while downloading or url: {url}')
     out_path = Path(out.path)
