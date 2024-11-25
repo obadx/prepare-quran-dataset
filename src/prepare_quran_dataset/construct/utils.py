@@ -50,8 +50,8 @@ def extract_suar_from_archive(
 
     # Check if the request was successful
     if response.status_code != 200:
-        raise Exception(f"Failed to load page: {
-                        response.status_code}, url={url}")
+        raise Exception(
+            f"Failed to load page: {response.status_code}, url={url}")
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -285,6 +285,7 @@ def download_multi_file_fast(
     remove_zipfile=True,
     redownload=False,
     show_progress=True,
+    max_retries=0,
 ) -> dict[str, Path]:
     """ same as `download_file_fast` but with multithreading
     Args:
@@ -310,6 +311,7 @@ def download_multi_file_fast(
                 remove_zipfile=remove_zipfile,
                 redownload=redownload,
                 show_progress=show_progress,
+                max_retries=max_retries,
             )
             future_to_url[future] = url
 
