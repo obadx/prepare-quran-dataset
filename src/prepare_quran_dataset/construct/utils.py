@@ -111,8 +111,8 @@ def extract_suar_from_mp3quran(url) -> dict[str, str]:
 
     # Check if the request was successful
     if response.status_code != 200:
-        raise Exception(f"Failed to load page: {
-                        response.status_code}, url={url}")
+        raise Exception(
+            f"Failed to load page: {response.status_code}, url={url}")
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -169,8 +169,8 @@ def extract_sura_from_zekr(url) -> dict[str, str]:
 
     # Check if the request was successful
     if response.status_code != 200:
-        raise Exception(f"Failed to load page: {
-                        response.status_code}, url={url}")
+        raise Exception(
+            f"Failed to load page: {response.status_code}, url={url}")
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
