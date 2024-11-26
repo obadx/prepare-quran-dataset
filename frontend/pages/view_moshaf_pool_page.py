@@ -105,6 +105,20 @@ def reset_filers():
     st.session_state.moshaf_filters = []
 
 
+def display_moshaf(moshaf: Moshaf):
+    """Displayes a Moshaf Item"""
+    for field, value in moshaf.model_dump().items():
+        if field not in conf.EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW:
+            label = get_field_name(
+                field, moshaf.model_fields[field])
+            arabic_attributes = get_arabic_attributes(
+                moshaf.model_fields[field])
+            if arabic_attributes:
+                value = arabic_attributes[value]
+            st.markdown(
+                f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
+
+
 def view_moshaf_pool():
     st.header("View Moshaf Pool")
     filter_moshaf_pool_view(
@@ -119,16 +133,8 @@ def view_moshaf_pool():
         expander = st.expander(
             f"{moshaf.name} / {moshaf.reciter_arabic_name} / (ID: {moshaf.id})")
         with expander:
-            for field, value in moshaf.model_dump().items():
-                if field not in conf.EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW:
-                    label = get_field_name(
-                        field, moshaf.model_fields[field])
-                    arabic_attributes = get_arabic_attributes(
-                        moshaf.model_fields[field])
-                    if arabic_attributes:
-                        value = arabic_attributes[value]
-                    st.markdown(
-                        f'<span style="color: orange; font-weight: bold;">{label}: </span>{value}', unsafe_allow_html=True)
+            with st.popover('تفاصيل المصحف'):
+                display_moshaf(moshaf)
 
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
