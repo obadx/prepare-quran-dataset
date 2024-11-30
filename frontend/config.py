@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
-import json
+
+from pydantic import AnyHttpUrl
+from pydantic import ValidationError
 
 
 def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'^http')):
@@ -17,19 +19,43 @@ def text_to_list(text: str, line_determiner: re.Pattern = re.compile(r'^http')):
     return clean_text_list
 
 
-def json_text_to_dict(text: str) -> dict[str, str]:
+def parse_link_in_list(links: list[str], line_determiner: re.Pattern = re.compile(r'^http')):
+    """Creates a text area with each line is a sperate item identified by `line_determiner`
+
+    Args:
+        line_determiner (str): the re pattern that each line should be with EX: re.compile(r'^http')
+    """
+    clean_text_list = []
+    for text in links:
+        if line_determiner.match(text):
+            clean_text_list.append(text)
+    return clean_text_list
+
+
+def validate_sura_index(specific_sources: dict[str | int: str]) -> dict[int, str]:
     """
     Args:
-        text(str): is JSON fromat of "sura name": "url" with new line with
+        sepcific_sources (dict[str | int]: str): is  a dict of {"sura_integer index from 1 to 114": "sura url"}
             Example:
-            {
-            "002": "https//example.com.002.mp3",
-            "004": "https//example.com.004.mp3"
-            }
+            2: https//example.com.002.mp3
+            4 "https//example.com.004.mp3
     """
-    if text:
-        return json.loads(text)
-    return {}
+    clean_sources: dict[int, str] = {}
+    for sura_idx_str, url in specific_sources.items():
+        sura_idx = int(sura_idx_str)
+        if sura_idx < 1 or sura_idx > 114:
+            raise ValueError(
+                f'Sura index should be >=1 and <=114, we got: "{sura_idx_str}" ')
+
+        # validating the url using pydantic
+        try:
+            url = AnyHttpUrl(url)
+            clean_sources[sura_idx] = str(url)
+        except ValidationError:
+            raise ValueError(
+                f'Error in `specific_sources`. The url="{url}" of sura_index="{sura_idx}" is not a valid url')
+
+    return clean_sources
 
 
 POPUP_MSG_ICONS: dict[str, str] = {
@@ -99,6 +125,6 @@ EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW = [
 
 
 MOSHAF_FIELD_FUNCS_AFTER_SUBMIT = {
-    'sources': text_to_list,
-    'specific_sources': json_text_to_dict,
+    'sources': parse_link_in_list,
+    'specific_sources': validate_sura_index,
 }

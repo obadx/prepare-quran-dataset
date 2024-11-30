@@ -11,11 +11,9 @@ from prepare_quran_dataset.construct.base import Pool
 from prepare_quran_dataset.construct.data_classes import (
     Reciter,
     Moshaf,
-    AudioFile
 )
 from prepare_quran_dataset.construct.utils import (
     download_file_fast,
-    get_audiofile_info,
     get_suar_list,
     normalize_text
 )
@@ -261,7 +259,7 @@ def download_media_and_fill_metadata(
 
 def download_moshaf_from_urls(
     urls: list[str],
-    specific_sources: dict[str, str],
+    specific_sources: dict[int, str],
     downloaded_sources: list[str],
     moshaf_path: str | Path,
     download_path: str | Path,
@@ -281,8 +279,7 @@ def download_moshaf_from_urls(
 
     Args:
         urls list[str]: list of urls either zip or single medila files
-        specific_sources (dict[str, str]): filename without extention like "002": "url of this file".
-            Each url has to be url to a file not zip file.
+        specific_sources (dict[int, str]): sura_index form 1 to 114 without extention like 002: "url of this file". Each url has to be url to a file not zip file.
         moshaf_path (str | Path): path to storm moshaf media files
         download_path (str): The Directory to store the moshaf downloads (specific for every moshaf)
         is_sura_parted (bool): if every recitation file is a sperate sura or not
@@ -319,7 +316,7 @@ def download_moshaf_from_urls(
 
 
 def download_specifc_sources(
-    specific_sources: dict[str, str],
+    specific_sources: dict[int, str],
     download_path: Path,
     is_sura_parted: bool,
     downloaded_sources: set[str],
@@ -331,8 +328,7 @@ def download_specifc_sources(
     3. Returns "f{filename}.extention": Path(of the downloaded file)
 
     Args:
-        specific_sources (dict[str, str]): "filename without extention like 002": url of this file
-            * each url has to be url to a file not zip file
+        specific_sources (dict[int, str]): "sura index from 1 to 114 like 002": url of this file. Each url has to be url to a file not zip file
         download_path (Path):
         is_sura_parted (bool): if every recitation file is a sperate sura or not
 
@@ -340,10 +336,7 @@ def download_specifc_sources(
         dict[str, Path]: "f{filename}.extention": Path(of the downloaded file)
     """
     name_to_specific_download_pathes = {}  # f"{file name}.extention": file path
-    for name, url in specific_sources.items():
-        assert len(name.split('.')) == 1, (
-            'Input file name should not have extention just the'
-            f' file name, name={name}')
+    for sura_idx, url in specific_sources.items():
         if url not in downloaded_sources:
             url_path = download_file_fast(
                 url=url,
@@ -356,6 +349,9 @@ def download_specifc_sources(
             assert url_path.is_file(), (
                 'Your specific source must be media file not zip')
             ext = url_path.name.split('.')[-1]
+
+            # (3 digits string) sura_idx=1, name=001}'
+            name = f'{sura_idx:0{3}}'
 
             # renamaing url_pathes from url_hash to its numercal name
             url_path = url_path.rename(url_path.parent / f'{name}.{ext}')
