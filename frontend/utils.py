@@ -15,7 +15,12 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 
 from prepare_quran_dataset.construct.database import Pool, MoshafPool, ReciterPool
 from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
-from prepare_quran_dataset.construct.utils import get_suar_list, kill_process
+from prepare_quran_dataset.construct.utils import (
+    get_suar_list,
+    kill_process,
+    load_yaml,
+    dump_yaml,
+)
 import config as conf
 
 
@@ -419,98 +424,69 @@ def insert_or_update_item_in_pool(
                 print(pool)
                 print(new_item)
     """
-
     with st.form("insert_or_update_form"):
+        form_data = {}
         for field_name in required_field_names:
             field_info = model.model_fields[field_name]
-            create_input_for_field(
+            val = create_input_for_field(
                 field_name, field_info, key_prefix=key_prefix,
                 default_value=getattr(st.session_state[item_name_in_session_state], field_name) if item_name_in_session_state else None)
 
+            if field_name in field_funcs_after_submit:
+                func = field_funcs_after_submit[field_name]
+                form_data[field_name] = func(val)
+            else:
+                form_data[field_name] = val
+
         if st.form_submit_button(f"Confirm {model.__name__}"):
-            new_item = insert_update_form_submit(
-                model=model,
-                pool=pool,
-                key_prefix=key_prefix,
-                required_field_names=required_field_names,
-                item_name_in_session_state=item_name_in_session_state,
-                states_values_after_submit=states_values_after_submit,
-                field_funcs_after_submit=field_funcs_after_submit,
-            )
+
+            try:
+                new_item: BaseModel = None
+
+                # Insertion Operation
+                if item_name_in_session_state is None:
+                    new_item = model(**form_data)
+                    pool.insert(new_item)
+                    popup_message("Insertion is successfully!",  'success')
+
+                # Update Operation
+                else:
+                    for field_name, val in form_data.items():
+                        setattr(
+                            st.session_state[item_name_in_session_state], field_name, val)
+                    pool.update(st.session_state[item_name_in_session_state])
+                    new_item = st.session_state[item_name_in_session_state]
+                    popup_message("Update is successfully!", 'success')
+            except Exception as e:
+                st.error(f"Error in the update/insert: {str(e)}")
+                raise e
+
+            # cleaning session_state after ooperation
+            if item_name_in_session_state is not None:
+                del st.session_state[item_name_in_session_state]
+            for field_name in required_field_names:
+                del st.session_state[key_prefix + field_name]
+
+            # setting keys after submit
+            for key, val in states_values_after_submit.items():
+                st.session_state[key] = val
+
             if after_submit_callback is not None:
                 after_submit_callback(pool, new_item)
-
-
-def insert_update_form_submit(
-    model: Type[BaseModel] = None,
-    pool: Pool = None,
-    key_prefix='model_',
-    required_field_names: list[str] = [],
-    item_name_in_session_state: str = None,
-    states_values_after_submit: Optional[dict[str, Any]] = {},
-    field_funcs_after_submit: Optional[dict[str, Callable[[Any], Any]]] = {},
-) -> BaseModel:
-    """Insert or update item in either `MoshafPool` or `ReciterPool`
-
-    Args:
-        field_funcs_after_submit ( Optional[dict[str, Callable[[Any], Any]]]):
-            dict[str, func], dict to aggregate field value after from
-            submition, Ex: {'id': lambda x: str(x)}
-
-    Returns:
-        BaseModel: the new item either the updated or the inserted
-    """
-
-    # Saveing values in dict
-    form_data = {}
-    for field_name in required_field_names:
-        if field_name in field_funcs_after_submit:
-            func = field_funcs_after_submit[field_name]
-            form_data[field_name] = func(
-                st.session_state[key_prefix + field_name])
-        else:
-            form_data[field_name] = st.session_state[key_prefix + field_name]
-
-    try:
-        new_item: BaseModel = None
-
-        # Insertion Operation
-        if item_name_in_session_state is None:
-            new_item = model(**form_data)
-            pool.insert(new_item)
-            popup_message("Insertion is successfully!", msg_type='success')
-
-        # Update Operation
-        else:
-            for field_name, val in form_data.items():
-                setattr(
-                    st.session_state[item_name_in_session_state], field_name, val)
-            pool.update(st.session_state[item_name_in_session_state])
-            new_item = st.session_state[item_name_in_session_state]
-            popup_message("Update is successfully!", msg_type='success')
-    except Exception as e:
-        st.error(f"Error in the update/insert: {str(e)}")
-        raise e
-
-    # cleaning session_state after ooperation
-    if item_name_in_session_state is not None:
-        del st.session_state[item_name_in_session_state]
-    for field_name in required_field_names:
-        del st.session_state[key_prefix + field_name]
-
-    # setting keys after submit
-    for key, val in states_values_after_submit.items():
-        st.session_state[key] = val
-
-    return new_item
 
 
 def create_input_for_field(
     field_name: str,
     field_info: FieldInfo,
-    default_value=None,
+    default_value: Any = None,
     key_prefix='model_',
-):
+    help: str = None,
+) -> Any:
+    """Created an input filed given a pydantic `field_name`, `fidel_info`
+    Args:
+        default_value (Any): overwrites the `field_info.default` if default_value is None. Otherwise we ues `field_info.default`
+        help (str): overwrites the `field_info.description` if help is None. Otherwise we ues `field_info.description` as a help text for input_filed
+    """
 
     # Extract Arabic name from field description if available
     label = get_field_name(field_name, field_info)
@@ -520,6 +496,9 @@ def create_input_for_field(
             default_value = field_info.default
 
     key = key_prefix + field_name
+
+    if help is None:
+        help = field_info.description
 
     if field_name == 'reciter_id':
         reciters = {r.id: r for r in st.session_state.reciter_pool}
@@ -543,41 +522,45 @@ def create_input_for_field(
             format_func=lambda x: arabic_attributes[x] if arabic_attributes else x,
             index=choices.index(default_value) if default_value else 0,
             key=key,
+            help=help,
         )
 
     if field_info.annotation in [str, Optional[str]]:
-        return st.text_input(label, value=default_value or "", key=key)
+        return st.text_input(label, value=default_value or "", key=key, help=help)
     elif field_info.annotation in [int, Optional[int]]:
-        return st.number_input(label, value=default_value or 0, step=1, key=key)
+        return st.number_input(label, value=default_value or 0, step=1, key=key, help=help)
     elif field_info.annotation in [float, Optional[float]]:
-        return st.number_input(label, value=default_value or 0.0, step=0.1, key=key)
+        return st.number_input(label, value=default_value or 0.0, step=0.1, key=key, help=help)
     elif field_info.annotation in [bool, Optional[bool]]:
-        return st.checkbox(label, value=default_value or False, key=key)
+        return st.checkbox(label, value=default_value or False, key=key, help=help)
     elif field_info.annotation in [list[str], Optional[list[str]]]:
-        # TODO: help should be input for every field
         help = (
             'Please enter every link in seprate line i.e: hit enter. Example:'
-            '\nhttps://example.com/003.mp3\nhttps://example.com/004.mp3'
-        )
+            '\nhttps://example.com/003.mp3\nhttps://example.com/004.mp3\n'
+        ) + help
 
-        return st.text_area(
+        text = st.text_area(
             label,
             key=key,
             value='\n'.join(default_value) if default_value else '',
             help=help,
             placeholder=help,
         )
-    elif field_info.annotation in [dict[str, str], Optional[dict[str, str]]]:
+        return text.split('\n')
+    elif field_info.annotation in [dict[str, str], Optional[dict[str, str]], dict[int, str], Optional[dict[int, str]]]:
         help = (
-            'Place the specifc downloads as a '
-            f'JSON\n{json.dumps({'002': 'https://example.com/003.mp3'}, indent=4)}')
-        return st.text_area(
+            'Place the specifc downloads as yaml:'
+            f'\n{dump_yaml({3: 'https://example.com/003.mp3',
+                           4: 'https://example.com/004.mp3'})}\n'
+        ) + help
+        yaml_text = st.text_area(
             label,
             key=key,
-            value=json.dumps(default_value, indent=4) if default_value else '',
+            value=dump_yaml(default_value) if default_value else '',
             help=help,
             placeholder=help,
         )
+        return load_yaml(yaml_text) if yaml_text else {}
 
     raise ValueError(
         f"Unsupported field type for {label}: {field_info.annotation}")

@@ -1,5 +1,5 @@
 from typing import Literal, Optional, Self
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 from pydantic.fields import FieldInfo, PydanticUndefined
 from pathlib import Path
 
@@ -39,16 +39,17 @@ class Moshaf(BaseModel):
         default="",
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
     name: str = Field(
-        description='The arabic name of the moshaf i.e "محف محمود خليلي الحصري"')
+        description='The arabic name of the moshaf i.e "المصحف المرتل"')
     path: str = Field(default="", description='Absolute path to the moshaf')
     reciter_id: int = Field(description='The ID of the reciter starting of 0')
     reciter_arabic_name: str = ""
     reciter_english_name: str = ""
     sources: list[str] = Field(
         description='List of urls to download recitations')
-    specific_sources: dict[str, str] = Field(
+    specific_sources: dict[int, str] = Field(
         default={},
         description='Overwriting a specific group of files.'
+        'As: {"sura_integer_index between 1 and 114": "sura_url"}'
         'Ex: {"002": "url_for_002"} will overwrite the recitation "002"'
         'downloaded by the `sources` attributes'
     )
@@ -500,6 +501,16 @@ class Moshaf(BaseModel):
             raise ValueError(
                 f'مد  اللين يجب أن يكون أقل من أو يساوي مد العارض للسكون. مد العارض ({self.madd_aared_len})و مد اللين ({self.madd_alleen_len}).')
         return self
+
+    @field_validator('specific_sources', mode='after')
+    @classmethod
+    def valid_sura_index(cls, specific_sources: dict[int, str]) -> str:
+        for sura_index in specific_sources:
+
+            if sura_index < 1 or sura_index > 114:
+                raise ValueError(
+                    f'Sura Index must be integer between 1 and 114, we got "{sura_index}"')
+        return specific_sources
 
     def model_post_init(self, *args, **kwargs):
         self.is_downloaded = set(self.downloaded_sources) == (

@@ -13,14 +13,16 @@ from typing import Any
 import urllib
 from hashlib import sha256
 import signal
+from io import StringIO
 
 
+from quran_transcript.utils import normalize_aya
 from tqdm import tqdm
 from pypdl import Pypdl
 from mutagen import File
 from bs4 import BeautifulSoup
 import filetype
-from quran_transcript.utils import normalize_aya
+from ruamel.yaml import YAML
 
 DATA_PATH = Path(__file__).parent.parent / 'data'
 
@@ -191,6 +193,21 @@ def extract_sura_from_zekr(url) -> dict[str, str]:
         sura_links[f'{int(sura_index):0{3}}'] = audio_link
 
     return sura_links
+
+
+def load_yaml(yaml_str: str) -> Any:
+    """Reads yaml file and returns it as a python pbject"""
+    r_yaml = YAML()
+    data = r_yaml.load(StringIO(yaml_str))
+    return data
+
+
+def dump_yaml(data: Any) -> str:
+    """Returns the yaml reprenstation of a python object"""
+    r_yaml = YAML()
+    stream = StringIO()
+    r_yaml.dump(data, stream)
+    return stream.getvalue()
 
 
 def kill_process(pid):

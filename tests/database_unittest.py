@@ -214,8 +214,8 @@ class TestMoshafPool(unittest.TestCase):
                 reciter_english_name=self.reciter_pool[3].english_name,
                 sources=[],
                 specific_sources={
-                    '001': 'https://download.quran.islamway.net/quran3/965/212/128/001.mp3',
-                    '110': 'https://download.quran.islamway.net/quran3/965/212/128/110.mp3',
+                    1: 'https://download.quran.islamway.net/quran3/965/212/128/001.mp3',
+                    110: 'https://download.quran.islamway.net/quran3/965/212/128/110.mp3',
                 },
                 rewaya='hafs',
                 madd_monfasel_len=2,
@@ -231,8 +231,8 @@ class TestMoshafPool(unittest.TestCase):
                 reciter_english_name=self.reciter_pool[3].english_name,
                 sources=[],
                 specific_sources={
-                    '002': 'https://download.quran.islamway.net/quran3/965/212/128/002.mp3',
-                    '111': 'https://download.quran.islamway.net/quran3/965/212/128/111.mp3',
+                    2: 'https://download.quran.islamway.net/quran3/965/212/128/002.mp3',
+                    111: 'https://download.quran.islamway.net/quran3/965/212/128/111.mp3',
                 },
                 rewaya='hafs',
                 madd_monfasel_len=2,
@@ -245,6 +245,28 @@ class TestMoshafPool(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
+
+    def test_specific_sources_sura_index(self):
+        """Validates that `specific_sura` keys as a vlid sura_index
+        """
+        with self.assertRaises(ValueError):
+            Moshaf(
+                name='المصحف المرتل',
+                reciter_id=3,
+                reciter_arabic_name=self.reciter_pool[3].arabic_name,
+                reciter_english_name=self.reciter_pool[3].english_name,
+                sources=[],
+                specific_sources={
+                    0: 'https://download.quran.islamway.net/quran3/965/212/128/002.mp3',
+                    111: 'https://download.quran.islamway.net/quran3/965/212/128/111.mp3',
+                },
+                rewaya='hafs',
+                madd_monfasel_len=2,
+                madd_mottasel_len=4,
+                madd_mottasel_waqf=5,
+                madd_aared_len=4,
+                madd_alleen_len=4,
+            ),
 
     def test_madd_aleen_validation(self):
         """validates the `Moshaf` rasies ValueError when
