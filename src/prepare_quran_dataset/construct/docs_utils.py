@@ -1,7 +1,5 @@
-import re
 from dataclasses import dataclass
 from typing import Any, get_args, get_origin, Literal
-import json
 
 from pydantic.fields import FieldInfo, PydanticUndefined
 
@@ -28,17 +26,13 @@ def get_moshaf_field_docs(fieldname: str, fieldinfo: FieldInfo) -> MoshafFieldDo
     if docs == PydanticUndefined or not docs:
         return None
 
-    arabic_out = get_arabic_name(docs)
+    arabic_name = get_arabic_name(fieldinfo)
     # Filterout None Quranic Attributes
-    if not arabic_out:
+    if arabic_name is None:
         return None
-    arabic_name, docs = arabic_out
 
-    attr_out = get_arabic_attributes(docs)
-    english2arabic_map = {}
-    if attr_out:
-        english2arabic_map, docs = attr_out
-    else:
+    english2arabic_map = get_arabic_attributes(fieldinfo)
+    if english2arabic_map is None:
         choices = list(get_args(fieldinfo.annotation))
         english2arabic_map = {c: c for c in choices}
 
@@ -50,35 +44,29 @@ def get_moshaf_field_docs(fieldname: str, fieldinfo: FieldInfo) -> MoshafFieldDo
     )
 
 
-def get_arabic_attributes(docs: str) -> dict[str, str] | None:
-    """get the Arabic attributes for `Literal` type fields
+def get_arabic_attributes(field_info: FieldInfo) -> dict[str, str] | None:
+    """get the Arabic attributes maping from English for `Literal` type fields
 
     Returns:
-        * tuple[dict[str, str], str]:
-            (the Arabic Attributes as {"English vlaue": "Arabie Value"}, rest of the docs)
+        * the Arabic Attributes as {"English vlaue": "Arabie Value"}
         * None: if there is no Arabic Name
     """
-    if docs:
-        match = re.search(
-            r'ArabicAttr\((.*?)\)',
-            docs, re.DOTALL)
-        if match:
-            return json.loads(match.group(1)), docs[: match.start()] + docs[match.end():]
+    if field_info.json_schema_extra:
+        if 'field_arabic_attrs_map' in field_info.json_schema_extra:
+            return field_info.json_schema_extra['field_arabic_attrs_map']
     return None
 
 
-def get_arabic_name(docs: str) -> tuple[str, str]:
+def get_arabic_name(field_info: FieldInfo) -> str | None:
     """get the Arabic name out of the field description
 
     Retusns:
-        * tuple[str, str]: (the Arabic Name, rest of the docs)
+        * the Arabic Name, rest of the docs
         * None: if there is no Arabic Name
 
     """
-    if docs:
-        match = re.search(
-            r'ArabicName\((.*)\)',
-            docs, re.UNICODE)
-        if match:
-            return match.group(1), docs[: match.start()] + docs[match.end():]
+    if field_info.json_schema_extra:
+        if 'field_arabic_name' in field_info.json_schema_extra:
+            return field_info.json_schema_extra['field_arabic_name']
+
     return None
