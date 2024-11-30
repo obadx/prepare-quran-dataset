@@ -1,4 +1,3 @@
-import re
 from typing import Type, Literal, Optional, Any, Callable, get_args, get_origin
 import time
 import multiprocessing
@@ -21,6 +20,11 @@ from prepare_quran_dataset.construct.utils import (
     load_yaml,
     dump_yaml,
 )
+from prepare_quran_dataset.construct.docs_utils import (
+    get_arabic_attributes,
+    get_arabic_name,
+)
+
 import config as conf
 
 
@@ -564,33 +568,6 @@ def create_input_for_field(
 
     raise ValueError(
         f"Unsupported field type for {label}: {field_info.annotation}")
-
-
-def get_arabic_name(field_info: FieldInfo) -> str:
-    """get the Arabic name out of the field description
-    """
-    if field_info.description:
-        match = re.search(
-            r'ArabicName\((.*)\)',
-            field_info.description, re.UNICODE)
-        if match:
-            return match.group(1)
-    return ''
-
-
-def get_arabic_attributes(field_info: FieldInfo) -> dict[str, str] | None:
-    """get the Arabic attributes for `Literal` type fields
-
-    Returns:
-        dict[str: str] if found else `None`
-    """
-    if field_info.description:
-        match = re.search(
-            r'ArabicAttr\((.*?)\)',
-            field_info.description, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-    return None
 
 
 def get_field_name(field_name: str, field_info: FieldInfo) -> str:
