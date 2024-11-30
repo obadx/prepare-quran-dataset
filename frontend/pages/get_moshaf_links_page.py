@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import streamlit as st
 from menu import menu_with_redirect
 
@@ -8,6 +5,7 @@ from prepare_quran_dataset.construct.utils import (
     extract_sura_from_zekr,
     extract_suar_from_mp3quran,
     extract_suar_from_archive,
+    dump_yaml,
 )
 
 
@@ -30,26 +28,23 @@ def sources_view():
 def specific_sources_view():
     st.markdown(
         'Extract Holy Quran\'s recitations for specific moshaf from webpages as'
-        ' JSON to be used in `specific_sources` in moshaf parameters.')
-    st.markdown('JSON Schema: ')
+        ' `yaml` to be used in `specific_sources` in moshaf parameters.')
+    st.markdown('yaml Schema: ')
     st.code(
         """
-        {
-            "sura index": "url of the sura",
-        }
-        """, language='json',
+        "sura integer index from 1 to 114": "the url for the sura"
+        """, language='yaml',
     )
     st.markdown('Example:')
     st.code(
         """
-    {
-        "110": "https://server10.mp3quran.net/download/Aamer/110.mp3",
-        "111": "https://server10.mp3quran.net/download/Aamer/111.mp3",
-        "112": "https://server10.mp3quran.net/download/Aamer/112.mp3",
-        "113": "https://server10.mp3quran.net/download/Aamer/113.mp3",
-        "114": "https://server10.mp3quran.net/download/Aamer/114.mp3"
-    }
-        """
+    18: https://cdns1.zekr.online/quran/5403/18/32.mp3
+    19: https://cdns1.zekr.online/quran/5403/19/32.mp3
+    20: https://cdns1.zekr.online/quran/5403/20/32.mp3
+    21: https://cdns1.zekr.online/quran/5403/21/32.mp3
+    22: https://cdns1.zekr.online/quran/5403/22/32.mp3
+    23: https://cdns1.zekr.online/quran/5403/23/32.mp3
+    """, language='yaml'
     )
 
 
@@ -60,14 +55,14 @@ def from_zekr():
         '![zekr](https://zekr.online/about/images/footer-logo.png)'
         'Extracting recitations for every sura for a [zekr.online](https://zekr.online/) moshaf like:'
         ' [https://zekr.online/ar/author/61/mhmod-khll-lhsr/quran?mushaf_id=5403](https://zekr.online/ar/author/61/mhmod-khll-lhsr/quran?mushaf_id=5403)'
-        ' as a JSON'
+        ' as a yaml'
     )
     url = st.text_input(
         'Enter Zekr moshaf Url',
         help='EX: https://zekr.online/ar/author/61/mhmod-khll-lhsr/quran?mushaf_id=5403')
     if url:
         out = extract_sura_from_zekr(url)
-        st.code(json.dumps(out, indent=4, ensure_ascii=False), language='json')
+        st.code(dump_yaml(out), language='yaml')
 
 
 def from_mp3quran():
@@ -78,14 +73,14 @@ def from_mp3quran():
     st.markdown(
         'Extracting recitations for every sura for a [mp3quran.net](https://mp3quran.net) moshaf like:'
         ' [https://mp3quran.net/ar/Aamer](https://mp3quran.net/ar/Aamer)'
-        ' as a JSON'
+        ' as a yaml'
     )
     url = st.text_input(
         'Enter mp3quran moshaf Url',
         help='EX: https://mp3quran.net/ar/Aamer')
     if url:
         out = extract_suar_from_mp3quran(url)
-        st.code(json.dumps(out, indent=4, ensure_ascii=False), language='json')
+        st.code(dump_yaml(out), language='yaml')
 
 
 def from_archive():

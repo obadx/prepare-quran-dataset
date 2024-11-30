@@ -88,20 +88,17 @@ def extract_suar_from_archive(
     return suar_links
 
 
-def extract_suar_from_mp3quran(url) -> dict[str, str]:
+def extract_suar_from_mp3quran(url) -> dict[int, str]:
     """Extract sepecific Moshaf from https://mp3quran.net/ as:
     {
-        "sura_id": "sura_link",
+        "sura integert index from 1 to 114": "sura_link",
     }
     Example:
     {
-        "108": "https://server10.mp3quran.net/download/Aamer/108.mp3",
-        "109": "https://server10.mp3quran.net/download/Aamer/109.mp3",
-        "110": "https://server10.mp3quran.net/download/Aamer/110.mp3",
+        "1": "https://server10.mp3quran.net/download/Aamer/001.mp3",
+        "3": "https://server10.mp3quran.net/download/Aamer/003.mp3",
         "111": "https://server10.mp3quran.net/download/Aamer/111.mp3",
-        "112": "https://server10.mp3quran.net/download/Aamer/112.mp3",
-        "113": "https://server10.mp3quran.net/download/Aamer/113.mp3",
-        "114": "https://server10.mp3quran.net/download/Aamer/114.mp3"
+        "114": "https://server10.mp3quran.net/download/Aamer/114.mp3",
     }
 
         Args:
@@ -142,15 +139,15 @@ def extract_suar_from_mp3quran(url) -> dict[str, str]:
                     f'Found more than sura url for the item:\n{item}'
                     f'\nResults: {sura_url}\nURL: {url}'
                 )
-                sura_links[sura_index] = sura_url[0]['href']
+                sura_links[int(sura_index)] = sura_url[0]['href']
 
     return sura_links
 
 
-def extract_sura_from_zekr(url) -> dict[str, str]:
+def extract_sura_from_zekr(url) -> dict[int, str]:
     """Extract sepecific Moshaf from https://zekr.online/ as:
     {
-        "sura_id": "sura_link",
+        "sura integer index from 1 to 114": "sura_link",
     }
     Example:
         {
@@ -190,7 +187,7 @@ def extract_sura_from_zekr(url) -> dict[str, str]:
         img_src = item['data-image']
         sura_index = img_src.split('/')[-1].replace('.svg', '')
 
-        sura_links[f'{int(sura_index):0{3}}'] = audio_link
+        sura_links[int(sura_index)] = audio_link
 
     return sura_links
 
