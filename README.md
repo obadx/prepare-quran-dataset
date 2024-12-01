@@ -1,11 +1,73 @@
 # prepare-quran-dataset
 
-Preparing and chuncking quran dataset
+Preparing and chunking quranic recitation dataset for Automatic Pronunciation Error Correction and Detection for the Holy Quran
 
 ## Table of Content
 
+* [Installation](#installation)
+    * [Main Package](#main-package)
+    * [Frontend](#frontend)
+    * [Demo](#demo)
 * [Hafs Ways](#أوجه-حفص)
-* [Moshaf Attributed Docs](#moshaf-attributed-docs)
+* [Moshaf Attributes Docs](#moshaf-attributes-docs)
+
+## Description
+
+* This repos is a part of a project to create an AI quranic recitation teacher. in this repo we are building and downloading recitations form the web and organizing them as a training dataset for the project.
+* The core database for gathering and annotating the recitations are in `src` dir as `prepare-quran-dataset` pip package along with a frontend in`frontend` directory.
+* Our elementary element for building our Quranic dataset is `Moshaf` found in `src/prepare_quran_dataset/construct/data_classes.py` as a pydantic dataclass.
+* The `Moshaf` Quranic attributes are listed [here](#moshaf-attributes-docs).
+
+## Installation
+
+We have two components to install:
+
+* Main Package: which have the main dataclasses and the core logic
+* Frontend: Which is a streamlit app to interact easily with the main package
+
+### Main Package
+
+1. Install python 3.12 or 3.13 using anaconda or any other option
+
+2. clone the repo
+
+```bash
+git clone https://github.com/obadx/prepare-quran-dataset.git
+```
+
+3. Install the package. We are installing the package as a regular pip package
+
+```bash
+cd prepare-quran-dataset
+python -m pip install -e ./
+```
+
+`-e` means editable installation
+
+4. Run the unittests as verification
+
+```bash
+python -m unittest tests/database_unittest.py 
+```
+
+### Frontend
+
+1. Install requirements:
+
+```bash
+cd frontend
+python -m pip install -r requirements.txt
+```
+
+2. Run the app:
+
+```bash
+python -m streamlit run streamlit_app.py
+```
+
+### Demo
+
+![basics](https://drive.google.com/file/d/1dbA4aw_LC7zsGjg3b3XGHaDPtvNoohxt/view?usp=sharing)
 
 ## أوجه حفص
 
@@ -201,7 +263,7 @@ Preparing and chuncking quran dataset
 
 ----------------------------
 
-## Moshaf Attributed Docs
+## Moshaf Attributes Docs
 
 |Attribute Name|Arabic Name|Values|Default Value|More Info|
 |-|-|-|-|-|
