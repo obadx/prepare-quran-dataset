@@ -19,7 +19,10 @@ def update_moshaf_item():
             required_field_names=conf.REQUIRED_MOSHAF_FIELDS,
             key_prefix='moshaf_',
             item_name_in_session_state='updated_moshaf',
-            states_values_after_submit={'switch_to_view_moshaf_pool': True},
+            states_values_after_submit={
+                'switch_to_view_moshaf_pool': True,
+                'refresh_moshaf_filters': True,
+            },
             field_funcs_after_submit=conf.MOSHAF_FIELD_FUNCS_AFTER_SUBMIT,
         )
     else:
