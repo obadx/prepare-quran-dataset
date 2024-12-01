@@ -67,10 +67,12 @@ python -m streamlit run streamlit_app.py
 
 ### Demo
 
-basics:
+Basics:
+https://github.com/user-attachments/assets/a9742b75-985c-4808-9fcb-cc8c0b6ff549
 
-![Basic Usage](./assets/qds-video-cover.png)
-[![Basic Usage](./assets/qds-video-cover.png)](https://drive.google.com/file/d/1dbA4aw_LC7zsGjg3b3XGHaDPtvNoohxt/view?usp=drive_link)
+
+
+
 
 ## أوجه حفص
 
