@@ -23,7 +23,14 @@ def play_recitations():
                 ext = file_info.name.split('.')[-1]
                 st.write(f'Sample Rate={file_info.sample_rate}')
                 st.write(f'File Type={ext}')
-                st.audio(file_info.path, loop=False)
+                if st.button('Load File', key=file_info.name, use_container_width=True):
+                    st.audio(file_info.path, loop=False)
+                    with open(file_info.path, "rb") as file:
+                        st.download_button(
+                            label="Download File",
+                            data=file,
+                            file_name=file_info.name,
+                        )
 
 
 if __name__ == '__main__':
