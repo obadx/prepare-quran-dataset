@@ -69,6 +69,8 @@ class MoshafFilter:
     not_downloaded: bool = True
     download_error: bool = True
     not_download_error: bool = True
+    annotated: bool = True
+    not_annotated: bool = True
     reciters: list[Reciter] = None
 
     @classmethod
@@ -124,6 +126,10 @@ def filter_moshaf_pool(
         # download and not download
         comp_flag = comp_flag and chose(
             filter.downloaded, filter.not_downloaded, moshaf.is_downloaded)
+
+        # annotated & not annotated
+        comp_flag = comp_flag and chose(
+            filter.annotated, filter.not_annotated, moshaf.is_annotated)
 
         # downlaod_error
         if error_ids:

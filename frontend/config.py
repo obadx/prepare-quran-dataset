@@ -74,6 +74,7 @@ DOWNLOAD_LOCK_FILE = BASE_DIR / 'download.lock'
 DOWNLOAD_ERROR_LOG = BASE_DIR / 'download_error.json'
 
 REQUIRED_MOSHAF_FIELDS = [
+    'is_annotated',
     'name',
     'reciter_id',
     'sources',

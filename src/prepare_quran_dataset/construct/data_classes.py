@@ -67,6 +67,10 @@ class Moshaf(BaseModel):
         description="The missing recitations from the Downloaded Moshaf"
         "It will filled if only `is_sura_parted==True` "
     )
+    is_annotated: bool = Field(
+        default=False,
+        description='Whether this Moshaf is annotated or not. (For Development only)'
+    )
 
     # Metadata Fields
     num_recitations: int = Field(
