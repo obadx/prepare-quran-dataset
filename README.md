@@ -68,6 +68,7 @@ python -m streamlit run streamlit_app.py
 ### Demo
 
 Basics:
+
 https://github.com/user-attachments/assets/a9742b75-985c-4808-9fcb-cc8c0b6ff549
 
 
