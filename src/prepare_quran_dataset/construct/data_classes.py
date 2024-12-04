@@ -354,7 +354,7 @@ class Moshaf(BaseModel):
     )
     tasheel_or_madd: Literal['tasheel', 'madd'] = Field(
         default='madd',
-        field_arabic_name="همزة الوصل في قوله تعالى: {آلذكرين} بموضعي الأنعام و{آلآن} موضعي يونس و{آلله} بيونس والنحل",
+        field_arabic_name="همزة الوصل في قوله تعالى: {آلذكرين} بموضعي الأنعام و{آلآن} موضعي يونس و{آلله} بيونس والنمل",
         field_arabic_attrs_map={
             "tasheel": "تسهيل",
             "madd": "مد"
