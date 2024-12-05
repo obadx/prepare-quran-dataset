@@ -176,7 +176,7 @@ class Moshaf(BaseModel):
         ' `wasl_2` Pronounce "meem" with fathah (a short "a" sound) and stretch it for 2 harakat.'
         ' `wasl_6` Pronounce "meem" with fathah and stretch it for 6 harakat.'
     )
-    madd_yaa_alayn_alharfy: Literal[4, 6] = Field(
+    madd_yaa_alayn_alharfy: Literal[2, 4, 6] = Field(
         default=6,
         field_arabic_name="مقدار   المد اللازم الحرفي للعين",
         description=' The length of Lzem Harfy of Yaa in letter Al-Ayen Madd'
