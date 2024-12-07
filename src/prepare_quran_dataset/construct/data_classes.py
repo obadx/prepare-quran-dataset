@@ -61,7 +61,7 @@ class Moshaf(BaseModel):
         ' sources or from specific sources')
     is_sura_parted: bool = Field(
         default=True,
-        description='If every recitation file is a sperate sura or not')
+        description='If every recitation file is a separate sura or not')
     missing_recitations: set = Field(
         default=set(),
         description="The missing recitations from the Downloaded Moshaf"
@@ -257,7 +257,7 @@ class Moshaf(BaseModel):
     )
     sakt_maleeyah: Literal['sakt', 'waqf', 'idgham'] = Field(
         default='waqf',
-        field_arabic_name="وجه  قوله تعالى {ماليه هلك} بالأحقاف",
+        field_arabic_name="وجه  قوله تعالى {ماليه هلك} بالحاقة",
         field_arabic_attrs_map={
             "sakt": "سكت",
             "waqf": "وقف",
@@ -490,8 +490,8 @@ class Moshaf(BaseModel):
         ' `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)'
     )
     raa_yasr: Literal['wasl', 'tafkheem', 'tarqeeq'] = Field(
-        default='tafkheem',
-        field_arabic_name="التفخيم والترقيق في راء {يسر} في الفجر  وقفا",
+        default='tarqeeq',
+        field_arabic_name="التفخيم والترقيق في راء {يسر} بالفجر و{أن أسر} بطه والشعراء و{فأسر} بهود والحجر والدخان  وقفا",
         field_arabic_attrs_map={
             "wasl": "وصل",
             "tafkheem": "تفخيم",
