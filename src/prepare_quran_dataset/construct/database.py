@@ -431,35 +431,57 @@ def check_duplicate_files(
 
 
 def get_file_name(
-    name: str,
+    filename: str,
     segmented_by: Literal[*SEGMENTED_BY] = 'sura',
 ) -> str:
     # TODO: Test it
     # converting unicode url name to Actual unicode
-    name = urllib.parse.unquote(name)
+    filename = urllib.parse.unquote(filename)
+    splits = filename.split('.')
+    assert len(splits) == 2, (
+        f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
+    name = splits[0]
+    ext = splits[1]
+
     match segmented_by:
         case 'sura':
-            return get_sura_standard_name(name)
+            name = get_sura_standard_name(name)
         case 'aya':
-            # We only support https://everyayah.com/ format as "xxxyyy.mp3"
-            # where xxx is the sura index starting form 1 and yyy is the aya index starting from 1
-            assert len(name) == 6, (
-                f'In correct everyayah format must contain 6 chars got {name}')
-            sura_idx = int(name[:3])
-            if sura_idx > 114 or sura_idx < 1:
-                raise ValueError(
-                    f'Sura Idx must be >=1 and <= 114 got {sura_idx} of name={name}')
-            aya_idx = int(name[3:])
-            if aya_idx < 1 or aya_idx > SURA_TO_AYA_COUNT[aya_idx]:
-                raise ValueError(
-                    f'The Aya Index is out of range got {aya_idx} of {name}')
+            name = get_aya_standard_name(name)
 
-            return name
+    return f'{name}.{ext}'
+
+
+def get_aya_standard_name(name: str):
+    """gets the standard name of the aya
+
+    We only support https://everyayah.com/ format as "xxxyyy.mp3"
+    where xxx is the sura index starting form 1 and yyy is the aya index starting from 1.
+    Example: name = 001023 the verse (aya) 23 of sura number 1
+    """
+    assert len(name) == 6, (
+        f'Incorrect everyayah format must contain 6 chars got {name}')
+    try:
+        sura_idx = int(name[:3])
+    except ValueError:
+        raise AssertionError(
+            f'Not a valid sura index got string: `{name[:3]}` expected first 3 chars to be integer value')
+    assert sura_idx <= 114 and sura_idx >= 1, (
+        f'Sura Idx must be >=1 and <= 114 got {sura_idx} of name={name}')
+
+    try:
+        aya_idx = int(name[3:])
+    except ValueError:
+        raise AssertionError(
+            f'Not a valid aya index got string: `{name[3:]}` expected last 3 chars to be integer value')
+
+    assert aya_idx >= 1 and aya_idx <= SURA_TO_AYA_COUNT[sura_idx], (
+        f'The Aya Index is out of range got {aya_idx} of {name}')
 
     return name
 
 
-def get_sura_standard_name(filename: str) -> str:
+def get_sura_standard_name(name: str) -> str:
     """Returns the standard name of the sura represnted by the Sura's Index i.e("001")
     Args:
         name (str): the name of the sura represnted by:
@@ -470,11 +492,6 @@ def get_sura_standard_name(filename: str) -> str:
     Returns:
         (str): the sura's index as a standard name i.e("002")
     """
-    splits = filename.split('.')
-    assert len(splits) == 2, (
-        f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
-    name = splits[0]
-    extention = splits[1]
 
     # searching for the Arabic name of the sura
     name_normalized = normalize_text(name)
@@ -490,7 +507,7 @@ def get_sura_standard_name(filename: str) -> str:
             else:
                 chosen_idx = idx
     if chosen_idx is not None:
-        return f'{chosen_idx + 1:0{3}}.{extention}'
+        return f'{chosen_idx + 1:0{3}}'
 
     # search first for numbers "002", or "2"
     # TODO: refine this regs to be specific
@@ -498,7 +515,7 @@ def get_sura_standard_name(filename: str) -> str:
     if re_result:
         num = int(re_result.group())
         if num >= 1 and num <= 114:
-            return f'{num:0{3}}.{extention}'
+            return f'{num:0{3}}'
 
     raise ValueError(f'Sura name is not handeled in this case. name="{name}"')
 
