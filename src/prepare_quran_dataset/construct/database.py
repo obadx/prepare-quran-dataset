@@ -456,7 +456,8 @@ def get_aya_standard_name(name: str):
     """gets the standard name of the aya
 
     We only support https://everyayah.com/ format as "xxxyyy.mp3"
-    where xxx is the sura index starting form 1 and yyy is the aya index starting from 1.
+    where xxx is the sura index starting form 1
+    and yyy is the aya index starting from 1 to the total aya count for sura, and 0 for استعاذة or بسملة 
     Example: name = 001023 the verse (aya) 23 of sura number 1
     """
     assert len(name) == 6, (
@@ -475,7 +476,7 @@ def get_aya_standard_name(name: str):
         raise AssertionError(
             f'Not a valid aya index got string: `{name[3:]}` expected last 3 chars to be integer value')
 
-    assert aya_idx >= 1 and aya_idx <= SURA_TO_AYA_COUNT[sura_idx], (
+    assert aya_idx >= 0 and aya_idx <= SURA_TO_AYA_COUNT[sura_idx], (
         f'The Aya Index is out of range got {aya_idx} of {name}')
 
     return name
