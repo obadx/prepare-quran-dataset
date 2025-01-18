@@ -15,11 +15,11 @@ from pydantic.fields import FieldInfo, PydanticUndefined
 from prepare_quran_dataset.construct.database import Pool, MoshafPool, ReciterPool
 from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
 from prepare_quran_dataset.construct.utils import (
-    get_suar_list,
     kill_process,
     load_yaml,
     dump_yaml,
 )
+from prepare_quran_dataset.construct.quran_data_utils import get_suar_list, SURA_TO_AYA_COUNT
 from prepare_quran_dataset.construct.docs_utils import (
     get_arabic_attributes,
     get_arabic_name,
@@ -154,6 +154,11 @@ class DownloadLog:
     moshaf_ids: list[str]
     finished_moshaf_ids: list[str] = field(default_factory=[])
     error_ids: list[str] = field(default_factory=[])
+
+
+@st.cache_data
+def get_sura_to_aya_count() -> list[str]:
+    return SURA_TO_AYA_COUNT
 
 
 @st.cache_data

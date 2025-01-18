@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from pathlib import Path
 
-from prepare_quran_dataset.construct.database import ReciterPool, MoshafPool
+from prepare_quran_dataset.construct.database import get_file_name, ReciterPool, MoshafPool
 from prepare_quran_dataset.construct.data_classes import Reciter, Moshaf
 from prepare_quran_dataset.construct.base import ItemExistsInPoolError
 
@@ -379,6 +379,57 @@ class TestMoshafPool(unittest.TestCase):
         self.assertEqual(
             self.reciter_pool[1].english_name,
             self.moshaf_pool['1.1'].reciter_english_name)
+
+
+class TestGetFileName(unittest.TestCase):
+    def setUp(self):
+        ...
+
+    def test_get_file_name_sura(self):
+        # Testing sura name
+        self.assertEqual(get_file_name(
+            '1.mp3', segmented_by='sura'), '001.mp3')
+        self.assertEqual(get_file_name(' الفاتحة001.mp3',
+                         segmented_by='sura',), '001.mp3')
+        self.assertEqual(get_file_name('الفاتحة' + '.mp3',
+                         segmented_by='sura',), '001.mp3')
+        self.assertEqual(get_file_name('الأخلاص' + '.mp3',
+                         segmented_by='sura',), '112.mp3')
+        self.assertEqual(get_file_name('المائدة  أحمد' +
+                         '.mp3', segmented_by='sura',), '005.mp3')
+        self.assertEqual(get_file_name('المائدة  005' + '.mp3',
+                         segmented_by='sura',), '005.mp3')
+        self.assertEqual(get_file_name('المائدة  4' + '.mp3',
+                         segmented_by='sura',), '005.mp3')
+        self.assertEqual(get_file_name('  5  maidaa' + '.mp3',
+                         segmented_by='sura',), '005.mp3')
+        with self.assertRaises(AssertionError):
+            get_file_name('  444  maidaa' + '.mp3',
+                          segmented_by='sura',), '444.mp3'
+
+    def test_get_file_name_aya(self):
+        cases = [
+            ('001001.mp3', '001001.mp3'),
+            ('111004.mp3', '111004.mp3'),
+            ('2119.mp3', '002119.mp3'),
+            ('2119.mp3', '002119.mp3'),
+            ('audhubillah.mp3', 'audhubillah.mp3'),
+            ('bismillah.mp3', 'bismillah.mp3'),
+        ]
+        for case in cases:
+            self.assertEqual(get_file_name(
+                case[0], segmented_by='aya'), case[1])
+
+        cases = [
+            '001010.mp3',
+            '111994.mp3',
+            '211994.mp3',
+            '2300.mp3',
+            'rrrfff.mp3',
+        ]
+        for case in cases:
+            with self.assertRaises(AssertionError):
+                get_file_name(case, segmented_by='aya')
 
 
 if __name__ == '__main__':

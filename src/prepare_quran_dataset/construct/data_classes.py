@@ -6,11 +6,15 @@ from pathlib import Path
 
 from .utils import get_audiofile_info
 from .docs_utils import get_moshaf_field_docs
+from .quran_data_utils import SURA_TO_AYA_COUNT
 # class FooBarModel(BaseModel):
 #     # do not modify attributes once object is created
 #     model_config = ConfigDict(frozen=True)
 #
 #     id: int
+
+
+SEGMENTED_BY = ['sura', 'aya', 'none']
 
 
 class Reciter(BaseModel):
@@ -59,13 +63,13 @@ class Moshaf(BaseModel):
         default=[],
         description='List of downloaded urls (sources) either from'
         ' sources or from specific sources')
-    is_sura_parted: bool = Field(
-        default=True,
-        description='If every recitation file is a separate sura or not')
+    segmented_by: Literal[*SEGMENTED_BY] = Field(
+        default='sura',
+        description='Every recitation file is  either `sura`, `aya` or `none` neither by aya or by sura ')
     missing_recitations: set = Field(
         default=set(),
         description="The missing recitations from the Downloaded Moshaf"
-        "It will filled if only `is_sura_parted==True` "
+        "It will filled if only `segmented_by` is either or `sura` or `aya` "
     )
     is_annotated: bool = Field(
         default=False,
@@ -556,23 +560,32 @@ class Moshaf(BaseModel):
         self.is_downloaded = set(self.downloaded_sources) == (
             set(self.sources) | set(self.specific_sources.values()))
 
-        if self.is_sura_parted:
+        # managing `complete` attribute
+        if self.segmented_by == 'sura':
             self.is_complete = (self.get_all_sura_names() ==
-                                self.get_downloaded_suar_names())
+                                self.get_downloaded_filenames())
+        elif self.segmented_by == 'aya':
+            self.is_complete = (self.get_all_sura_names() ==
+                                self.get_downloaded_filenames())
         else:
+            # WARN: wiered condition
             self.is_complete = self.is_downloaded
 
-        if self.is_sura_parted:
+        # filling missing recitation files
+        if self.segmented_by == 'sura':
             self.missing_recitations = (
-                self.get_all_sura_names() - self.get_downloaded_suar_names())
+                self.get_all_sura_names() - self.get_downloaded_filenames())
+        elif self.segmented_by == 'aya':
+            self.missing_recitations = (
+                self.get_all_ayat_names() - self.get_downloaded_filenames())
 
-    def get_downloaded_suar_names(self) -> set[str]:
-        """Gets the sura names of the dwonloaded recitations"""
-        suar_names_set = set()
+    def get_downloaded_filenames(self) -> set[str]:
+        """Gets the filenames of the dwonloaded recitations"""
+        filenames_set = set()
         for audiofile in self.recitation_files:
-            sura_name = audiofile.name.split('.')[0]
-            suar_names_set.add(sura_name)
-        return suar_names_set
+            filename = audiofile.name.split('.')[0]
+            filenames_set.add(filename)
+        return filenames_set
 
     def get_all_sura_names(self) -> set[str]:
         """Retruns the suar names as set of '001', '002', ...'114' """
@@ -580,6 +593,23 @@ class Moshaf(BaseModel):
         for idx in range(1, 115, 1):
             suar_names.add(f'{idx:0{3}}')
         return suar_names
+
+    def get_all_ayat_names(self) -> set[str]:
+        """Retruns All the Holy quran ayat index with everyayah.com style
+
+        Returns all the Holy Quran aya in everyayah style Totatiling 6236  + 114 = 6350:
+        Formated as "xxxyyy.mp3"
+        where xxx is the sura index starting form 1 to 114
+        and yyy is the aya index starting from 0 to the total aya count for sura, where 0 for استعاذة or بسملة  not an independet aya
+        Example: name = 001023 the verse (aya) 23 of sura number 1
+        """
+        ayat_names = set()
+        for sura_idx in range(1, 115, 1):
+            # add index 0 file (not an aya  استعاذة or بسملة  or both
+            ayat_names.add(f'{sura_idx * 1000:0{6}}')
+            for aya_idx in range(1, SURA_TO_AYA_COUNT[sura_idx], 1):
+                ayat_names.add(f'{sura_idx * 1000 + aya_idx:0{6}}')
+        return ayat_names
 
     @classmethod
     def generate_docs(cls) -> str:
