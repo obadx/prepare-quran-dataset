@@ -13,7 +13,7 @@ from .data_classes import (
     Moshaf,
     SEGMENTED_BY,
 )
-from .utils import download_file_fast
+from .utils import download_file_fast, correct_file_extention, is_audiofile
 from .quran_data_utils import SUAR_LIST, SURA_TO_AYA_COUNT, normalize_text
 
 
@@ -398,13 +398,22 @@ def download_normal_sources(
             )
             downloaded_pathes.append(url_path)
     files_pathes = get_files(downloaded_pathes)
+
+    # correct every file extentoin
+    corrected_file_pathes: list[Path] = [
+        correct_file_extention(p) for p in files_pathes]
+
+    # get only the media files
+    audiofiles: list[Path] = [
+        p for p in corrected_file_pathes if is_audiofile(p)]
+
     check_duplicate_files(
-        files_pathes, download_path,
+        audiofiles, download_path,
         segmented_by=segmented_by,
         error_source='original Sources',
     )
     name_to_downloaded_path = {}
-    for p in files_pathes:
+    for p in audiofiles:
         file_name = get_file_name(p.name, segmented_by=segmented_by)
         name_to_downloaded_path[file_name] = p
 
@@ -434,9 +443,13 @@ def get_file_name(
     filename: str,
     segmented_by: Literal[*SEGMENTED_BY] = 'sura',
 ) -> str:
-    # TODO: Test it
-    # converting unicode url name to Actual unicode
+    """Returns the filename is a valid  sura or aya name
+
+    Raises:
+        AssertetionError: if the file is not a valid sura or aya
+    """
     filename = urllib.parse.unquote(filename)
+
     splits = filename.split('.')
     assert len(splits) == 2, (
         f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
@@ -452,34 +465,34 @@ def get_file_name(
     return f'{name}.{ext}'
 
 
-def get_aya_standard_name(name: str):
+def get_aya_standard_name(name: str | int) -> str:
     """gets the standard name of the aya
 
-    We only support https://everyayah.com/ format as "xxxyyy.mp3"
-    where xxx is the sura index starting form 1
-    and yyy is the aya index starting from 1 to the total aya count for sura, and 0 for استعاذة or بسملة 
-    Example: name = 001023 the verse (aya) 23 of sura number 1
+    * We only support https://everyayah.com/ format as "xxxyyy.mp3"
+        where xxx is the sura index starting form 1
+        and yyy is the aya index starting from 0 to the total aya count for sura, where 0 for استعاذة or بسملة  not an independet aya
+        Example: name = `002023` is the same as `2023` representing: the verse (aya) 23 of sura number 2
+    * We also accept strings: ['audhubillah', 'bismillah']  for استعاذة and بسملة
     """
-    assert len(name) == 6, (
-        f'Incorrect everyayah format must contain 6 chars got {name}')
     try:
-        sura_idx = int(name[:3])
+        int_name = int(name)
     except ValueError:
-        raise AssertionError(
-            f'Not a valid sura index got string: `{name[:3]}` expected first 3 chars to be integer value')
+        if name in ['audhubillah', 'bismillah']:
+            return name
+        else:
+            raise AssertionError(
+                f'Sura should be at format of xxxyyy where xxx is the sura index form(1) to (114) and yyy is the ayah index from(0) to max_aya count for sura Ex: 002100 is equvilent to 2100 where sura idx is 2 and aya index is 100')
+
+    sura_idx = int_name // 1000
+    aya_idx = int_name % 1000
+
     assert sura_idx <= 114 and sura_idx >= 1, (
         f'Sura Idx must be >=1 and <= 114 got {sura_idx} of name={name}')
-
-    try:
-        aya_idx = int(name[3:])
-    except ValueError:
-        raise AssertionError(
-            f'Not a valid aya index got string: `{name[3:]}` expected last 3 chars to be integer value')
 
     assert aya_idx >= 0 and aya_idx <= SURA_TO_AYA_COUNT[sura_idx], (
         f'The Aya Index is out of range got {aya_idx} of {name}')
 
-    return name
+    return f'{int_name:0{6}}'
 
 
 def get_sura_standard_name(name: str) -> str:
@@ -517,8 +530,12 @@ def get_sura_standard_name(name: str) -> str:
         num = int(re_result.group())
         if num >= 1 and num <= 114:
             return f'{num:0{3}}'
+        else:
+            raise AssertionError(
+                f'sura index should be between 1 and 114 got: ({num}) of name: ({name})')
 
-    raise ValueError(f'Sura name is not handeled in this case. name="{name}"')
+    raise AssertionError(
+        f'Sura name is not handeled in this case. name="{name}"')
 
 
 def get_files(pathes: list[Path]) -> list[Path]:
