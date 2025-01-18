@@ -403,7 +403,7 @@ class TestGetFileName(unittest.TestCase):
                          segmented_by='sura',), '005.mp3')
         self.assertEqual(get_file_name('  5  maidaa' + '.mp3',
                          segmented_by='sura',), '005.mp3')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AssertionError):
             get_file_name('  444  maidaa' + '.mp3',
                           segmented_by='sura',), '444.mp3'
 
@@ -411,6 +411,10 @@ class TestGetFileName(unittest.TestCase):
         cases = [
             ('001001.mp3', '001001.mp3'),
             ('111004.mp3', '111004.mp3'),
+            ('2119.mp3', '002119.mp3'),
+            ('2119.mp3', '002119.mp3'),
+            ('audhubillah.mp3', 'audhubillah.mp3'),
+            ('bismillah.mp3', 'bismillah.mp3'),
         ]
         for case in cases:
             self.assertEqual(get_file_name(
@@ -420,6 +424,7 @@ class TestGetFileName(unittest.TestCase):
             '001010.mp3',
             '111994.mp3',
             '211994.mp3',
+            '2300.mp3',
             'rrrfff.mp3',
         ]
         for case in cases:

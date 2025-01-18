@@ -1,4 +1,4 @@
-from prepare_quran_dataset.construct.utils import get_suar_list
+from prepare_quran_dataset.construct.quran_data_utils import get_suar_list
 from prepare_quran_dataset.construct.database import get_sura_standard_name
 
 
