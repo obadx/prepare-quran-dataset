@@ -133,8 +133,9 @@ def view_moshaf_pool():
         expander = st.expander(
             f"{moshaf.name} / {moshaf.reciter_arabic_name} / (ID: {moshaf.id})")
         with expander:
-            with st.popover('تفاصيل المصحف'):
-                display_moshaf(moshaf)
+            if st.button('اضغط  هذا الزر والذي يليه  لمزيد من التفاصيل', key=f'{moshaf.id}_details'):
+                with st.popover('تفاصيل المصحف'):
+                    display_moshaf(moshaf)
 
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
