@@ -564,7 +564,7 @@ def create_input_for_field(
         return text.split('\n')
     elif field_info.annotation in [dict[str, str], Optional[dict[str, str]], dict[int, str], Optional[dict[int, str]]]:
         help = (
-            'Place the specifc downloads as yaml:'
+            'Place the specifc downloads as yaml with `key: url`. Example:'
             f'\n{dump_yaml({3: 'https://example.com/003.mp3',
                            4: 'https://example.com/004.mp3'})}\n'
         ) + help
@@ -572,6 +572,7 @@ def create_input_for_field(
             label,
             key=key,
             value=dump_yaml(default_value) if default_value else '',
+            height=450,
             help=help,
             placeholder=help,
         )
