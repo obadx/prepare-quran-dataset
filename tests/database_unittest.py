@@ -139,7 +139,7 @@ class TestMoshafPool(unittest.TestCase):
         self.reciter_pool = ReciterPool(path=self.reciter_pool_file)
         self.moshaf_pool = MoshafPool(
             reciter_pool=self.reciter_pool,
-            metadata_path=self.moshaf_pool_file)
+            base_path=self.temp_dir)
 
         reciters = [Reciter(
             arabic_name="محمد صديق المنشاوي",
@@ -383,7 +383,7 @@ class TestMoshafPool(unittest.TestCase):
 
         loaded_moshaf_pool = MoshafPool(
             reciter_pool=self.reciter_pool,
-            metadata_path=self.moshaf_pool_file)
+            base_path=self.temp_dir)
         self.assertEqual(moshaf.name, loaded_moshaf_pool['1.0'].name)
 
     def test_update_with_changing_moshaf_reciter(self):
