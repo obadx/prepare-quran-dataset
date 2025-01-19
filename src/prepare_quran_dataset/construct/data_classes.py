@@ -1,12 +1,13 @@
 from typing import Literal, Optional, Self
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, model_validator, field_validator, AnyHttpUrl, ValidationError
 from pydantic.fields import FieldInfo, PydanticUndefined
 from pathlib import Path
 
 
-from .utils import get_audiofile_info
+from .utils import get_audiofile_info, dump_yaml
 from .docs_utils import get_moshaf_field_docs
 from .quran_data_utils import SURA_TO_AYA_COUNT
+from .database_utils import get_aya_standard_name
 # class FooBarModel(BaseModel):
 #     # do not modify attributes once object is created
 #     model_config = ConfigDict(frozen=True)
@@ -55,9 +56,19 @@ class Moshaf(BaseModel):
     specific_sources: dict[int, str] = Field(
         default={},
         description='Overwriting a specific group of files.'
-        'As: {"sura_integer_index between 1 and 114": "sura_url"}'
+        'As: {"sura or aya index": "url"}'
         'Ex: {"002": "url_for_002"} will overwrite the recitation "002"'
-        'downloaded by the `sources` attributes'
+        'The key is sura index if `segmented_by="sura"` while the key is the aya index if `segmented_by="aya"`.\n'
+        'Sura index should be between 1 and 114.\n'
+        'Aya index should be with everyayah.com format as: `xxxyyy` where `xxx` is the sura index form(1) to (114) and `yyy` is the ayah index from(0) to max_aya count for sura. Example: `002100` is equvilent to `2100` where sura idx is 2 and aya index is 100.'
+        '\nExample for specific sources of sura key:'
+        f'\n{dump_yaml({3: 'https://example.com/003.mp3',
+                           4: 'https://example.com/004.mp3'})}'
+        '\nExample for specific sources of aya key:'
+        f'\n{dump_yaml({1001: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/001001.mp3',
+                        114007: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/114007.mp3'})}'
+
+
     )
     downloaded_sources: list[str] = Field(
         default=[],
@@ -515,15 +526,39 @@ class Moshaf(BaseModel):
                 f'مد  اللين يجب أن يكون أقل من أو يساوي مد العارض للسكون. مد العارض ({self.madd_aared_len})و مد اللين ({self.madd_alleen_len}).')
         return self
 
-    @field_validator('specific_sources', mode='after')
-    @classmethod
-    def valid_sura_index(cls, specific_sources: dict[int, str]) -> str:
-        for sura_index in specific_sources:
+    @model_validator(mode='after')
+    def valid_sura_and_aya_index(self) -> Self:
+        error_beginning = 'Error in validating `specific_sources`'
+        for key, url in self.specific_sources.items():
+            if self.segmented_by == 'sura':
+                if key < 1 or key > 114:
+                    raise ValueError(
+                        f'{error_beginning}. Sura Index must be integer between 1 and 114, we got "{key}"')
+            elif self.segmented_by == 'aya':
+                try:
+                    get_aya_standard_name(key)
+                except Exception as e:
+                    raise ValueError(f'{error_beginning}. {e}')
 
-            if sura_index < 1 or sura_index > 114:
+            try:
+                url = AnyHttpUrl(url)
+                self.specific_sources[key] = str(url)
+            except ValidationError:
                 raise ValueError(
-                    f'Sura Index must be integer between 1 and 114, we got "{sura_index}"')
-        return specific_sources
+                    f'Error in `specific_sources`. The url="{url}" of key="{key}" is not a valid url')
+
+        return self
+
+    # @field_validator('specific_sources', mode='after')
+    # @classmethod
+    # def valid_sura_index(cls, specific_sources: dict[int, str]) -> str:
+    #     # TODO: add support for `aya` mode
+    #     for sura_index in specific_sources:
+    #
+    #         if sura_index < 1 or sura_index > 114:
+    #             raise ValueError(
+    #                 f'Sura Index must be integer between 1 and 114, we got "{sura_index}"')
+    #     return specific_sources
 
     def model_post_init(self, *args, **kwargs):
         self.is_downloaded = set(self.downloaded_sources) == (
