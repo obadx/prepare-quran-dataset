@@ -38,9 +38,6 @@ POPUP_MSG_ICONS: dict[str, str] = {
 
 BASE_DIR = Path('../../../quran-dataset')
 RECITER_POOL_FILE = BASE_DIR / 'reciter_pool.jsonl'
-MOSHAF_POOL_FILE = BASE_DIR / 'moshaf_pool.jsonl'
-DOWNLOAD_PATH = BASE_DIR / 'Downloads'
-DATASET_PATH = BASE_DIR / 'dataset'
 DOWNLOAD_LOCK_FILE = BASE_DIR / 'download.lock'
 DOWNLOAD_ERROR_LOG = BASE_DIR / 'download_error.json'
 

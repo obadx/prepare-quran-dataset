@@ -25,14 +25,9 @@ def set_up(reset=False) -> None:
         st.session_state.reciter_pool = ReciterPool(conf.RECITER_POOL_FILE)
 
     if 'moshaf_pool' not in st.session_state or reset:
-        if not conf.MOSHAF_POOL_FILE.is_file():
-            os.makedirs(conf.BASE_DIR, exist_ok=True)
-            conf.MOSHAF_POOL_FILE.touch()
         st.session_state.moshaf_pool = MoshafPool(
             reciter_pool=st.session_state.reciter_pool,
-            metadata_path=conf.MOSHAF_POOL_FILE,
-            download_path=conf.DOWNLOAD_PATH,
-            dataset_path=conf.DATASET_PATH)
+            base_path=conf.BASE_DIR)
 
     if 'switch_to_view_reciters' not in st.session_state:
         st.session_state.switch_to_view_reciters = False

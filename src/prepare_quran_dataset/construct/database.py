@@ -53,18 +53,41 @@ class MoshafPool(Pool):
     def __init__(
         self,
         reciter_pool: ReciterPool,
-        dataset_path='data/',
-        metadata_path='data/moshaf_pool.jsonl',
-        download_path='data/Downloads',
+        base_path: Path | str,
     ):
+        """
+        The dataset is formated as:
+            .
+            ├── dataset
+            │   ├── 0.0
+            │   ├── 0.1
+            │   ├── 1.0
+            │   └── 1.1
+            ├── Downloads
+            │   ├── 0.0
+            │   ├── 0.1
+            │   ├── 1.0
+            │   └── 1.1
+            ├── moshaf_pool.jsonl
+            └── reciter_pool.jsonl
+        Every item in `dataset` is a directory containg recitation files same as `Downloads`
+        """
+
+        self._reciter_pool = reciter_pool
+        self.base_path = Path(base_path)
+        self.dataset_path = self.base_path / 'dataset'
+        self.download_path = self.base_path / 'Downloads'
+        self.moshaf_pool_metadata_path = self.base_path / 'moshaf_pool.jsonl'
+
+        if not self.moshaf_pool_metadata_path.is_file():
+            os.makedirs(self.base_path, exist_ok=True)
+            self.moshaf_pool_metadata_path.touch()
+
         super().__init__(
-            path=metadata_path,
+            path=self.moshaf_pool_metadata_path,
             item_type=Moshaf,
             id_column='id',
         )
-        self._reciter_pool = reciter_pool
-        self.dataset_path = Path(dataset_path)
-        self.download_path = Path(download_path)
 
     def get_hash(self, item: dict[str, Any] | Moshaf) -> str:
         """We will use url and reciter's ID as a unique Identifier"""
@@ -171,6 +194,7 @@ class MoshafPool(Pool):
         moshaf = self.__getitem__(id)
         moshaf = download_media_and_fill_metadata(
             moshaf,
+            base_path=self.base_path,
             database_path=self.dataset_path,
             download_path=self.download_path,
             segmented_by=moshaf.segmented_by,
@@ -194,6 +218,7 @@ class MoshafPool(Pool):
 
 def download_media_and_fill_metadata(
     item: Moshaf,
+    base_path: Path,
     database_path: Path | str,
     download_path: Path | str,
     refresh=False,
@@ -248,7 +273,8 @@ def download_media_and_fill_metadata(
     )
 
     # Fill Moshaf's Metadata
-    item.fill_metadata_after_download(moshaf_path=moshaf_path)
+    item.fill_metadata_after_download(
+        moshaf_path=moshaf_path, base_path=base_path)
 
     return item
 

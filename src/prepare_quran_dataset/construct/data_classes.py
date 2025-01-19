@@ -99,7 +99,7 @@ class Moshaf(BaseModel):
         description='If the Moshaf has all the recitations (114)')
     recitation_files: list[AudioFile] = Field(
         default_factory=lambda: [],
-        description='List of AudioFile objects')
+        description='List of AudioFile objects. Every path is `dataset/moshaf_id/audiofile_name`')
     publisher: Optional[str] = Field(
         default='',
         description='Publisher that records the recitations')
@@ -567,7 +567,13 @@ class Moshaf(BaseModel):
         if self.madd_alleen_len is None:
             self.madd_alleen_len = self.madd_aared_len
 
-    def fill_metadata_after_download(self, moshaf_path: Path):
+    def fill_metadata_after_download(self, moshaf_path: Path, base_path: Path):
+        """Filling Moshaf Metada after downlaod
+
+        Args:
+            moshaf_path (Path): the moshaf path
+            base_path (Path): the base path of the dataset
+        """
 
         total_duration_minutes = 0.0
         total_size_megabytes = 0.0
@@ -577,7 +583,7 @@ class Moshaf(BaseModel):
             if audio_file_info:
                 audio_file = AudioFile(
                     name=filepath.name,
-                    path=str(filepath.absolute()),
+                    path=str(filepath.relative_to(base_path)),
                     sample_rate=audio_file_info.sample_rate,
                     duration_minutes=audio_file_info.duration_seconds / 60.0
                 )

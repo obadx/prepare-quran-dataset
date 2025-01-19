@@ -3,6 +3,8 @@ import streamlit as st
 
 from menu import menu_with_redirect
 from utils import get_suar_names, get_sura_to_aya_count
+import config as conf
+
 from prepare_quran_dataset.construct.data_classes import AudioFile
 
 
@@ -21,8 +23,8 @@ def display_audio_file(
         st.write(f'Sample Rate={file_info.sample_rate}')
         st.write(f'File Type={ext}')
         if st.button('Load File', key=file_info.name, use_container_width=True):
-            st.audio(file_info.path, loop=False)
-            with open(file_info.path, "rb") as file:
+            st.audio(str(conf.BASE_DIR / file_info.path), loop=False)
+            with open(conf.BASE_DIR / file_info.path, "rb") as file:
                 st.download_button(
                     label="Download File",
                     data=file,
