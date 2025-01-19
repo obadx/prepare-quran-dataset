@@ -4,7 +4,6 @@ from pathlib import Path
 import shutil
 import os
 from collections import defaultdict
-import urllib.parse
 
 
 from .base import Pool
@@ -14,7 +13,7 @@ from .data_classes import (
     SEGMENTED_BY,
 )
 from .utils import download_file_fast, correct_file_extention, is_audiofile
-from .quran_data_utils import SUAR_LIST, SURA_TO_AYA_COUNT, normalize_text
+from .database_utils import get_file_name
 
 
 class ReciterPool(Pool):
@@ -288,8 +287,8 @@ def download_moshaf_from_urls(
     #  Download specifc_sources
     # f"{file name}.extention": file path
     name_to_specific_sura_download_path = {}
-    if segmented_by == 'sura':
-        name_to_specific_sura_download_path = download_specifc_sura_sources(
+    if segmented_by in ['sura', 'aya']:
+        name_to_specific_sura_download_path = download_specifc_sources(
             specific_sources=specific_sources,
             download_path=download_path,
             downloaded_sources=downloaded_sources,
@@ -315,7 +314,7 @@ def download_moshaf_from_urls(
         shutil.rmtree(download_path)
 
 
-def download_specifc_sura_sources(
+def download_specifc_sources(
     specific_sources: dict[int, str],
     download_path: Path,
     downloaded_sources: set[str],
@@ -328,14 +327,16 @@ def download_specifc_sura_sources(
     3. Returns "f{filename}.extention": Path(of the downloaded file)
 
     Args:
-        specific_sources (dict[int, str]): "sura index from 1 to 114 like 002": url of this file. Each url has to be url to a file not zip file
+        specific_sources (dict[int, str]): The key is either `sura index` or `aya index`. The value is the url
+            * `sura index` from 1 to 114 like 002"
+            * `aya index`: is an interger formated as everyayah.com format see docstring for function `get_aya_standard_name` for clarification
         download_path (Path):
 
     Returns:
         dict[str, Path]: "f{filename}.extention": Path(of the downloaded file)
     """
     name_to_specific_download_pathes = {}  # f"{file name}.extention": file path
-    for sura_idx, url in specific_sources.items():
+    for specific_key, url in specific_sources.items():
         if url not in downloaded_sources:
             url_path = download_file_fast(
                 url=url,
@@ -349,13 +350,13 @@ def download_specifc_sura_sources(
                 'Your specific source must be media file not zip')
             ext = url_path.name.split('.')[-1]
 
-            # (3 digits string) sura_idx=1, name=001}'
-            name = f'{sura_idx:0{3}}'
+            filename = get_file_name(
+                f'{specific_key}.{ext}', segmented_by=segmented_by)
 
             # renamaing url_pathes from url_hash to its numercal name
-            url_path = url_path.rename(url_path.parent / f'{name}.{ext}')
+            url_path = url_path.rename(url_path.parent / filename)
 
-            name_to_specific_download_pathes[f'{name}.{ext}'] = url_path
+            name_to_specific_download_pathes[filename] = url_path
     check_duplicate_files(
         list(name_to_specific_download_pathes.values()),
         download_path,
@@ -437,105 +438,6 @@ def check_duplicate_files(
         f'Duplicate Files in {error_source}.'
         f' These files are duplicated {duplicate_files}.'
         f' Download_path: {download_path.absolute()}')
-
-
-def get_file_name(
-    filename: str,
-    segmented_by: Literal[*SEGMENTED_BY] = 'sura',
-) -> str:
-    """Returns the filename is a valid  sura or aya name
-
-    Raises:
-        AssertetionError: if the file is not a valid sura or aya
-    """
-    filename = urllib.parse.unquote(filename)
-
-    splits = filename.split('.')
-    assert len(splits) == 2, (
-        f'The filename ({filename}) does not has an extention ex:(.mp3) or have more than one dot (.)')
-    name = splits[0]
-    ext = splits[1]
-
-    match segmented_by:
-        case 'sura':
-            name = get_sura_standard_name(name)
-        case 'aya':
-            name = get_aya_standard_name(name)
-
-    return f'{name}.{ext}'
-
-
-def get_aya_standard_name(name: str | int) -> str:
-    """gets the standard name of the aya
-
-    * We only support https://everyayah.com/ format as "xxxyyy.mp3"
-        where xxx is the sura index starting form 1
-        and yyy is the aya index starting from 0 to the total aya count for sura, where 0 for استعاذة or بسملة  not an independet aya
-        Example: name = `002023` is the same as `2023` representing: the verse (aya) 23 of sura number 2
-    * We also accept strings: ['audhubillah', 'bismillah']  for استعاذة and بسملة
-    """
-    try:
-        int_name = int(name)
-    except ValueError:
-        if name in ['audhubillah', 'bismillah']:
-            return name
-        else:
-            raise AssertionError(
-                f'Sura should be at format of xxxyyy where xxx is the sura index form(1) to (114) and yyy is the ayah index from(0) to max_aya count for sura Ex: 002100 is equvilent to 2100 where sura idx is 2 and aya index is 100')
-
-    sura_idx = int_name // 1000
-    aya_idx = int_name % 1000
-
-    assert sura_idx <= 114 and sura_idx >= 1, (
-        f'Sura Idx must be >=1 and <= 114 got {sura_idx} of name={name}')
-
-    assert aya_idx >= 0 and aya_idx <= SURA_TO_AYA_COUNT[sura_idx], (
-        f'The Aya Index is out of range got {aya_idx} of {name}')
-
-    return f'{int_name:0{6}}'
-
-
-def get_sura_standard_name(name: str) -> str:
-    """Returns the standard name of the sura represnted by the Sura's Index i.e("001")
-    Args:
-        name (str): the name of the sura represnted by:
-        * the sura Arabic name i.e("البقرة")
-        * or by the sura's index i.e ("002") or ("2")
-        * or by bothe i.e("البقرة 2")
-
-    Returns:
-        (str): the sura's index as a standard name i.e("002")
-    """
-
-    # searching for the Arabic name of the sura
-    name_normalized = normalize_text(name)
-    suar_list = SUAR_LIST
-    chosen_idx = None
-    for idx, sura_name in enumerate(suar_list):
-        sura_name_normalized = normalize_text(sura_name)
-        if re.search(sura_name_normalized, name_normalized):
-            # save the longest sura name
-            if chosen_idx:
-                if len(sura_name) > len(suar_list[chosen_idx]):
-                    chosen_idx = idx
-            else:
-                chosen_idx = idx
-    if chosen_idx is not None:
-        return f'{chosen_idx + 1:0{3}}'
-
-    # search first for numbers "002", or "2"
-    # TODO: refine this regs to be specific
-    re_result = re.search(r'\d+', name)
-    if re_result:
-        num = int(re_result.group())
-        if num >= 1 and num <= 114:
-            return f'{num:0{3}}'
-        else:
-            raise AssertionError(
-                f'sura index should be between 1 and 114 got: ({num}) of name: ({name})')
-
-    raise AssertionError(
-        f'Sura name is not handeled in this case. name="{name}"')
 
 
 def get_files(pathes: list[Path]) -> list[Path]:
