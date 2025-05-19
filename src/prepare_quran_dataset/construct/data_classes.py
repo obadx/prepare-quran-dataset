@@ -132,12 +132,7 @@ class Moshaf(BaseModel):
             "murattal": "مرتل",
             "hadr": "حدر",
         },
-        description="""The recitation speech sorted from slowes to fastest سرعة التلاوة مرتبة من الأبطأ إلي الأسرع:
-            * `mujawad`: مجود
-            * `above_murattal` فويق المرتل
-            * `murattal`: مرتل
-            * `hadr`: حدر
-        """
+        description="The recitation speed sorted from slowest to the fastest سرعة التلاوة مرتبة من الأبطأ إلي الأسرع"
 
     )
 
