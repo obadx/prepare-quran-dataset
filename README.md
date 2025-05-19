@@ -271,6 +271,7 @@ https://github.com/user-attachments/assets/a9742b75-985c-4808-9fcb-cc8c0b6ff549
 
 ## Moshaf Attributes Docs
 
+|Attribute Name|Arabic Name|Values|Default Value|More Info|
 |-|-|-|-|-|
 |rewaya|الرواية|- `hafs` (`حفص`)<br>||The type of the quran Rewaya.|
 |recitation_speech|سرعة التلاوة|- `mujawad` (`مجود`)<br>- `above_murattal` (`فويق المرتل`)<br>- `murattal` (`مرتل`)<br>- `hadr` (`حدر`)<br>||The recitation speech sorted from slowes to fastest سرعة التلاوة مرتبة من الأبطأ إلي الأسرع:
