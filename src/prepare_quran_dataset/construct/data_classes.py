@@ -123,7 +123,7 @@ class Moshaf(BaseModel):
         description='The type of the quran Rewaya.'
 
     )
-    recitation_speech: Literal['mujawad', 'above_murattal', 'murattal', 'hadr'] = Field(
+    recitation_speed: Literal['mujawad', 'above_murattal', 'murattal', 'hadr'] = Field(
         default='murattal',
         field_arabic_name='سرعة التلاوة',
         field_arabic_attrs_map={

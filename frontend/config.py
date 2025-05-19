@@ -51,6 +51,7 @@ REQUIRED_MOSHAF_FIELDS = [
     'publisher',
     'comments',
     'rewaya',
+    'recitation_speed',
     'takbeer',
     'madd_monfasel_len',
     'madd_mottasel_len',
