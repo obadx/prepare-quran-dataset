@@ -22,6 +22,8 @@ from mutagen import File
 from bs4 import BeautifulSoup
 import filetype
 from ruamel.yaml import YAML
+import yaml
+from datasets import Features
 
 
 def extract_suar_from_archive(
@@ -643,3 +645,53 @@ def extract_zipfile(
 
     # executing this to account for errors
     feature.result()
+
+
+def overwrite_readme_yaml(file_path, metadata: dict | list):
+    """Overwrite the metadata section (yaml) section of README.md file with new `metadata`
+    """
+    # Read the file
+    lines = []
+    if Path(file_path).is_file():
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+
+    yaml_content = None
+    rest_content = []
+    has_yaml = False
+    parser_idx = 0
+
+    # Check if the file starts with YAML front matter
+    if len(lines) > 0 and lines[0].strip() == '---':
+        yaml_lines = []
+        parser_idx = 1
+        # Collect lines until the next '---'
+        while parser_idx < len(lines) and lines[parser_idx].strip() != '---':
+            yaml_lines.append(lines[parser_idx])
+            parser_idx += 1
+        # Check if closing '---' was found
+        if parser_idx < len(lines) and lines[parser_idx].strip() == '---':
+            has_yaml = True
+            parser_idx += 1
+            yaml_content = ''.join(yaml_lines)
+
+    # If YAML exists, parse and edit it
+    # if has_yaml:
+    #     data = yaml.safe_load(yaml_content) or {}  # Handle empty YAML
+    #     edit_callback(data)  # Apply user-defined edits
+
+    rest_content = ''.join(lines[parser_idx:])  # Content after YAML block
+
+    # Convert back to YAML
+    new_content = rest_content
+    if metadata:
+        new_yaml = yaml.dump(metadata, default_flow_style=False)
+        if not new_yaml.endswith('\n'):
+            new_yaml += '\n'  # Ensure trailing newline
+
+        # Reconstruct the file content
+        new_content = f"---\n{new_yaml}---\n{rest_content}"
+
+    # Write back to the file
+    with open(file_path, 'w') as f:
+        f.write(new_content)

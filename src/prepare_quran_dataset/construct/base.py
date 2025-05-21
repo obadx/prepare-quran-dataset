@@ -1,14 +1,35 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from datasets import load_dataset, Dataset
+from typing import (
+    Literal,
+    Any,
+    get_args,
+    get_origin,
+    Iterable,
+    Optional,
+)
+
+from datasets import load_dataset, Dataset, Features, ClassLabel, Value, Sequence
 from pydantic import BaseModel
-from typing import Any, Iterable
+from pydantic.fields import FieldInfo, PydanticUndefined
 
 from .utils import load_jsonl, save_jsonl
+from .docs_utils import get_arabic_attributes, get_arabic_name
 
 
 class ItemExistsInPoolError(Exception):
     pass
+
+
+def get_field_name(field_name: str, field_info: FieldInfo) -> str:
+    """Recturn the Arabic name of the field if applicable else the field_name
+    """
+    label = field_name
+    arabic_name = get_arabic_name(field_info)
+    if arabic_name:
+        label = f"{arabic_name} ({field_name})"
+
+    return label
 
 
 class Pool(ABC):
@@ -202,7 +223,102 @@ class Pool(ABC):
             text = text[:-1]  # removes '\n' from last line
         return text
 
+    def to_parquet(self, path: str | Path, excluded_fields: Optional[list[str]] = None) -> str:
+        """Saves the dataset as parquet file
+        """
+
+        if excluded_fields is None:
+            excluded_fields = set()
+
+        # Finding dict[int, str] to cast it to dict[str, str]
+        to_cast_keys = set()
+        base_item = self.__getitem__(list(self.dataset_dict.keys())[0])
+        item_type = type(base_item)
+
+        items = []
+        for item in self.__iter__():
+            item_dict = item.model_dump(exclude=set(excluded_fields))
+            # TODO: Hard coded
+            if 'specific_sources' in item_dict:
+                item_dict['specific_sources'] = [
+                    {'sura_or_aya_index': str(k),
+                     'url': v}
+                    for k, v in item_dict['specific_sources'].items()]
+            items.append(item_dict)
+
+        features, metadata = item_type.extract_huggingface_features(
+            excluded_fields)
+        ds = Dataset.from_list(
+            items,
+            features=features,
+        )
+        ds.to_parquet(path)
+
     def save(self):
         json_line_pool = self.to_jsonl()
         with open(self.path, 'w+', encoding='utf-8') as f:
             f.write(json_line_pool)
+
+
+class BaseDatasetModel(BaseModel):
+    @classmethod
+    def extract_huggingface_features(
+        cls,
+        exclueded_fields: Optional[list[str]] = None,
+    ) -> tuple[Features, dict]:
+        """Extracts Hugginface Dataset Features from BaseModel
+
+        Args:
+            required_fields (list[str]): the requried files to be inclued in the HF Dataset Features
+        """
+        if exclueded_fields is None:
+            exclueded_fields = set()
+        required_fields = set(cls.model_fields.keys()) - set(exclueded_fields)
+
+        features = Features()  # a dict object
+        metadata = {}
+        for fieldname in required_fields:
+            fieldinfo: FieldInfo = cls.model_fields[fieldname]
+
+            metadata[fieldname] = {
+                'arabic_name': get_arabic_name(fieldinfo),
+                'arabic_attributes': get_arabic_attributes(fieldinfo),
+                'description': fieldinfo.description,
+            }
+
+            # the args of a Literal typs > 0 EX: Literal[3, 4]
+            dtype = fieldinfo.annotation
+            if get_origin(fieldinfo.annotation) is Literal:
+                choices = list(get_args(fieldinfo.annotation))
+                dtype = type(choices[0])
+
+            if dtype in [str, Optional[str]]:
+                features[fieldname] = Value(dtype='string')
+
+            elif dtype in [int, Optional[int]]:
+                features[fieldname] = Value(dtype='int32')
+
+            elif dtype in [float, Optional[float]]:
+                features[fieldname] = Value(dtype='float32')
+
+            elif dtype in [bool, Optional[bool]]:
+                features[fieldname] = Value(dtype='bool')
+
+            elif dtype in [
+                list[str], Optional[list[str]], list, Optional[list],
+                set[str], Optional[set[str]], set, Optional[set]
+            ]:
+                features[fieldname] = Sequence(feature=Value(dtype='string'))
+
+            # TODO: Hard coded
+            elif fieldname == 'specific_sources':
+                features[fieldname] = [{
+                    "sura_or_aya_index": Value(dtype="string"),
+                    "url": Value(dtype="string"),
+                }]
+
+            else:
+                raise ValueError(
+                    f'Type: `{fieldinfo.annotation}` is not supported')
+
+        return features, metadata
