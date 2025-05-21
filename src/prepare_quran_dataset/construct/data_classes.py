@@ -1,13 +1,15 @@
 from typing import Literal, Optional, Self
-from pydantic import BaseModel, Field, model_validator, field_validator, AnyHttpUrl, ValidationError
-from pydantic.fields import FieldInfo, PydanticUndefined
 from pathlib import Path
+
+from pydantic import BaseModel, Field, model_validator, field_validator, AnyHttpUrl, ValidationError
+from pydantic.fields import PydanticUndefined
 
 
 from .utils import get_audiofile_info, dump_yaml
 from .docs_utils import get_moshaf_field_docs
 from .quran_data_utils import SURA_TO_AYA_COUNT
 from .database_utils import get_aya_standard_name
+from .base import BaseDatasetModel
 # class FooBarModel(BaseModel):
 #     # do not modify attributes once object is created
 #     model_config = ConfigDict(frozen=True)
@@ -18,7 +20,7 @@ from .database_utils import get_aya_standard_name
 SEGMENTED_BY = ['sura', 'aya', 'none']
 
 
-class Reciter(BaseModel):
+class Reciter(BaseDatasetModel):
     id: int = Field(
         default=-1, description='The ID of the reciter starting of 0')
     arabic_name: str = Field(description='ArabicName(الاسم)')
@@ -41,7 +43,7 @@ class AudioFile(BaseModel):
     duration_minutes: float
 
 
-class Moshaf(BaseModel):
+class Moshaf(BaseDatasetModel):
     id: str = Field(
         default="",
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
@@ -62,11 +64,11 @@ class Moshaf(BaseModel):
         'Sura index should be between 1 and 114.\n'
         'Aya index should be with everyayah.com format as: `xxxyyy` where `xxx` is the sura index form(1) to (114) and `yyy` is the ayah index from(0) to max_aya count for sura. Example: `002100` is equvilent to `2100` where sura idx is 2 and aya index is 100.'
         '\nExample for specific sources of sura key:'
-        f'\n{dump_yaml({3: 'https://example.com/003.mp3',
-                           4: 'https://example.com/004.mp3'})}'
+        f"\n{dump_yaml({3: 'https://example.com/003.mp3',
+                       4: 'https://example.com/004.mp3'})}"
         '\nExample for specific sources of aya key:'
-        f'\n{dump_yaml({1001: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/001001.mp3',
-                        114007: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/114007.mp3'})}'
+        f"\n{dump_yaml({1001: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/001001.mp3',
+                       114007: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/114007.mp3'})}"
 
 
     )
@@ -605,7 +607,7 @@ class Moshaf(BaseModel):
                 total_size_megabytes += filepath.stat().st_size / (1024.0 * 1024.0)
 
         self.recitation_files = recitation_files
-        self.path = str(moshaf_path.absolute())
+        self.path = str(moshaf_path.relative_to(base_path))
         self.num_recitations = len(recitation_files)
         self.total_duraion_minutes = total_duration_minutes
         self.total_size_mb = total_size_megabytes
