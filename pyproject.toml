@@ -18,12 +18,14 @@ dependencies = [
   "pypdl==1.4.4",
   "tqdm",
   "pydantic==2.10.2",
-  "datasets==3.1.0",
+  "datasets==3.3.2",
   "mutagen==1.47.0",
   "quran-transcript @ git+https://github.com/obadx/quran-transcript.git",
   "beautifulsoup4==4.12.3",
   "filetype==1.2.0",
   "ruamel.yaml==0.18.6", # It has duplicate key validation in a dict structure
+  "huggingface_hub",
+  "pyyaml",
 ]
 requires-python = ">=3.10"
 classifiers = [
