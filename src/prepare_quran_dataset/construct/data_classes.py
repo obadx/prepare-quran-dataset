@@ -49,7 +49,7 @@ class Moshaf(BaseDatasetModel):
         description='Every Moshaf ID is a string has the following structure "reciter_id"."mohaf_id"')
     name: str = Field(
         description='The arabic name of the moshaf i.e "المصحف المرتل"')
-    path: str = Field(default="", description='Absolute path to the moshaf')
+    path: str = Field(default="", description='Path to the moshaf')
     reciter_id: int = Field(description='The ID of the reciter starting of 0')
     reciter_arabic_name: str = ""
     reciter_english_name: str = ""
