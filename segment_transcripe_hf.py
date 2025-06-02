@@ -1,0 +1,156 @@
+import argparse
+from pathlib import Path
+import os
+import shutil
+
+
+from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
+from prepare_quran_dataset.construct.database import MoshafPool, ReciterPool
+from prepare_quran_dataset.construct.utils import overwrite_readme_yaml
+from prepare_quran_dataset.hf_dataset_config import (
+    HFDatasetBuilder,
+    HFDatasetConfig,
+    HFDatasetSplit,
+)
+from prepare_quran_dataset.annotate.main import OUT_FEATURES, process_moshaf_tracks
+from prepare_quran_dataset.annotate.utils import save_to_disk_split
+
+
+# TODO:
+# write msohaf metadata
+# write every recitations as speparate split
+def write_redmme(
+    dataset_path: str | Path,
+    moshaf_excluded_fields: list[str],
+    moshaf_pool: MoshafPool,
+    recitation_features=OUT_FEATURES,
+):
+    """Write metadata to yaml section of readme:
+    EX:
+
+    ---
+    configs:
+    - config_name: default
+    data_files:
+    - path: data/recitation_6/train/*.parquet
+        split: recitation_6
+    ---
+    """
+    pass
+    dataset_path = Path(dataset_path)
+    dataset_path.mkdir(exist_ok=True)
+
+    moshaf_features, _ = Moshaf.extract_huggingface_features(
+        exclueded_fields=moshaf_excluded_fields
+    )
+    reciter_features, _ = Reciter.extract_huggingface_features()
+
+    configs: list[HFDatasetConfig] = []
+    configs.append(
+        HFDatasetConfig(
+            config_name="moshaf_metadata",
+            features=moshaf_features,
+            data_files=[
+                HFDatasetSplit(
+                    split="train",
+                    path=(dataset_path / "moshaf_pool.parquet").relative_to(
+                        dataset_path
+                    ),
+                )
+            ],
+        ),
+    )
+    configs.append(
+        HFDatasetConfig(
+            config_name="reciters_metadata",
+            features=reciter_features,
+            data_files=[
+                HFDatasetSplit(
+                    split="train",
+                    path=(dataset_path / "reciter_pool.parquet").relative_to(
+                        dataset_path
+                    ),
+                )
+            ],
+        ),
+    )
+
+    # # Adding recitation tracks as splits
+    # splits: list[HFDatasetSplit] = []
+    # num_tracks = 0
+    # for moshaf in moshaf_pool:
+    #     splits.append(HFDatasetSplit(
+    #         split=f'moshaf_{moshaf.id}',
+    #         path=moshaf.path,
+    #     ))
+    #     num_tracks += moshaf.num_recitations
+    # configs.append(HFDatasetConfig(
+    #     config_name='moshaf_tracks',
+    #     features=recitation_features,
+    #     data_files=splits,
+    # ))
+
+    # building the dataset info
+    builder = HFDatasetBuilder(
+        configs=configs,
+        # dataset_info={'configs': [{
+        #     'name': 'moshaf_tracks', 'num_examples': num_tracks}]}
+    )
+    builder.to_readme_yaml(dataset_path / "README.md")
+
+
+def main(args):
+    moshaf_excluded_fields = set(
+        [
+            "downloaded_sources",
+            "recitation_files",
+        ]
+    )
+
+    reciter_pool = ReciterPool(Path(args.dataset_dir).glob / "reciter_pool.jsonl")
+    moshaf_pool = MoshafPool(reciter_pool, args.dataset_dir)
+    metadata_files = []
+    for ext in ["jsonl", "parquet"]:
+        metadata_files += list(args.dataset_dir.glob(f"*.{ext}"))
+    for f in metadata_files:
+        shutil.copy(f, args.out_dataset_dir)
+
+    for moshaf in moshaf_pool:
+        # TODO: add other optional args to the and to the function
+        ds = process_moshaf_tracks(moshaf, dataset_path=args.dataset_dir)
+        save_to_disk_split(ds, moshaf.id, out_path=args.out_dataset_dir)
+
+    write_redmme(
+        args.dataset_dir,
+        moshaf_excluded_fields=moshaf_excluded_fields,
+        moshaf_pool=moshaf_pool,
+        recitation_features=OUT_FEATURES,
+    )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        "Building Recitations Dataset by spliting tracks using وقف and trancripe using Tarteel"
+    )
+    parser.add_argument(
+        "--dataset-dir",
+        type=Path,
+        required=True,
+        help="""The path to the quran dataset that has the following directory structure
+        ../quran-dataset/
+        ├── dataset
+        │   └── 0.1
+        ├── moshaf_pool.jsonl
+        └── reciter_pool.jsonl
+        """,
+    )
+    parser.add_argument(
+        "--out-dataset-dir",
+        type=Path,
+        required=True,
+        help="""The output path to the dataset dir""",
+    )
+
+    args = parser.parse_args()
+
+    main(args)
