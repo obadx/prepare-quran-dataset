@@ -114,6 +114,9 @@ class Moshaf(BaseDatasetModel):
     is_downloaded: bool = Field(
         default=False,
         description='moshaf is downloades using the sources or not')
+    alias_start_sec: float = Field(
+        default=0,
+        description='The non quranic start time in secods')
 
     # Quran Specific Attributes
     # Core Attributes (كليات)
