@@ -1,7 +1,9 @@
 import argparse
 from pathlib import Path
-import os
 import shutil
+
+from transformers import AutoFeatureExtractor, AutoModelForAudioFrameClassification
+import torch
 
 
 from prepare_quran_dataset.construct.data_classes import Moshaf, Reciter
@@ -16,9 +18,6 @@ from prepare_quran_dataset.annotate.main import OUT_FEATURES, process_moshaf_tra
 from prepare_quran_dataset.annotate.utils import save_to_disk_split
 
 
-# TODO:
-# write msohaf metadata
-# write every recitations as speparate split
 def write_redmme(
     dataset_path: str | Path,
     moshaf_excluded_fields: list[str],
@@ -75,20 +74,22 @@ def write_redmme(
         ),
     )
 
-    # # Adding recitation tracks as splits
-    # splits: list[HFDatasetSplit] = []
-    # num_tracks = 0
-    # for moshaf in moshaf_pool:
-    #     splits.append(HFDatasetSplit(
-    #         split=f'moshaf_{moshaf.id}',
-    #         path=moshaf.path,
-    #     ))
-    #     num_tracks += moshaf.num_recitations
-    # configs.append(HFDatasetConfig(
-    #     config_name='moshaf_tracks',
-    #     features=recitation_features,
-    #     data_files=splits,
-    # ))
+    # Adding recitation tracks as splits
+    splits: list[HFDatasetSplit] = []
+    for moshaf in moshaf_pool:
+        splits.append(
+            HFDatasetSplit(
+                split=f"moshaf_{moshaf.id}",
+                path=f"dataset/{moshaf.id}/train/*.parquet",
+            )
+        )
+    configs.append(
+        HFDatasetConfig(
+            config_name="moshaf_tracks",
+            features=recitation_features,
+            data_files=splits,
+        )
+    )
 
     # building the dataset info
     builder = HFDatasetBuilder(
@@ -107,7 +108,10 @@ def main(args):
         ]
     )
 
-    reciter_pool = ReciterPool(Path(args.dataset_dir).glob / "reciter_pool.jsonl")
+    out_path = Path(args.out_dataset_dir) / "dataset"
+    out_path.mkdir(exist_ok=True, parents=True)
+
+    reciter_pool = ReciterPool(args.dataset_dir / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, args.dataset_dir)
     metadata_files = []
     for ext in ["jsonl", "parquet"]:
@@ -115,13 +119,41 @@ def main(args):
     for f in metadata_files:
         shutil.copy(f, args.out_dataset_dir)
 
+    processor = AutoFeatureExtractor.from_pretrained("obadx/recitation-segmenter-v2")
+    model = AutoModelForAudioFrameClassification.from_pretrained(
+        "obadx/recitation-segmenter-v2",
+    )
+    model.to(args.device, dtype=torch.bfloat16)
+
     for moshaf in moshaf_pool:
-        # TODO: add other optional args to the and to the function
-        ds = process_moshaf_tracks(moshaf, dataset_path=args.dataset_dir)
-        save_to_disk_split(ds, moshaf.id, out_path=args.out_dataset_dir)
+        ds = process_moshaf_tracks(
+            moshaf,
+            args.dataset_dir,
+            loop_batch_size=16,
+            sample_rate=16000,
+            tarteel_batch_size=16,
+            segment_batch_size=32,
+            segment_device="cuda",
+            segment_model=model,
+            segment_feature_extractor=processor,
+            segment_cache_dir=".segment_cache",
+            tarteel_timeout_sec=300,
+            tarteel_chunk_overlap_sec=10,
+            tarteel_max_len_sec=30,
+            tarteel_vllm_endpont="http://localhost:8000/v1",
+        )
+
+        # saves every path under outpath / "{moshaf_id}/train/shard.parquest
+        save_to_disk_split(
+            ds,
+            moshaf.id,
+            out_path=out_path,
+            samples_per_shard=512,
+        )
+        break
 
     write_redmme(
-        args.dataset_dir,
+        args.out_dataset_dir,
         moshaf_excluded_fields=moshaf_excluded_fields,
         moshaf_pool=moshaf_pool,
         recitation_features=OUT_FEATURES,
@@ -149,6 +181,11 @@ if __name__ == "__main__":
         type=Path,
         required=True,
         help="""The output path to the dataset dir""",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
     )
 
     args = parser.parse_args()

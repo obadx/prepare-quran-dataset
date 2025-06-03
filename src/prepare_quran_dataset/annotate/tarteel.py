@@ -70,7 +70,6 @@ async def transcribe_chunk(
         model=model,
         file=wav_bytes,
     )
-
     return out.text
 
 
@@ -141,11 +140,11 @@ def merge_transcripts(
     return merged
 
 
-async def tarteel_transcript(
+async def tarteel_transcribe(
     wave: np.ndarray,
     sample_rate=16000,
     max_len_sec: float = 30,
-    chunck_overlap_sec: float = 12,
+    chunck_overlap_sec: float = 10,
     vllm_endpoint="http://localhost:8000/v1",
     model="tarteel-ai/whisper-base-ar-quran",
     timeout_sec=300,
@@ -156,7 +155,7 @@ async def tarteel_transcript(
 
     # chunk waves
     wav_chunks = chunk_wave(
-        wave, max_len=max_len_samples, chunk_overlap=chunck_overlap_samples
+        wave, max_len_samples=max_len_samples, chunk_overlap=chunck_overlap_samples
     )
 
     transcripts: list[str] = []

@@ -6,8 +6,6 @@ from datasets import IterableDataset, Dataset
 from tqdm import tqdm
 
 
-# TODO:
-# edit out path for every path from data/moshaf_name/files
 def save_to_disk_split(
     dataset: IterableDataset,
     split_name: str,
@@ -33,7 +31,7 @@ def save_to_disk_split(
         if ((idx + 1) % samples_per_shard == 0) and idx != 0:
             shard_ds = Dataset.from_list(cache)
             shard_ds.to_parquet(
-                out_path / f"data/{split_name}/train/shard_{shard_idx:0{5}}.parquet"
+                out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
             )
             del shard_ds
             del cache
@@ -45,7 +43,7 @@ def save_to_disk_split(
     if cache:
         shard_ds = Dataset.from_list(cache)
         shard_ds.to_parquet(
-            out_path / f"data/{split_name}/train/shard_{shard_idx:0{5}}.parquet"
+            out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
         )
         del shard_ds
         del cache

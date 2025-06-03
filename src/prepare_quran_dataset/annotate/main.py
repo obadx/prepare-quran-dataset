@@ -1,11 +1,9 @@
 from pathlib import Path
+import asyncio
 
 import librosa
-from datasets import Features, IterableDataset, load_dataset, Audio, Value
+from datasets import Features, IterableDataset, load_dataset, Audio, Value, Sequence
 import torch
-
-# TODO: edit this to transfomers because of jedi error
-from hamo import AutoModel, AutoFeatureExtractor
 from recitations_segmenter import (
     segment_recitations,
     clean_speech_intervals,
@@ -13,6 +11,7 @@ from recitations_segmenter import (
 )
 
 from ..construct.data_classes import Moshaf, Reciter
+from .tarteel import tarteel_transcribe
 
 
 READ_FEATURES = Features(
@@ -34,7 +33,7 @@ OUT_FEATURES = Features(
     {
         "audio": Audio(sampling_rate=16000),  # We will read auiofiles manyally
         "segment_index": Value(dtype="string"),
-        "tarteel_transcript": Value(dtype="string"),
+        "tarteel_transcript": Sequence(feature=Value(dtype="string")),
         "moshaf_id": Value(dtype="string"),
         "moshaf_name": Value(dtype="string"),
         "reciter_id": Value(dtype="int32"),
@@ -56,12 +55,12 @@ SEGMET_PARAMS = {
     "above_murattal": {
         "min_silence_duration_ms": 150,
         "min_speech_duration_ms": 900,
-        "pad_duration_ms": 700,
+        "pad_duration_ms": 800,
     },
     "murattal": {
         "min_silence_duration_ms": 100,
         "min_speech_duration_ms": 700,
-        "pad_duration_ms": 700,
+        "pad_duration_ms": 800,
     },
     "hadr": {
         "min_silence_duration_ms": 0,
@@ -98,15 +97,15 @@ def librosa_mono_decoder(batch, sample_rate=16000, alias_start_sec: float = 0):
             print(f"⚠️ Failed {audio_path}: {str(e)}")
             raise e
 
-    return {"audio": audio_data}
+    return {"audio": audio_data, "sample_rate": [sample_rate] * len(audio_data)}
 
 
 def segment_batch(
     batch: dict,
     batch_ids: list[int],
     moshaf: Moshaf,
-    segment_model: AutoModel,
-    segment_feature_extractor: AutoFeatureExtractor,
+    segment_model,
+    segment_feature_extractor,
     batch_size=32,
     sample_rate=16000,
     dtype=torch.bfloat16,
@@ -178,18 +177,38 @@ def segment_batch(
     return new_batch
 
 
-# TODO:
-# batch szie for multiple requests at the same time with async
-def tarteel_transcripe_batch(
+def tarteel_transcribe_batch(
     batch: dict,
-    batch_size=32,
-) -> dict: ...
+    vllm_endpoint="http://localhost:8000/v1",
+    timeout_sec=300,
+    chunk_overlap_sec=10,
+    max_len_sec=30,
+    sample_rate=16000,
+) -> dict:
+    async def async_main(waves):
+        tasks = [
+            tarteel_transcribe(
+                wave,
+                vllm_endpoint=vllm_endpoint,
+                timeout_sec=timeout_sec,
+                chunck_overlap_sec=chunk_overlap_sec,
+                max_len_sec=max_len_sec,
+                sample_rate=sample_rate,
+            )
+            for wave in waves
+        ]
+        outs = await asyncio.gather(*tasks)
+        return outs
+
+    waves = [batch["audio"][idx]["array"] for idx in range(len(batch["audio"]))]
+    transcritps = asyncio.run(async_main(waves))
+
+    return {"tarteel_transcript": transcritps}
 
 
 def process_moshaf_tracks(
     moshaf: Moshaf,
     dataset_path: str | Path,
-    out_features: Features,
     read_moshaf_features: Features = READ_FEATURES,
     out_moshaf_features: Features = READ_FEATURES,
     loop_batch_size=4,
@@ -197,9 +216,13 @@ def process_moshaf_tracks(
     tarteel_batch_size=64,
     segment_batch_size=64,
     segment_device="cuda",
-    segment_model: AutoModel = None,
-    segment_feature_extractor: AutoFeatureExtractor = None,
+    segment_model=None,
+    segment_feature_extractor=None,
     segment_cache_dir=".segment_cache",
+    tarteel_timeout_sec=300,
+    tarteel_chunk_overlap_sec=10,
+    tarteel_max_len_sec=30,
+    tarteel_vllm_endpont="http://localhost:8000/v1",
 ) -> IterableDataset:
     """ """
     dataset_path = Path(dataset_path)
@@ -216,7 +239,7 @@ def process_moshaf_tracks(
         librosa_mono_decoder,
         batched=True,
         batch_size=10,
-        features=out_features,
+        features=read_moshaf_features,
         fn_kwargs={
             "sample_rate": sample_rate,
             "alias_start_sec": moshaf.alias_start_sec,
@@ -228,7 +251,7 @@ def process_moshaf_tracks(
         segment_batch,
         batched=True,
         batch_size=loop_batch_size,
-        features=out_moshaf_features,
+        # features=out_moshaf_features,
         with_indices=True,
         remove_columns=ds.column_names,
         fn_kwargs={
@@ -244,12 +267,16 @@ def process_moshaf_tracks(
 
     # Transcripe using Tarteel
     ds = ds.map(
-        tarteel_transcripe_batch,
+        tarteel_transcribe_batch,
         batched=True,
-        batch_size=loop_batch_size,
-        features=out_moshaf_features,
+        batch_size=tarteel_batch_size,
+        # features=out_moshaf_features,
         fn_kwargs={
-            "batch_size": tarteel_batch_size,
+            "vllm_endpoint": tarteel_vllm_endpont,
+            "timeout_sec": tarteel_timeout_sec,
+            "chunk_overlap_sec": tarteel_chunk_overlap_sec,
+            "max_len_sec": tarteel_max_len_sec,
+            "sample_rate": sample_rate,
         },
     )
 
