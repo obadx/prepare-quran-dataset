@@ -19,7 +19,6 @@ READ_FEATURES = Features(
     {
         "audio": Audio(decode=False),  # We will read auiofiles manyally
         "moshaf_id": Value(dtype="string"),
-        "tarteel_transcript": Value(dtype="string"),
         "moshaf_name": Value(dtype="string"),
         "reciter_id": Value(dtype="int32"),
         "reciter_arabic_name": Value(dtype="string"),
@@ -35,6 +34,7 @@ OUT_FEATURES = Features(
     {
         "audio": Audio(sampling_rate=16000),  # We will read auiofiles manyally
         "segment_index": Value(dtype="string"),
+        "tarteel_transcript": Value(dtype="string"),
         "moshaf_id": Value(dtype="string"),
         "moshaf_name": Value(dtype="string"),
         "reciter_id": Value(dtype="int32"),
@@ -43,7 +43,7 @@ OUT_FEATURES = Features(
         "sura_or_aya_index": Value(dtype="string"),
         "index_type": Value(dtype="string"),
         "sample_rate": Value(dtype="int32"),
-        "duration_minutes": Value(dtype="float32"),
+        "duration_seconds": Value(dtype="float32"),
     }
 )
 
@@ -108,6 +108,7 @@ def segment_batch(
     segment_model: AutoModel,
     segment_feature_extractor: AutoFeatureExtractor,
     batch_size=32,
+    sample_rate=16000,
     dtype=torch.bfloat16,
     device="cuda",
     cache_dir: str | Path = ".segment_cache",
@@ -147,14 +148,16 @@ def segment_batch(
             )
             raise e
 
-    original_keys = set(batch.keys()) - {"audio"}
-    new_batch = {"audio": [], "segment_index": []}
+    # removing `duration_minutes` columns and rewriting `audio` column
+    original_keys = set(batch.keys()) - {"audio", "duration_minutes"}
+    new_batch = {"audio": [], "segment_index": [], "duration_seconds": []}
     for key in original_keys:
         new_batch[key] = []
     # Devising recitations into segments
     for idx, clean_out in enumerate(clean_outs):
         new_audios = []
         segment_ids = []
+        durations_seconds = []
         for span_idx, span in enumerate(clean_out.clean_speech_intervals):
             new_audios.append(
                 {
@@ -162,10 +165,12 @@ def segment_batch(
                     "sampling_rate": 16000,
                 }
             )
+            durations_seconds.append(len(new_audios[-1]["array"]) / sample_rate)
             segment_ids.append(f"{batch['sura_or_aya_index'][idx]}.{span_idx:04d}")
 
         # Organizing batch
         new_batch["audio"] += new_audios
+        new_batch["duration_seconds"] += durations_seconds
         new_batch["segment_index"] += segment_ids
         for key in original_keys:
             new_batch[key] += [batch[key][idx]] * len(segment_ids)
@@ -225,12 +230,14 @@ def process_moshaf_tracks(
         batch_size=loop_batch_size,
         features=out_moshaf_features,
         with_indices=True,
+        remove_columns=ds.column_names,
         fn_kwargs={
             "moshaf": moshaf,
             "segment_model": segment_model,
             "segment_feature_extractor": segment_feature_extractor,
             "device": segment_device,
             "batch_size": segment_batch_size,
+            "sample_rate": sample_rate,
             "cache_dir": segment_cache_dir,
         },
     )
