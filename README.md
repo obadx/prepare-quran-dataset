@@ -2,6 +2,10 @@
 
 Preparing and chunking quranic recitation dataset for Automatic Pronunciation Error Correction and Detection for the Holy Quran
 
+## TODO
+
+* [ ] Add `alias_begin_sec` to `Moshaf` to remove un quranic start
+
 ## Table of Content
 
 * [Installation](#installation)

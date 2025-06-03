@@ -1,5 +1,5 @@
 # build source
-**/prepare_quran_dataset.egg-info/
+**/*.egg-info/
 
 # pypdl logs
 **pypdl.log
