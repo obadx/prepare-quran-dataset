@@ -147,6 +147,7 @@ async def tarteel_transcript(
     chunck_overlap_sec: float = 12,
     vllm_endpoint="http://localhost:8000/v1",
     model="tarteel-ai/whisper-base-ar-quran",
+    timeout_sec=300,
 ) -> list[str]:
     assert chunck_overlap_sec < max_len_sec
     max_len_samples = int(max_len_sec * sample_rate)
@@ -158,7 +159,7 @@ async def tarteel_transcript(
     )
 
     transcripts: list[str] = []
-    client = AsyncOpenAI(api_key="None", base_url="vllm_endpoint")
+    client = AsyncOpenAI(api_key="None", base_url="vllm_endpoint", timeout=timeout_sec)
 
     # Run concerent async requests
     tasks = [
