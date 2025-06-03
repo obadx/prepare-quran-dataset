@@ -61,6 +61,7 @@ async def transcribe_chunk(
         buffer,
         chunk,
         sample_rate,
+        format="WAV",  # Explicitly specify WAV format
     )
     wav_bytes = buffer.getvalue()
 
@@ -159,7 +160,7 @@ async def tarteel_transcript(
     )
 
     transcripts: list[str] = []
-    client = AsyncOpenAI(api_key="None", base_url="vllm_endpoint", timeout=timeout_sec)
+    client = AsyncOpenAI(api_key="None", base_url=vllm_endpoint, timeout=timeout_sec)
 
     # Run concerent async requests
     tasks = [
