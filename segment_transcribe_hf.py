@@ -126,13 +126,15 @@ def main(args):
     model.to(args.device, dtype=torch.bfloat16)
 
     for moshaf in moshaf_pool:
+        if (out_path / moshaf.id).is_dir():
+            continue
         ds = process_moshaf_tracks(
             moshaf,
             args.dataset_dir,
             loop_batch_size=16,
             sample_rate=16000,
-            tarteel_batch_size=16,
-            segment_batch_size=32,
+            tarteel_batch_size=32,
+            segment_batch_size=40,
             segment_device="cuda",
             segment_model=model,
             segment_feature_extractor=processor,
