@@ -230,7 +230,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--not-write-readme-yaml",
-        action="store_false",
+        action="store_true",
         help="Not writing the metadata of the dataset insied the yaml section of the README.md",
     )
 
