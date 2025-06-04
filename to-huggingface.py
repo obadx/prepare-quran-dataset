@@ -176,9 +176,9 @@ def write_tracks_metadata(
                 }
             )
 
-        # TODO: remove this if
         if metadata:
             metadata = sorted(metadata, key=lambda x: x["sura_or_aya_index"])
+            print(metadata[-1])
             save_jsonl(metadata, dataset_dir / moshaf.path / "metadata.jsonl")
 
 
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--not-write-readme-yaml",
-        action="store_true",
+        action="store_false",
         help="Not writing the metadata of the dataset insied the yaml section of the README.md",
     )
 
