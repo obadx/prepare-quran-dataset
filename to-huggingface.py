@@ -178,7 +178,6 @@ def write_tracks_metadata(
 
         if metadata:
             metadata = sorted(metadata, key=lambda x: x["sura_or_aya_index"])
-            print(metadata[-1])
             save_jsonl(metadata, dataset_dir / moshaf.path / "metadata.jsonl")
 
 
@@ -201,15 +200,15 @@ def main(args):
             "recitation_files",
         ],
     )
-    write_redmme(
-        args.dataset_dir,
-        moshaf_excluded_fields=moshaf_excluded_fields,
-        moshaf_pool=moshaf_pool,
-        recitation_features=RECITATION_FEATURES,
-    )
-
     if not args.not_write_readme_yaml:
-        write_tracks_metadata(moshaf_pool, args.dataset_dir)
+        write_redmme(
+            args.dataset_dir,
+            moshaf_excluded_fields=moshaf_excluded_fields,
+            moshaf_pool=moshaf_pool,
+            recitation_features=RECITATION_FEATURES,
+        )
+
+    write_tracks_metadata(moshaf_pool, args.dataset_dir)
 
 
 if __name__ == "__main__":
