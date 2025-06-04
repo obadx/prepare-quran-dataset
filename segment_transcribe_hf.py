@@ -150,7 +150,6 @@ def main(args):
             out_path=out_path,
             samples_per_shard=512,
         )
-        break
 
     write_redmme(
         args.out_dataset_dir,
