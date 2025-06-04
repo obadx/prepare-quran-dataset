@@ -58,7 +58,7 @@ SEGMET_PARAMS = {
         "pad_duration_ms": 800,
     },
     "murattal": {
-        "min_silence_duration_ms": 100,
+        "min_silence_duration_ms": 30,
         "min_speech_duration_ms": 700,
         "pad_duration_ms": 800,
     },
