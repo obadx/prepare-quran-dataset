@@ -64,9 +64,7 @@ def display_sura(ds: Dataset, sura_idx):
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
-    print(ds_path)
-    print(moshaf)
-    ds = load_dataset(ds_path, name=f"moshaf_{moshaf.id}", split="train")
+    ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
     st.write(f"عدد المقاعط: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
