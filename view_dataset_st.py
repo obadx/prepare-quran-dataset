@@ -45,7 +45,7 @@ def display_audio_file(
         if st.button(
             "Load File", key=f"track_{item['segment_index']}", use_container_width=True
         ):
-            wav_bytes = numpy_to_wav_bytes(item["aduio"]["array"], 16000)
+            wav_bytes = numpy_to_wav_bytes(item["audio"]["array"], 16000)
             st.audio(wav_bytes, format="audio/wav")
             # with open(conf.BASE_DIR / file_info.path, "rb") as file:
             #     st.download_button(
