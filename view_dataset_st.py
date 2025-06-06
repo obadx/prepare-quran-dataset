@@ -69,12 +69,12 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     st.write(moshaf.reciter_arabic_name)
 
     avaiable_suar = [int(r.name.split(".")[0]) for r in moshaf.recitation_files]
-    sura_name = st.selectbox(
+    avaiable_suar = sorted(avaiable_suar)
+    sura_idx = st.selectbox(
         "اختر السورة",
         avaiable_suar,
         format_func=lambda x: SUAR_LIST[x - 1],
     )
-    sura_idx = SUAR_LIST.index(sura_name) + 1
     st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
 
     display_sura(ds, sura_idx)
