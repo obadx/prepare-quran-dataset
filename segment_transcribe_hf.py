@@ -18,7 +18,7 @@ from prepare_quran_dataset.annotate.main import OUT_FEATURES, process_moshaf_tra
 from prepare_quran_dataset.annotate.utils import save_to_disk_split
 
 
-def write_redmme(
+def write_redmme_splits(
     dataset_path: str | Path,
     moshaf_excluded_fields: list[str],
     moshaf_pool: MoshafPool,
@@ -100,6 +100,86 @@ def write_redmme(
     builder.to_readme_yaml(dataset_path / "README.md")
 
 
+def write_redmme_configs(
+    dataset_path: str | Path,
+    moshaf_excluded_fields: list[str],
+    moshaf_pool: MoshafPool,
+    recitation_features=OUT_FEATURES,
+):
+    """Write metadata to yaml section of readme:
+    EX:
+
+    ---
+    configs:
+    - config_name: default
+    data_files:
+    - path: data/recitation_6/train/*.parquet
+        split: recitation_6
+    ---
+    """
+    pass
+    dataset_path = Path(dataset_path)
+    dataset_path.mkdir(exist_ok=True)
+
+    moshaf_features, _ = Moshaf.extract_huggingface_features(
+        exclueded_fields=moshaf_excluded_fields
+    )
+    reciter_features, _ = Reciter.extract_huggingface_features()
+
+    configs: list[HFDatasetConfig] = []
+    configs.append(
+        HFDatasetConfig(
+            config_name="moshaf_metadata",
+            features=moshaf_features,
+            data_files=[
+                HFDatasetSplit(
+                    split="train",
+                    path=(dataset_path / "moshaf_pool.parquet").relative_to(
+                        dataset_path
+                    ),
+                )
+            ],
+        ),
+    )
+    configs.append(
+        HFDatasetConfig(
+            config_name="reciters_metadata",
+            features=reciter_features,
+            data_files=[
+                HFDatasetSplit(
+                    split="train",
+                    path=(dataset_path / "reciter_pool.parquet").relative_to(
+                        dataset_path
+                    ),
+                )
+            ],
+        ),
+    )
+
+    # Adding recitation tracks as separeate dataset configs
+    for moshaf in moshaf_pool:
+        configs.append(
+            HFDatasetConfig(
+                config_name=f"moshaf_{moshaf.id}",
+                features=recitation_features,
+                data_files=[
+                    HFDatasetSplit(
+                        split="train",
+                        path=f"dataset/{moshaf.id}/train/*.parquet",
+                    ),
+                ],
+            )
+        )
+
+    # building the dataset info
+    builder = HFDatasetBuilder(
+        configs=configs,
+        # dataset_info={'configs': [{
+        #     'name': 'moshaf_tracks', 'num_examples': num_tracks}]}
+    )
+    builder.to_readme_yaml(dataset_path / "README.md")
+
+
 def main(args):
     moshaf_excluded_fields = set(
         [
@@ -119,41 +199,44 @@ def main(args):
     for f in metadata_files:
         shutil.copy(f, args.out_dataset_dir)
 
-    processor = AutoFeatureExtractor.from_pretrained("obadx/recitation-segmenter-v2")
-    model = AutoModelForAudioFrameClassification.from_pretrained(
-        "obadx/recitation-segmenter-v2",
-    )
-    model.to(args.device, dtype=torch.bfloat16)
-
-    for moshaf in moshaf_pool:
-        if (out_path / moshaf.id).is_dir():
-            continue
-        ds = process_moshaf_tracks(
-            moshaf,
-            args.dataset_dir,
-            loop_batch_size=16,
-            sample_rate=16000,
-            tarteel_batch_size=32,
-            segment_batch_size=40,
-            segment_device="cuda",
-            segment_model=model,
-            segment_feature_extractor=processor,
-            segment_cache_dir=".segment_cache",
-            tarteel_timeout_sec=300,
-            tarteel_chunk_overlap_sec=10,
-            tarteel_max_len_sec=30,
-            tarteel_vllm_endpont="http://localhost:8000/v1",
+    if not args.not_process_data:
+        processor = AutoFeatureExtractor.from_pretrained(
+            "obadx/recitation-segmenter-v2"
         )
-
-        # saves every path under outpath / "{moshaf_id}/train/shard.parquest
-        save_to_disk_split(
-            ds,
-            moshaf.id,
-            out_path=out_path,
-            samples_per_shard=512,
+        model = AutoModelForAudioFrameClassification.from_pretrained(
+            "obadx/recitation-segmenter-v2",
         )
+        model.to(args.device, dtype=torch.bfloat16)
 
-    write_redmme(
+        for moshaf in moshaf_pool:
+            if (out_path / moshaf.id).is_dir():
+                continue
+            ds = process_moshaf_tracks(
+                moshaf,
+                args.dataset_dir,
+                loop_batch_size=16,
+                sample_rate=16000,
+                tarteel_batch_size=32,
+                segment_batch_size=40,
+                segment_device="cuda",
+                segment_model=model,
+                segment_feature_extractor=processor,
+                segment_cache_dir=".segment_cache",
+                tarteel_timeout_sec=300,
+                tarteel_chunk_overlap_sec=10,
+                tarteel_max_len_sec=30,
+                tarteel_vllm_endpont="http://localhost:8000/v1",
+            )
+
+            # saves every path under outpath / "{moshaf_id}/train/shard.parquest
+            save_to_disk_split(
+                ds,
+                moshaf.id,
+                out_path=out_path,
+                samples_per_shard=512,
+            )
+
+    write_redmme_configs(
         args.out_dataset_dir,
         moshaf_excluded_fields=moshaf_excluded_fields,
         moshaf_pool=moshaf_pool,
@@ -187,6 +270,10 @@ if __name__ == "__main__":
         "--device",
         type=str,
         default="cuda",
+    )
+    parser.add_argument(
+        "--not-process-data",
+        action="store_true",
     )
 
     args = parser.parse_args()
