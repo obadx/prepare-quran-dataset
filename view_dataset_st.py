@@ -65,10 +65,10 @@ def display_sura(ds: Dataset, sura_idx):
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
-    st.write(f"عدد المقاعط: {len(ds)}")
+    st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
-    avaiable_suar = [int(r.name.split["."][0]) for r in moshaf.recitation_files]
+    avaiable_suar = [int(r.name.split(["."])[0]) for r in moshaf.recitation_files]
     sura_name = st.selectbox(
         "اختر السورة",
         avaiable_suar,
