@@ -68,7 +68,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
-    avaiable_suar = [int(r.name.split(["."])[0]) for r in moshaf.recitation_files]
+    avaiable_suar = [int(r.name.split(".")[0]) for r in moshaf.recitation_files]
     sura_name = st.selectbox(
         "اختر السورة",
         avaiable_suar,
