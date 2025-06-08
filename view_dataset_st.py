@@ -74,7 +74,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     left_col, right_col = st.columns(2)
 
     with right_col:
-        if st.button("اختر عينة عشاوئية"):
+        if st.button("اختر عينة عشاوئية", use_container_width=True):
             rand_idx = randint(0, len(ds) - 1)
             st.session_state.rand_idx = rand_idx
 
