@@ -36,6 +36,7 @@ def numpy_to_wav_bytes(audio_array, sample_rate):
 
 def display_audio_file(
     item: dict,
+    key_prefix="",
 ):
     """Displayes an audio file with download button"""
     expander = st.expander(f"**{item['segment_index']}**")
@@ -44,7 +45,9 @@ def display_audio_file(
         for key in keys:
             st.write(f"{key}: {item[key]}")
         if st.button(
-            "Load File", key=f"track_{item['segment_index']}", use_container_width=True
+            "Load File",
+            key=f"{key_prefix}_track_{item['segment_index']}",
+            use_container_width=True,
         ):
             wav_bytes = numpy_to_wav_bytes(item["audio"]["array"], 16000)
             st.audio(wav_bytes, format="audio/wav")
@@ -80,7 +83,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
     if "rand_idx" in st.session_state:
         st.subheader("عينة عشوائية")
-        display_audio_file(ds[st.session_state.rand_idx])
+        display_audio_file(ds[st.session_state.rand_idx], key_prefix="rand")
 
     avaiable_suar = [int(r.name.split(".")[0]) for r in moshaf.recitation_files]
     avaiable_suar = sorted(avaiable_suar)
