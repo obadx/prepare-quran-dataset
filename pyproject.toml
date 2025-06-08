@@ -19,6 +19,7 @@ dependencies = [
   "tqdm",
   "pydantic==2.10.2",
   "datasets==3.3.2",
+  "pyarrow>=20.0.0"
   "mutagen==1.47.0",
   "quran-transcript @ git+https://github.com/obadx/quran-transcript.git",
   "beautifulsoup4==4.12.3",
