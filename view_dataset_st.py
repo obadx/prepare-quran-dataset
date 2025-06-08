@@ -1,4 +1,5 @@
 from pathlib import Path
+from random import randint
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -70,15 +71,27 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
+    left_col, right_col = st.columns(2)
+
+    with right_col:
+        if st.button("اختر عينة عشاوئية"):
+            rand_idx = randint(0, len(ds) - 1)
+            st.session_state.rand_idx = rand_idx
+
+    if "rand_idx" in st.session_state:
+        st.subheader("عينة عشوائية")
+        display_audio_file(ds[st.session_state.rand_idx])
+
     avaiable_suar = [int(r.name.split(".")[0]) for r in moshaf.recitation_files]
     avaiable_suar = sorted(avaiable_suar)
-    sura_idx = st.selectbox(
-        "اختر السورة",
-        avaiable_suar,
-        format_func=lambda x: SUAR_LIST[x - 1],
-    )
-    st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
-
+    with left_col:
+        sura_idx = st.selectbox(
+            "اختر السورة",
+            avaiable_suar,
+            format_func=lambda x: SUAR_LIST[x - 1],
+        )
+        st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
+    st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
 
 
