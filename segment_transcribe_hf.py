@@ -211,6 +211,8 @@ def main(args):
         for moshaf in moshaf_pool:
             if (out_path / moshaf.id).is_dir():
                 continue
+            if moshaf.id != "19.0":
+                break
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
