@@ -69,9 +69,32 @@ SEGMET_PARAMS = {
     },
 }
 
+SEGMET_MOSHAF_PARAMS = {
+    "19.0": {
+        "min_silence_duration_ms": 30,
+        "min_speech_duration_ms": 600,
+        "pad_duration_ms": 380,
+    },
+    "4.0": {
+        "min_silence_duration_ms": 300,
+        "min_speech_duration_ms": 600,
+        "pad_duration_ms": 700,
+    },
+}
 
-def librosa_mono_decoder(batch, sample_rate=16000, alias_start_sec: float = 0):
-    """Loading aduio file and downsample it to 16000"""
+
+# Moshaf Item thta loads the first channel only
+FIRST_CHANNEL_ONLY_MOSHAF = {"4.0"}
+
+
+def librosa_mono_decoder(
+    batch, sample_rate=16000, alias_start_sec: float = 0, first_channel_only=False
+):
+    """Loading aduio file and downsample it to 16000
+
+    args:
+        first_channel_only(bool): whether to load the first channel only or average both (default)
+    """
     alias_samples = int(alias_start_sec * sample_rate)
     audio_data = []
     durations: list[float] = []
@@ -82,8 +105,13 @@ def librosa_mono_decoder(batch, sample_rate=16000, alias_start_sec: float = 0):
             waveform, _ = librosa.core.load(
                 audio_path,
                 sr=sample_rate,
-                mono=True,  # Force mono conversion
+                mono=not first_channel_only,  # Force mono conversion
             )
+
+            # take only the first channel
+            if first_channel_only:
+                if len(waveform) > 1:
+                    waveform = waveform[0]
 
             audio_data.append(
                 {
@@ -123,6 +151,11 @@ def segment_batch(
         for idx in range(len(batch["audio"]))
     ]
 
+    if moshaf.id in SEGMET_MOSHAF_PARAMS:
+        segment_prams = SEGMET_MOSHAF_PARAMS[moshaf.id]
+    else:
+        segment_prams = SEGMET_PARAMS[moshaf.recitation_speed]
+
     # Segmenting waves using وقف
     outs = segment_recitations(
         waves,
@@ -138,7 +171,7 @@ def segment_batch(
             clean_out = clean_speech_intervals(
                 out.speech_intervals,
                 out.is_complete,
-                **SEGMET_PARAMS[moshaf.recitation_speed],
+                **segment_prams,
             )
             clean_outs.append(clean_out)
         except Exception as e:
@@ -243,6 +276,7 @@ def process_moshaf_tracks(
         fn_kwargs={
             "sample_rate": sample_rate,
             "alias_start_sec": moshaf.alias_start_sec,
+            "first_channel_only": moshaf.id in FIRST_CHANNEL_ONLY_MOSHAF,
         },
     )
 
