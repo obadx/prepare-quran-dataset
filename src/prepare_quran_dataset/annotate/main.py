@@ -110,7 +110,7 @@ def librosa_mono_decoder(
 
             # take only the first channel
             if first_channel_only:
-                if len(waveform) > 1:
+                if len(waveform.shape) > 1:
                     waveform = waveform[0]
 
             audio_data.append(
