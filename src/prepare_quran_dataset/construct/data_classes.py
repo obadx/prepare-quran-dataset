@@ -68,22 +68,22 @@ class Moshaf(BaseDatasetModel):
         'Ex: {"002": "url_for_002"} will overwrite the recitation "002"'
         'The key is sura index if `segmented_by="sura"` while the key is the aya index if `segmented_by="aya"`.\n'
         "Sura index should be between 1 and 114.\n"
-        "Aya index should be with everyayah.com format as: `xxxyyy` where `xxx` is the sura index form(1) to (114) and `yyy` is the ayah index from(0) to max_aya count for sura. Example: `002100` is equvilent to `2100` where sura idx is 2 and aya index is 100."
-        "\nExample for specific sources of sura key:"
-        f"\n{
-            dump_yaml(
-                {3: 'https://example.com/003.mp3', 4: 'https://example.com/004.mp3'}
-            )
-        }"
-        "\nExample for specific sources of aya key:"
-        f"\n{
-            dump_yaml(
-                {
-                    1001: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/001001.mp3',
-                    114007: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/114007.mp3',
-                }
-            )
-        }",
+        "Aya index should be with everyayah.com format as: `xxxyyy` where `xxx` is the sura index form(1) to (114) and `yyy` is the ayah index from(0) to max_aya count for sura. Example: `002100` is equvilent to `2100` where sura idx is 2 and aya index is 100.",
+        # "\nExample for specific sources of sura key:"
+        # f"\n{
+        #     dump_yaml(
+        #         {3: 'https://example.com/003.mp3', 4: 'https://example.com/004.mp3'}
+        #     )
+        # }"
+        # "\nExample for specific sources of aya key:"
+        # f"\n{
+        #     dump_yaml(
+        #         {
+        #             1001: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/001001.mp3',
+        #             114007: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/114007.mp3',
+        #         }
+        #     )
+        # }",
     )
     downloaded_sources: list[str] = Field(
         default=[],
