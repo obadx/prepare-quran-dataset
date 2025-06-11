@@ -216,7 +216,7 @@ def main(args):
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
-                loop_batch_size=16,
+                loop_batch_size=1,
                 sample_rate=16000,
                 tarteel_batch_size=16,
                 segment_batch_size=16,
