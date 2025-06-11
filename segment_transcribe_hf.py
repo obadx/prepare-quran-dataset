@@ -212,7 +212,7 @@ def main(args):
             if (out_path / moshaf.id).is_dir():
                 continue
             if moshaf.id not in ["4.0", "19.0"]:
-                break
+                continue
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
