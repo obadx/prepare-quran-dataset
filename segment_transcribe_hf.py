@@ -211,15 +211,15 @@ def main(args):
         for moshaf in moshaf_pool:
             if (out_path / moshaf.id).is_dir():
                 continue
-            if moshaf.id != "19.0":
+            if moshaf.id not in ["4.0", "19.0"]:
                 break
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
                 loop_batch_size=16,
                 sample_rate=16000,
-                tarteel_batch_size=32,
-                segment_batch_size=40,
+                tarteel_batch_size=16,
+                segment_batch_size=16,
                 segment_device="cuda",
                 segment_model=model,
                 segment_feature_extractor=processor,
@@ -235,7 +235,7 @@ def main(args):
                 ds,
                 moshaf.id,
                 out_path=out_path,
-                samples_per_shard=512,
+                samples_per_shard=32,
             )
 
     write_redmme_configs(
