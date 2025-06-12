@@ -5,6 +5,7 @@ import asyncio
 
 from openai import AsyncOpenAI
 import soundfile as sf
+import stamina
 
 import numpy as np
 
@@ -140,6 +141,7 @@ def merge_transcripts(
     return merged
 
 
+@stamina.retry(attempts=3)
 async def tarteel_transcribe(
     wave: np.ndarray,
     sample_rate=16000,
