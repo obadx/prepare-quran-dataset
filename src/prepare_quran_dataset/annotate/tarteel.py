@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import io
 import asyncio
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, APIConnectionError
 import soundfile as sf
 import stamina
 
@@ -141,7 +141,7 @@ def merge_transcripts(
     return merged
 
 
-@stamina.retry(attempts=3)
+@stamina.retry(on=APIConnectionError, attempts=3)
 async def tarteel_transcribe(
     wave: np.ndarray,
     sample_rate=16000,
