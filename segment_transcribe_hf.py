@@ -216,9 +216,9 @@ def main(args):
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
-                loop_batch_size=1,
+                loop_batch_size=16,
                 sample_rate=16000,
-                tarteel_batch_size=16,
+                tarteel_batch_size=40,
                 segment_batch_size=16,
                 segment_device="cuda",
                 segment_model=model,
@@ -227,7 +227,7 @@ def main(args):
                 tarteel_timeout_sec=300,
                 tarteel_chunk_overlap_sec=10,
                 tarteel_max_len_sec=30,
-                tarteel_vllm_endpont="http://localhost:8000/v1",
+                tarteel_vllm_endpont=args.vllm_endpoint,
             )
 
             # saves every path under outpath / "{moshaf_id}/train/shard.parquest
@@ -235,7 +235,7 @@ def main(args):
                 ds,
                 moshaf.id,
                 out_path=out_path,
-                samples_per_shard=32,
+                samples_per_shard=512,
             )
 
     write_redmme_configs(
@@ -276,6 +276,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--not-process-data",
         action="store_true",
+    )
+    parser.add_argument(
+        "--vllm-endpoint",
+        default="http://localhost:8000/v1",
     )
 
     args = parser.parse_args()

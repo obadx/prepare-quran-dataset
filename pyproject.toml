@@ -50,6 +50,7 @@ annotate = [
   "torchaudio",
   "recitations-segmenter==1.0.0",
   "transformers",
+  "submitit==1.5.3",
 ]
 
 [project.urls]
