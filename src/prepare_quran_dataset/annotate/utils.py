@@ -51,10 +51,8 @@ def save_to_disk_split(
             cache.append(item)
 
         if ((idx + 1) % samples_per_shard == 0) and idx != 0:
+            shard_path = out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
             if cache:
-                shard_path = (
-                    out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
-                )
                 shard_ds = Dataset.from_list(cache)
                 shard_ds.to_parquet(shard_path)
                 del shard_ds
