@@ -240,7 +240,7 @@ def main(args):
                     continue
 
             logging.info(f"Working on moshaf: {moshaf.id}")
-            annotated_segment_ids = load_segment_ids(out_path / "train" / moshaf.id)
+            annotated_segment_ids = load_segment_ids(out_path / moshaf.id / "train")
 
             logging.info(f"{len(annotated_segment_ids)} has been annotated already")
 
