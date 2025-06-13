@@ -223,7 +223,7 @@ def tarteel_transcribe_batch(
     async def dummy_task():
         return ""
 
-    async def async_main(waves):
+    async def async_main(waves, annotated_segment_ids):
         tasks = [
             tarteel_transcribe(
                 wave,
