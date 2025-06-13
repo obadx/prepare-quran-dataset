@@ -1,60 +1,60 @@
 items:
-  - id: 0.0
+  - id: "0.0"
     turnc_ms: 210
 
-  - id: 1.0
+  - id: "1.0"
     turnc_ms: 200
 
-  - id: 2.1
+  - id: "2.1"
     turnc_ms: 310
 
-  - id: 3.0
+  - id: "3.0"
     turnc_ms: 350
 
-  - id: 5.0
+  - id: "5.0"
     turnc_ms: 210
 
-  - id: 6.0
+  - id: "6.0"
     turnc_ms: 240
 
-  - id: 7.0
+  - id: "7.0"
     turnc_ms: 435
 
-  - id: 9.0
+  - id: "9.0"
     turnc_ms: 240
 
-  - id: 11.0
+  - id: "11.0"
     turnc_ms: 425
 
-  - id: 12.0
+  - id: "12.0"
     turnc_ms: 90
 
-  - id: 13.0
+  - id: "13.0"
     turnc_ms: 120
 
-  - id: 17.0
+  - id: "17.0"
     turnc_ms: 355
 
-  - id: 21.0
+  - id: "21.0"
     turnc_ms: 190
 
-  - id: 21.1
+  - id: "21.1"
     turnc_ms: 390
 
-  - id: 22.0
+  - id: "22.0"
     turnc_ms: 330
 
-  - id: 24.0
+  - id: "24.0"
     turnc_ms: 275
 
-  - id: 25.0
+  - id: "25.0"
     turnc_ms: 345
 
-  - id: 26.1
+  - id: "26.1"
     turnc_ms: 90
 
-  - id: 28.0
+  - id: "28.0"
     turnc_ms: 500
 
-  - id: 31.0
+  - id: "31.0"
     turnc_ms: 240
