@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import shutil
 import logging
+import os
 
 from transformers import AutoFeatureExtractor, AutoModelForAudioFrameClassification
 import torch
@@ -17,6 +18,21 @@ from prepare_quran_dataset.hf_dataset_config import (
 )
 from prepare_quran_dataset.annotate.main import OUT_FEATURES, process_moshaf_tracks
 from prepare_quran_dataset.annotate.utils import save_to_disk_split, load_segment_ids
+
+
+# Setup logging configuration
+def setup_logging(log_dir="logs"):
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, "annotation_log.txt")
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),  # Save to file
+            logging.StreamHandler(),  # Print to console
+        ],
+    )
 
 
 def write_redmme_splits(
@@ -260,6 +276,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    setup_logging()
+
     parser = argparse.ArgumentParser(
         "Building Recitations Dataset by spliting tracks using وقف and trancripe using Tarteel"
     )
