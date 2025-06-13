@@ -226,6 +226,10 @@ def main(args):
         model.to(args.device, dtype=torch.bfloat16)
 
         for moshaf in moshaf_pool:
+            # TODO: for debugging only
+            if moshaf.id not in ["4.0", "19.0"]:
+                continue
+
             if (out_path / moshaf.id).is_dir():
                 if moshaf.id in args.continue_moshaf_ids:
                     logging.info(f"Continue Moshaf: {moshaf.id}")
@@ -237,6 +241,8 @@ def main(args):
 
             logging.info(f"Working on moshaf: {moshaf.id}")
             annotated_segment_ids = load_segment_ids(out_path / "train" / moshaf.id)
+
+            logging.info(f"{len(annotated_segment_ids)} has been annotated already")
 
             ds = process_moshaf_tracks(
                 moshaf,
