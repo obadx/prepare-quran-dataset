@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 import shutil
+import logging
 
 from transformers import AutoFeatureExtractor, AutoModelForAudioFrameClassification
 import torch
@@ -15,7 +16,7 @@ from prepare_quran_dataset.hf_dataset_config import (
     HFDatasetSplit,
 )
 from prepare_quran_dataset.annotate.main import OUT_FEATURES, process_moshaf_tracks
-from prepare_quran_dataset.annotate.utils import save_to_disk_split
+from prepare_quran_dataset.annotate.utils import save_to_disk_split, load_segment_ids
 
 
 def write_redmme_splits(
@@ -210,16 +211,24 @@ def main(args):
 
         for moshaf in moshaf_pool:
             if (out_path / moshaf.id).is_dir():
-                continue
-            if moshaf.id not in ["4.0", "19.0"]:
-                continue
+                if moshaf.id in args.continue_moshaf_ids:
+                    logging.info(f"Continue Moshaf: {moshaf.id}")
+                else:
+                    logging.info(
+                        f"Skipping Moshaf: {moshaf.id} as it was previously annotated"
+                    )
+                    continue
+
+            logging.info(f"Working on moshaf: {moshaf.id}")
+            annotated_segment_ids = load_segment_ids(out_path / "train" / moshaf.id)
+
             ds = process_moshaf_tracks(
                 moshaf,
                 args.dataset_dir,
                 loop_batch_size=16,
                 sample_rate=16000,
-                tarteel_batch_size=40,
-                segment_batch_size=16,
+                tarteel_batch_size=args.tarteel_batch_size,
+                segment_batch_size=args.segment_batch_size,
                 segment_device="cuda",
                 segment_model=model,
                 segment_feature_extractor=processor,
@@ -228,6 +237,7 @@ def main(args):
                 tarteel_chunk_overlap_sec=10,
                 tarteel_max_len_sec=30,
                 tarteel_vllm_endpont=args.vllm_endpoint,
+                annotated_segment_ids=annotated_segment_ids,
             )
 
             # saves every path under outpath / "{moshaf_id}/train/shard.parquest
@@ -236,7 +246,10 @@ def main(args):
                 moshaf.id,
                 out_path=out_path,
                 samples_per_shard=512,
+                annotated_segment_ids=annotated_segment_ids,
             )
+
+            logging.info(f"Finished moshaf: {moshaf.id}")
 
     write_redmme_configs(
         args.out_dataset_dir,
@@ -280,6 +293,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--vllm-endpoint",
         default="http://localhost:8000/v1",
+    )
+    parser.add_argument(
+        "--tarteel-batch-size",
+        type=int,
+        default=32,
+    )
+    parser.add_argument(
+        "--segment-batch-size",
+        type=int,
+        default=40,
+    )
+    parser.add_argument(
+        "--continue-moshaf-ids",
+        nargs="+",
+        help="""The output path to the dataset dir""",
     )
 
     args = parser.parse_args()

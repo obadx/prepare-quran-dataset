@@ -1,5 +1,6 @@
 from pathlib import Path
 import asyncio
+from typing import Optional
 
 import librosa
 from datasets import Features, IterableDataset, load_dataset, Audio, Value, Sequence
@@ -217,7 +218,11 @@ def tarteel_transcribe_batch(
     chunk_overlap_sec=10,
     max_len_sec=30,
     sample_rate=16000,
+    annotated_segment_ids: Optional[set[str]] = None,
 ) -> dict:
+    async def dummy_task():
+        return ""
+
     async def async_main(waves):
         tasks = [
             tarteel_transcribe(
@@ -228,13 +233,17 @@ def tarteel_transcribe_batch(
                 max_len_sec=max_len_sec,
                 sample_rate=sample_rate,
             )
-            for wave in waves
+            if batch["segment_index"][idx] not in annotated_segment_ids
+            else dummy_task()
+            for idx, wave in enumerate(waves)
         ]
         outs = await asyncio.gather(*tasks)
         return outs
 
     waves = [batch["audio"][idx]["array"] for idx in range(len(batch["audio"]))]
-    transcritps = asyncio.run(async_main(waves))
+    if annotated_segment_ids is None:
+        annotated_segment_ids = set()
+    transcritps = asyncio.run(async_main(waves, annotated_segment_ids))
 
     return {"tarteel_transcript": transcritps}
 
@@ -256,6 +265,7 @@ def process_moshaf_tracks(
     tarteel_chunk_overlap_sec=10,
     tarteel_max_len_sec=30,
     tarteel_vllm_endpont="http://localhost:8000/v1",
+    annotated_segment_ids: Optional[set[str]] = None,
 ) -> IterableDataset:
     """ """
     dataset_path = Path(dataset_path)
@@ -311,6 +321,7 @@ def process_moshaf_tracks(
             "chunk_overlap_sec": tarteel_chunk_overlap_sec,
             "max_len_sec": tarteel_max_len_sec,
             "sample_rate": sample_rate,
+            "annotated_segment_ids": annotated_segment_ids,
         },
     )
 
