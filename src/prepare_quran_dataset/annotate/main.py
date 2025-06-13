@@ -1,6 +1,7 @@
 from pathlib import Path
 import asyncio
 from typing import Optional
+import logging
 
 import librosa
 from datasets import Features, IterableDataset, load_dataset, Audio, Value, Sequence
@@ -156,6 +157,8 @@ def segment_batch(
         segment_prams = SEGMET_MOSHAF_PARAMS[moshaf.id]
     else:
         segment_prams = SEGMET_PARAMS[moshaf.recitation_speed]
+
+    logging.info(f"Segment Params of moshaf: {moshaf.id} are: {segment_prams}")
 
     # Segmenting waves using وقف
     outs = segment_recitations(
