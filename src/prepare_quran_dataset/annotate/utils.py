@@ -55,6 +55,7 @@ def save_to_disk_split(
             shard_idx += 1
             if cache:
                 shard_ds = Dataset.from_list(cache)
+                logging.info(f"Saving shard: {shard_path}")
                 shard_ds.to_parquet(shard_path)
                 del shard_ds
                 del cache
