@@ -23,7 +23,7 @@ from prepare_quran_dataset.annotate.utils import save_to_disk_split, load_segmen
 # Setup logging configuration
 def setup_logging(log_dir="logs"):
     os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "annotation_log.txt")
+    log_file = os.path.join(log_dir, "annotation_log.log")
 
     logging.basicConfig(
         level=logging.INFO,
