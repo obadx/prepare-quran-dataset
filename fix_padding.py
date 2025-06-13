@@ -53,7 +53,7 @@ class TruncationConfig(BaseModel):
             )
 
 
-def truncate_sample(example, trunc_samples):
+def truncate_example(example, trunc_samples):
     example["audio"]["array"] = example["audio"]["array"][trunc_samples:-trunc_samples]
     return example
 
@@ -71,7 +71,9 @@ def truncate_moshaf(
         # Truncate
         trunc_samples = int(moshaf_trunc_config.turnc_ms * sample_rate / 10000)
         ds_shard.map(
-            trunc_samples, fn_kwargs={"trunc_samples": trunc_samples}, num_proc=num_proc
+            truncate_example,
+            fn_kwargs={"trunc_samples": trunc_samples},
+            num_proc=num_proc,
         )
 
         # caching
