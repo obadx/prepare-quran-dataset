@@ -86,7 +86,7 @@ def truncate_moshaf(
 
 
 def main(args):
-    out_path = Path(args.out_dataset_dir) / "dataset"
+    out_path = Path(args.dataset_dir) / "dataset"
     out_path.mkdir(exist_ok=True, parents=True)
 
     trunc_conifg = TruncationConfig.from_yaml("./truncation_config.yml")
