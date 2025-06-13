@@ -110,16 +110,15 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        # job = executor.submit(
-        #     truncate_moshaf,
-        #     moshaf_trunc_config,
-        #     out_path / moshaf_trunc_config.id / "train",
-        # )
-        # print(job.job_id)
-        truncate_moshaf(
-            moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        job = executor.submit(
+            truncate_moshaf,
+            moshaf_trunc_config,
+            out_path / moshaf_trunc_config.id / "train",
         )
-        break
+        print(job.job_id)
+        # truncate_moshaf(
+        #     moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        # )
 
 
 if __name__ == "__main__":
