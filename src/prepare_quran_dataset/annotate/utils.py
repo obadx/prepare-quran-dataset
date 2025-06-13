@@ -14,7 +14,7 @@ def load_segment_ids(ds_path: Path, segment_column="segment_index") -> set[str]:
     ids = []
     for parquet_file in ds_path.glob("*parquet"):
         logging.info(f"Loading Annoated shard: {parquet_file}")
-        ds = Dataset.from_parquet(parquet_file)
+        ds = Dataset.from_parquet(str(parquet_file))
         ids += ds[segment_column]
         del ds
         gc.collect()
