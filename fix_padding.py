@@ -9,6 +9,17 @@ import submitit
 from datasets import Dataset
 
 
+# Setup logging configuration
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.StreamHandler(),  # Print to console
+        ],
+    )
+
+
 class MoshafTruncConfig(BaseModel):
     id: str
     turnc_ms: float
@@ -110,6 +121,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    setup_logging()
+
     parser = argparse.ArgumentParser(
         "Building Recitations Dataset by spliting tracks using وقف and trancripe using Tarteel"
     )
