@@ -52,6 +52,7 @@ def save_to_disk_split(
 
         if ((idx + 1) % samples_per_shard == 0) and idx != 0:
             shard_path = out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
+            shard_idx += 1
             if cache:
                 shard_ds = Dataset.from_list(cache)
                 shard_ds.to_parquet(shard_path)
@@ -59,7 +60,6 @@ def save_to_disk_split(
                 del cache
                 gc.collect()
                 cache = []
-                shard_idx += 1
             else:
                 logging.info(
                     f"Skipping shard: {shard_path} as it was annotated previously"
