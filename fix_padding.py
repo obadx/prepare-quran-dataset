@@ -15,7 +15,7 @@ from prepare_quran_dataset.annotate.utils import load_segment_ids
 # Setup logging configuration
 def setup_logging():
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.StreamHandler(),  # Print to console
@@ -168,9 +168,6 @@ def truncate_moshaf(
         del to_save_ds
         gc.collect()
 
-        # TODO: remove
-        break
-
 
 def main(args):
     out_path = Path(args.dataset_dir) / "dataset"
@@ -195,16 +192,15 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        # job = executor.submit(
-        #     truncate_moshaf,
-        #     moshaf_trunc_config,
-        #     out_path / moshaf_trunc_config.id / "train",
-        # )
-        # print(job.job_id)
-        truncate_moshaf(
-            moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        job = executor.submit(
+            truncate_moshaf,
+            moshaf_trunc_config,
+            out_path / moshaf_trunc_config.id / "train",
         )
-        break
+        print(job.job_id)
+        # truncate_moshaf(
+        #     moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        # )
 
 
 if __name__ == "__main__":
