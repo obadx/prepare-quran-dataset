@@ -148,7 +148,7 @@ def truncate_moshaf(
         trunc_samples = int(moshaf_trunc_config.turnc_ms * sample_rate / 1000)
         logging.debug(f"Truncation samples: {trunc_samples}")
 
-        ds_shard.map(
+        ds_shard = ds_shard.map(
             truncate_example,
             fn_kwargs={
                 "trunc_samples": trunc_samples,
