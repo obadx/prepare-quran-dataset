@@ -106,7 +106,7 @@ def truncate_example(
 
     match startegy:
         case "start":
-            logging.info(f"Start Truncation strategy for: {example['segment_index']}")
+            logging.debug(f"Start Truncation strategy for: {example['segment_index']}")
             example["audio"]["array"] = example["audio"]["array"][:-trunc_samples]
 
         case "middle":
@@ -115,7 +115,7 @@ def truncate_example(
             ]
 
         case "end":
-            logging.info(f"End Truncation Strategy for: {example['segment_index']}")
+            logging.debug(f"End Truncation Strategy for: {example['segment_index']}")
             example["audio"]["array"] = example["audio"]["array"][trunc_samples:]
 
     example["duration_seconds"] = len(example["audio"]["array"]) / sample_rate
@@ -137,7 +137,7 @@ def truncate_moshaf(
         ds_shard = Dataset.from_parquet(str(parquet_path))
 
         # Truncate
-        trunc_samples = int(moshaf_trunc_config.turnc_ms * sample_rate / 10000)
+        trunc_samples = int(moshaf_trunc_config.turnc_ms * sample_rate / 1000)
         ds_shard.map(
             truncate_example,
             fn_kwargs={
@@ -182,16 +182,15 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        # job = executor.submit(
-        #     truncate_moshaf,
-        #     moshaf_trunc_config,
-        #     out_path / moshaf_trunc_config.id / "train",
-        # )
-        # print(job.job_id)
-        truncate_moshaf(
-            moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        job = executor.submit(
+            truncate_moshaf,
+            moshaf_trunc_config,
+            out_path / moshaf_trunc_config.id / "train",
         )
-        break
+        print(job.job_id)
+        # truncate_moshaf(
+        #     moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        # )
 
 
 if __name__ == "__main__":
