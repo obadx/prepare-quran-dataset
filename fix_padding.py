@@ -104,6 +104,10 @@ def truncate_example(
         example["segment_index"], idx_to_segment, segment_to_idx
     )
 
+    logging.debug(
+        f"Length in seconds for {example['segment_index']} befre processing: {len(example['audio']['array']) / sample_rate}"
+    )
+
     match startegy:
         case "start":
             logging.debug(f"Start Truncation strategy for: {example['segment_index']}")
@@ -120,6 +124,10 @@ def truncate_example(
 
     example["duration_seconds"] = len(example["audio"]["array"]) / sample_rate
 
+    logging.debug(
+        f"Length in seconds for {example['segment_index']} after processing: {len(example['audio']['array']) / sample_rate}"
+    )
+
     return example
 
 
@@ -132,12 +140,14 @@ def truncate_moshaf(
     idx_to_segment = sorted(load_segment_ids(ds_path))
     segment_to_idx = {seg: idx for idx, seg in enumerate(idx_to_segment)}
 
-    for parquet_path in ds_path.glob("*.parquet"):
+    for parquet_path in sorted(ds_path.glob("*.parquet")):
         logging.info(f"Woring in shard: {parquet_path}")
         ds_shard = Dataset.from_parquet(str(parquet_path))
 
         # Truncate
         trunc_samples = int(moshaf_trunc_config.turnc_ms * sample_rate / 1000)
+        logging.debug(f"Truncation samples: {trunc_samples}")
+
         ds_shard.map(
             truncate_example,
             fn_kwargs={
@@ -157,6 +167,9 @@ def truncate_moshaf(
         to_save_ds.to_parquet(parquet_path)
         del to_save_ds
         gc.collect()
+
+        # TODO: remove
+        break
 
 
 def main(args):
@@ -182,15 +195,16 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        job = executor.submit(
-            truncate_moshaf,
-            moshaf_trunc_config,
-            out_path / moshaf_trunc_config.id / "train",
-        )
-        print(job.job_id)
-        # truncate_moshaf(
-        #     moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        # job = executor.submit(
+        #     truncate_moshaf,
+        #     moshaf_trunc_config,
+        #     out_path / moshaf_trunc_config.id / "train",
         # )
+        # print(job.job_id)
+        truncate_moshaf(
+            moshaf_trunc_config, out_path / moshaf_trunc_config.id / "train"
+        )
+        break
 
 
 if __name__ == "__main__":
