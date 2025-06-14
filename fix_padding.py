@@ -15,7 +15,7 @@ from prepare_quran_dataset.annotate.utils import load_segment_ids
 # Setup logging configuration
 def setup_logging():
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.StreamHandler(),  # Print to console
