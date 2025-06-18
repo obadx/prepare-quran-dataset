@@ -1,5 +1,6 @@
 from pathlib import Path
 from random import randint
+import argparse
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -69,6 +70,26 @@ def display_sura(ds: Dataset, sura_idx):
         display_audio_file(item)
 
 
+def display_higher_durations(ds: Dataset, threshold: float):
+    """
+    Args:
+        sura_idx (int): Absolute sura index
+    """
+    f_ds = ds.filter(lambda ex: int(ex["duration_seconds"]) >= threshold, num_proc=16)
+    for item in f_ds:
+        display_audio_file(item)
+
+
+def display_small_durations(ds: Dataset, threshold: float):
+    """
+    Args:
+        sura_idx (int): Absolute sura index
+    """
+    f_ds = ds.filter(lambda ex: int(ex["duration_seconds"]) <= threshold, num_proc=16)
+    for item in f_ds:
+        display_audio_file(item)
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
     st.write(f"عدد المقاطع: {len(ds)}")
@@ -94,13 +115,26 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             format_func=lambda x: SUAR_LIST[x - 1],
         )
         st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
+
+    st.subheader("المقاطع القصيرة")
+    small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
+    display_small_durations(ds, small_duration)
+
+    st.subheader("المقاطع الطويلة")
+    long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
+    display_higher_durations(ds, long_duration)
+
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
 
 
 if __name__ == "__main__":
     # config
-    ds_path = Path("/cluster/users/shams035u1/data/mualem-recitations-annotated")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset-path", type=Path, required=True)
+    args = parser.parse_args()
+
+    ds_path = args.dataset_path
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, ds_path)
 
