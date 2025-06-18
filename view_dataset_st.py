@@ -129,6 +129,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
 if __name__ == "__main__":
     ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
+    ds_path = Path(ds_path)
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, ds_path)
 
