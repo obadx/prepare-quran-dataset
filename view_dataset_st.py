@@ -116,12 +116,14 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
 
     st.subheader("المقاطع القصيرة")
-    small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
-    display_small_durations(ds, small_duration)
+    with st.expander("انقر للعرض"):
+        small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
+        display_small_durations(ds, small_duration)
 
-    st.subheader("المقاطع الطويلة")
-    long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
-    display_higher_durations(ds, long_duration)
+    with st.expander("انقر للعرض"):
+        st.subheader("المقاطع الطويلة")
+        long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
+        display_higher_durations(ds, long_duration)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
