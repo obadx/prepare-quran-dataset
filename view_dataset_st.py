@@ -111,7 +111,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         sura_idx = st.selectbox(
             "اختر السورة",
             avaiable_suar,
-            format_func=lambda x: SUAR_LIST[x - 1],
+            format_func=lambda x: f"{x} / {SUAR_LIST[x - 1]}",
         )
         st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
 
