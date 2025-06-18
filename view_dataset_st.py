@@ -1,6 +1,5 @@
 from pathlib import Path
 from random import randint
-import argparse
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -129,12 +128,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
 
 if __name__ == "__main__":
-    # config
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset-path", type=Path, required=True)
-    args = parser.parse_args()
-
-    ds_path = args.dataset_path
+    ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, ds_path)
 
