@@ -1,55 +1,24 @@
 configs:
   - id: "0.0"
     operations:
+      - type: delete
+        segment_index: "008.0040"
+      - type: update
+        segment_index: "008.0039"
+        new_audio_file: 0.0/008_0039.wav
 
       - type: delete
-        segment_index: "112.0004"
+        segment_index: "009.0043"
+      - type: delete
+        segment_index: "009.0042"
 
       - type: update
-        segment_index: "112.0003"
-        new_tarteel_transcript: "الحمد لله"
+        segment_index: "000.0133"
+        new_tarteel_transcript: "هِيَ حَسْبُهُمْ"
 
-      - type: insert
-        segment_index: "112.0000"
-        new_tarteel_transcript: "أعوذ بالله من الشيطان الرجيم"
-        new_audio_file: /home/abdullah/Downloads/0_0_authbellah.wav
+      - type: delete
+        segment_index: "011.0206"
+      - type: update
+        segment_index: "011.0205"
+        new_audio_file: 0.0/011.0205.wav
 
-
-      # - type: insert
-      #   segment_index: "098.0004"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-      #
-      # - type: insert
-      #   segment_index: "114.0000"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-
-
-      # - type: insert
-      #   segment_index: "112.0000"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-      #
-      #
-      # - type: update
-      #   segment_index: "112.0001"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-      #
-      #
-      # - type: delete
-      #   segment_index: "112.0002"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-      #
-      # - type: insert
-      #   segment_index: "112.0004"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
-
-
-      # - type: insert
-      #   segment_index: "112.0005"
-      #   new_audio_file: ./hamo.wav
-      #   new_tarteel_transcript: "الحمد لله"
