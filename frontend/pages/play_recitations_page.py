@@ -35,45 +35,45 @@ def display_audio_file(
 
         # New Download wav 16000 button
         if st.button(
-            "Download wav 16000", key=f"wav_{file_info.name}", use_container_width=True
+            "Convert to 16000 wav",
+            key=f"wav_{file_info.name}",
+            use_container_width=True,
         ):
-            with st.spinner("Converting to wav 16000..."):
-                try:
-                    # Create temporary file
-                    with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".wav", dir="./"
-                    ) as tmpfile:
-                        temp_path = tmpfile.name
+            try:
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(
+                    delete=False, suffix=".wav", dir="./"
+                ) as tmpfile:
+                    temp_path = tmpfile.name
 
-                    # Prepare file paths
-                    input_path = str(conf.BASE_DIR / file_info.path)
-                    output_path = temp_path
+                # Prepare file paths
+                input_path = str(conf.BASE_DIR / file_info.path)
+                output_path = temp_path
 
-                    # Run FFmpeg conversion
-                    cmd = ["ffmpeg", "-i", input_path, "-ar", "16000", output_path]
-                    subprocess.run(
-                        cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                    )
+                # Run FFmpeg conversion
+                cmd = ["ffmpeg", "-i", input_path, "-ar", "16000", output_path]
+                subprocess.run(
+                    cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
 
-                    # Offer download and clean up
-                    with open(output_path, "rb") as f:
-                        wav_data = f.read()
-                    os.unlink(output_path)  # Delete temp file immediately after reading
+                # Offer download and clean up
+                with open(output_path, "rb") as f:
+                    wav_data = f.read()
 
-                    # Create download button
-                    base_name = file_info.name.split(".")[0]
-                    new_filename = f"{base_name}_16000.wav"
-                    st.download_button(
-                        label="Click to download wav 16000",
-                        data=wav_data,
-                        file_name=new_filename,
-                        key=f"download_wav_{file_info.name}",
-                    )
+                # Create download button
+                base_name = file_info.name.split(".")[0]
+                new_filename = f"{base_name}_16000.wav"
+                st.download_button(
+                    label="Click to download wav 16000",
+                    data=wav_data,
+                    file_name=new_filename,
+                    key=f"download_wav_{file_info.name}",
+                )
 
-                except subprocess.CalledProcessError as e:
-                    st.error(f"Conversion failed: {e.stderr.decode()}")
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
+            except subprocess.CalledProcessError as e:
+                st.error(f"Conversion failed: {e.stderr.decode()}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 
 def play_recitations():
