@@ -26,9 +26,13 @@ def setup_logging():
 
 
 def apply_moshaf_edits(
-    moshaf_edit_config: MoshafEditConfig, ds_path: Path, num_proc=16
+    moshaf_edit_config: MoshafEditConfig,
+    ds_path: Path,
+    new_audiofile_path: Path,
+    num_proc=16,
 ):
     ds_path = Path(ds_path)
+    new_audiofile_path = Path(new_audiofile_path)
     ds_info = load_moshaf_dataset_info(ds_path)
 
     to_apply_shrads = plan_moshaf_edits(ds_info, moshaf_edit_config)
@@ -39,7 +43,7 @@ def apply_moshaf_edits(
         )
 
     for shards_ops in to_apply_shrads:
-        apply_ds_shard_edits(shards_ops, num_proc=16)
+        apply_ds_shard_edits(shards_ops, new_audiofile_path, num_proc=num_proc)
 
 
 def main(args):
@@ -68,7 +72,8 @@ def main(args):
         job = executor.submit(
             apply_moshaf_edits,
             moshaf_edit_config,
-            out_path / moshaf_edit_config.id / "train",
+            ds_path=out_path / moshaf_edit_config.id / "train",
+            new_audiofile_path=args.new_audiofile_path,
             num_proc=16,
         )
         print(job.job_id)
@@ -94,6 +99,11 @@ if __name__ == "__main__":
         ├── moshaf_pool.jsonl
         └── reciter_pool.jsonl
         """,
+    )
+    parser.add_argument(
+        "--new-aduiofile-base-path",
+        type=Path,
+        required=True,
     )
 
     args = parser.parse_args()

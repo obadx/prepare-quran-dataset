@@ -69,13 +69,13 @@ class Operation(BaseModel):
 
         return {"array": wave, "sampling_rate": self.sample_rate}
 
-    def to_hf(self):
+    def to_hf(self, base_path: str | Path):
         item = {}
         if self.new_segment_index is not None:
             item["segment_index"] = self.new_segment_index
 
         if self.new_audio_file is not None:
-            item["audio"] = self._to_hf_audio()
+            item["audio"] = self._to_hf_audio(base_path)
 
         if self.new_tarteel_transcript is not None:
             item["tarteel_transcript"] = self.new_tarteel_transcript
@@ -92,7 +92,7 @@ class MoshafEditConfig(BaseModel):
         context: Any,
     ):
         # sort oprerations
-        self.operations = sorted(
+        self.operations: list[Operation] = sorted(
             self.operations,
             key=lambda o: (o.segment_index, OPERATION_TYPE_ORDER[o.type]),
         )
@@ -162,6 +162,28 @@ class EditConfig(BaseModel):
         raw_data = yaml.safe_load(yaml_data)
 
         return cls(**raw_data)
+
+    def to_yaml(self, path: str | Path) -> None:
+        path = Path(path)
+        data = self.model_dump(exclude_none=True)  # Pydantic v2; use .dict() for v1
+        yaml_str = yaml.safe_dump(
+            data,
+            allow_unicode=True,  # Preserve non-ASCII characters
+            sort_keys=False,  # Maintain field order
+            encoding="utf-8",  # Encode as UTF-8
+        )
+        path.write_bytes(yaml_str)  # Write bytes directly
+
+    def to_moshaf_dict(self) -> dict:
+        moshaf_to_seg_to_ops = {}
+        for conf in self.configs:
+            if conf.id not in moshaf_to_seg_to_ops:
+                moshaf_to_seg_to_ops[conf.id] = {}
+            for op in conf.operations:
+                if op.segment_index not in moshaf_to_seg_to_ops[conf.id]:
+                    moshaf_to_seg_to_ops[conf.id][op.segment_index] = []
+                moshaf_to_seg_to_ops[conf.id][op.segment_index].append(op)
+        return moshaf_to_seg_to_ops
 
 
 @dataclass
@@ -308,14 +330,18 @@ def plan_moshaf_edits(
     return shard_operataions
 
 
-def apply_edits_map(batch, segment_index_to_ops: dict[str, list[Operation]]) -> dict:
+def apply_edits_map(
+    batch,
+    segment_index_to_ops: dict[str, list[Operation]],
+    new_audiofile_path: str | Path,
+) -> dict:
     new_batch = {k: [] for k in batch}
     if batch["segment_index"][0] in segment_index_to_ops:
         for op in segment_index_to_ops[batch["segment_index"][0]]:
             if op.type == "delete":
                 ...
             elif op.type in ["update", "insert"]:
-                new_item = op.to_hf()
+                new_item = op.to_hf(new_audiofile_path)
                 for k in new_batch:
                     if k in new_item:
                         new_batch[k].append(new_item[k])
@@ -330,6 +356,7 @@ def apply_edits_map(batch, segment_index_to_ops: dict[str, list[Operation]]) -> 
 
 def apply_ds_shard_edits(
     ds_shard_operations: DatasetShardOperations,
+    new_audiofile_path: str | Path,
     num_proc=16,
 ):
     ds_shard = Dataset.from_parquet(ds_shard_operations.path)
@@ -356,7 +383,10 @@ def apply_ds_shard_edits(
         batched=True,
         batch_size=1,
         num_proc=num_proc,
-        fn_kwargs={"segment_index_to_ops": segment_index_to_ops},
+        fn_kwargs={
+            "segment_index_to_ops": segment_index_to_ops,
+            "new_audiofile_path": new_audiofile_path,
+        },
     )
     ds_shard = ds_shard.sort("segment_index")
     logging.info(f"Saveing Shard: {ds_shard_operations.path}")
