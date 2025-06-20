@@ -41,7 +41,7 @@ def display_audio_file(
                 try:
                     # Create temporary file
                     with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".wav"
+                        delete=False, suffix=".wav", dir="./"
                     ) as tmpfile:
                         temp_path = tmpfile.name
 
