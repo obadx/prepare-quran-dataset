@@ -340,9 +340,9 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
-    with col3:
+    with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
             rand_idx = randint(0, len(ds) - 1)
             st.session_state.rand_idx = rand_idx
@@ -362,21 +362,26 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         st.write(f"عدد الآيات بالسورة: {SURA_TO_AYA_COUNT[sura_idx]}")
 
     with col2:
-        if st.button("اعرض التعديلات"):
+        if st.button("اعرض التعديلات", use_container_width=True):
             st.session_state.display_edits = True
 
+    with col3:
+        if st.button("اخف التعديلات", use_container_width=True):
+            st.session_state.display_edits = False
+
     if "display_edits" in st.session_state:
-        st.subheader("التعديلات")
-        # view operations on this item
-        if moshaf.id in st.session_state.moshaf_to_seg_to_ops:
-            edited_ds = ds.filter(
-                lambda ex: ex["segment_index"]
-                in st.session_state.moshaf_to_seg_to_ops[moshaf.id],
-                keep_in_memory=True,
-                num_proc=16,
-            )
-            for item in edited_ds:
-                display_audio_file(item, key_prefix="edit")
+        if st.session_state.display_edits:
+            st.subheader("التعديلات")
+            # view operations on this item
+            if moshaf.id in st.session_state.moshaf_to_seg_to_ops:
+                edited_ds = ds.filter(
+                    lambda ex: ex["segment_index"]
+                    in st.session_state.moshaf_to_seg_to_ops[moshaf.id],
+                    keep_in_memory=True,
+                    num_proc=16,
+                )
+                for item in edited_ds:
+                    display_audio_file(item, key_prefix="edit")
 
     st.subheader("المقاطع القصيرة")
     small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
