@@ -218,3 +218,10 @@ configs:
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
     sample_rate: 16000
+- id: '0.2'
+  operations:
+  - type: update
+    segment_index: '038.0067'
+    new_tarteel_transcript:
+    - هَٰذَا
+    sample_rate: 16000
