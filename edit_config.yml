@@ -1,24 +1,122 @@
 configs:
-  - id: "0.0"
-    operations:
-      - type: delete
-        segment_index: "008.0040"
-      - type: update
-        segment_index: "008.0039"
-        new_audio_file: 0.0/008_0039.wav
-
-      - type: delete
-        segment_index: "009.0043"
-      - type: delete
-        segment_index: "009.0042"
-
-      - type: update
-        segment_index: "000.0133"
-        new_tarteel_transcript: "هِيَ حَسْبُهُمْ"
-
-      - type: delete
-        segment_index: "011.0206"
-      - type: update
-        segment_index: "011.0205"
-        new_audio_file: 0.0/011.0205.wav
-
+- id: '0.0'
+  operations:
+  - type: update
+    segment_index: '000.0133'
+    new_tarteel_transcript:
+    - هِيَ حَسْبُهُمْ
+    sample_rate: 16000
+  - type: update
+    segment_index: '008.0039'
+    new_audio_file: 0.0/008_0039.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '008.0040'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '009.0042'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '009.0043'
+    sample_rate: 16000
+  - type: update
+    segment_index: '009.0133'
+    new_tarteel_transcript:
+    - هِيَ حَسْبُهُمْ
+    sample_rate: 16000
+  - type: update
+    segment_index: '011.0205'
+    new_audio_file: 0.0/011.0205.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '011.0206'
+    sample_rate: 16000
+  - type: update
+    segment_index: '016.0047'
+    new_audio_file: 0.0/016_0047.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '016.0048'
+    sample_rate: 16000
+  - type: update
+    segment_index: '016.0165'
+    new_audio_file: 0.0/016_0165.wav
+    new_tarteel_transcript:
+    - إِنَّمَا يَفْتَرِي الْكَذِبَ الَّذِينَ لَا يُؤْمِنُونَ بِآيَاتِ اللَّهِ وَأُولَٰئِكَ
+      هُمُ الْكَاذِبُونَ ‎
+    sample_rate: 16000
+  - type: delete
+    segment_index: '016.0166'
+    sample_rate: 16000
+  - type: update
+    segment_index: '019.0069'
+    new_audio_file: 0.0/019_0069.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '019.0070'
+    sample_rate: 16000
+  - type: update
+    segment_index: '026.0146'
+    new_audio_file: 0.0/026_0146.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '026.0147'
+    sample_rate: 16000
+  - type: update
+    segment_index: '037.0181'
+    new_audio_file: 0.0/037_0181.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '037.0182'
+    sample_rate: 16000
+  - type: update
+    segment_index: '039.0097'
+    new_audio_file: 0.0/039_0097.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '039.0098'
+    sample_rate: 16000
+  - type: update
+    segment_index: '042.0032'
+    new_audio_file: 0.0/042_0032.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '042.0033'
+    sample_rate: 16000
+  - type: update
+    segment_index: '056.0096'
+    new_audio_file: 0.0/056_0096.wav
+    new_tarteel_transcript:
+    - فَسَبِّح بِاسمِ رَبِّكَ العَظيمِ
+    sample_rate: 16000
+  - type: delete
+    segment_index: '056.0097'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '059.0029'
+    sample_rate: 16000
+  - type: update
+    segment_index: '059.0028'
+    new_audio_file: 0.0/059_0028.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '068.0049'
+    sample_rate: 16000
+  - type: update
+    segment_index: '068.0048'
+    new_audio_file: 0.0/068_0048.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '096.0013'
+    sample_rate: 16000
+  - type: update
+    segment_index: '096.0012'
+    new_audio_file: 0.0/096_0012.wav
+    new_tarteel_transcript:
+    - أَو أَمَرَ بِالتَّقوىٰ
+    sample_rate: 16000
+  - type: update
+    segment_index: '053.0034'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+    sample_rate: 16000
