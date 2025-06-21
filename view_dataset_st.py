@@ -76,6 +76,41 @@ def save_moshaf_operation(moshaf_id: str, op: Operation):
     )
 
 
+@st.dialog("إضافة عنصر")
+def update_with_confirmation(item: dict):
+    with st.form("add_form"):
+        st.write(f"segment_index: {item['segment_index']}")
+        st.write(f"Sura Index: {item['sura_or_aya_index']}")
+        new_tarteel_transcript = st.text_input(
+            "tarteel_transcript",
+        )
+        new_audio_file = st.text_input("audio_file")
+
+        if st.form_submit_button("موافق", use_container_width=True):
+            if (
+                new_tarteel_transcript != item["tarteel_transcript"][0]
+                and new_audio_file
+            ):
+                operation = Operation(
+                    type="insert",
+                    segment_index=item["segment_index"],
+                    new_tarteel_transcript=new_tarteel_transcript,
+                    new_audio_file=new_audio_file,
+                )
+                save_moshaf_operation(item["moshaf_id"], operation)
+                popup_message(
+                    f"تم إضافة عنصر بنجاح: **{item['segment_index']}**",
+                    "success",
+                )
+                st.rerun()
+
+            else:
+                popup_message(
+                    "يجب ملأ كل الحقول",
+                    "info",
+                )
+
+
 @st.dialog("عدل العنصر")
 def update_with_confirmation(item: dict):
     with st.form("update_form"):
@@ -114,8 +149,7 @@ def update_with_confirmation(item: dict):
                 )
 
 
-@st.dialog("عرض التعديل")
-def view_update_operation(item: dict, op: Operation):
+def view_operation(item: dict, op: Operation):
     st.write(f"**segment_index:** {item['segment_index']}")
     st.write(f"**Sura Index:** {item['sura_or_aya_index']}")
     st.write(f"**Reciter Arabic Name:** {item['reciter_arabic_name']}")
@@ -134,6 +168,16 @@ def view_update_operation(item: dict, op: Operation):
             popup_message(
                 f"Error while loading file: {base_path / op.new_audio_file}", "error"
             )
+
+
+@st.dialog("عرض التعديل")
+def view_update_operation(item: dict, op: Operation):
+    view_operation(item, op)
+
+
+@st.dialog("عرض الإضافة")
+def view_insert_operation(item: dict, op: Operation):
+    view_operation(item, op)
 
 
 @st.dialog("احذف العنصر?")
@@ -214,6 +258,12 @@ def display_audio_file(
                             key=f"{key_prefix}_track_{item['segment_index']}_view_update",
                         ):
                             view_update_operation(item, op)
+                    elif op.type == "insert":
+                        if st.button(
+                            "Insert 📥",
+                            key=f"{key_prefix}_track_{item['segment_index']}_view_insert",
+                        ):
+                            view_insert_operation(item, op)
 
         if st.button(
             "Load File",
@@ -229,7 +279,7 @@ def display_audio_file(
             #         file_name=file_info.name,
             #     )
 
-        left_col, right_col = st.columns(2)
+        left_col, middle_col, right_col = st.columns(3)
         with left_col:
             if st.button(
                 "احذف ❌",
@@ -237,6 +287,14 @@ def display_audio_file(
                 key=f"{key_prefix}_track_{item['segment_index']}_delete",
             ):
                 delete_item_with_confirmation(item)
+
+        with middle_col:
+            if st.button(
+                "إضافة 📥",
+                use_container_width=True,
+                key=f"{key_prefix}_track_{item['segment_index']}_add",
+            ):
+                update_with_confirmation(item)
 
         with right_col:
             if st.button(
