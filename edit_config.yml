@@ -84,6 +84,11 @@ configs:
     segment_index: '042.0033'
     sample_rate: 16000
   - type: update
+    segment_index: '053.0034'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+    sample_rate: 16000
+  - type: update
     segment_index: '056.0096'
     new_audio_file: 0.0/056_0096.wav
     new_tarteel_transcript:
@@ -92,22 +97,19 @@ configs:
   - type: delete
     segment_index: '056.0097'
     sample_rate: 16000
-  - type: delete
-    segment_index: '059.0029'
-    sample_rate: 16000
   - type: update
     segment_index: '059.0028'
     new_audio_file: 0.0/059_0028.wav
     sample_rate: 16000
   - type: delete
-    segment_index: '068.0049'
+    segment_index: '059.0029'
     sample_rate: 16000
   - type: update
     segment_index: '068.0048'
     new_audio_file: 0.0/068_0048.wav
     sample_rate: 16000
   - type: delete
-    segment_index: '096.0013'
+    segment_index: '068.0049'
     sample_rate: 16000
   - type: update
     segment_index: '096.0012'
@@ -115,16 +117,11 @@ configs:
     new_tarteel_transcript:
     - أَو أَمَرَ بِالتَّقوىٰ
     sample_rate: 16000
-  - type: update
-    segment_index: '053.0034'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: delete
+    segment_index: '096.0013'
     sample_rate: 16000
 - id: '0.1'
   operations:
-  - type: delete
-    segment_index: '004.0062'
-    sample_rate: 16000
   - type: update
     segment_index: '004.0061'
     new_audio_file: 0.1/004_0061.wav
@@ -133,7 +130,7 @@ configs:
       تَأخُذوا مِنهُ شَيئًا
     sample_rate: 16000
   - type: delete
-    segment_index: '006.0211'
+    segment_index: '004.0062'
     sample_rate: 16000
   - type: update
     segment_index: '006.0210'
@@ -142,14 +139,14 @@ configs:
     - ' لَقَد تَقَطَّعَ بَينَكُم وَضَلَّ عَنكُم ما كُنتُم تَزعُمونَ'
     sample_rate: 16000
   - type: delete
-    segment_index: '006.0376'
+    segment_index: '006.0211'
     sample_rate: 16000
   - type: update
     segment_index: '006.0375'
     new_audio_file: 0.1/006_0375.wav
     sample_rate: 16000
   - type: delete
-    segment_index: '009.0036'
+    segment_index: '006.0376'
     sample_rate: 16000
   - type: update
     segment_index: '009.0035'
@@ -159,7 +156,7 @@ configs:
       يَتَّخِذوا
     sample_rate: 16000
   - type: delete
-    segment_index: '009.0249'
+    segment_index: '009.0036'
     sample_rate: 16000
   - type: update
     segment_index: '009.0248'
@@ -169,7 +166,7 @@ configs:
       وَإِرصادًا لِمَن حارَبَ اللَّهَ وَرَسولَهُ مِن قَبلُ وَلَيَحلِفُنَّ
     sample_rate: 16000
   - type: delete
-    segment_index: '012.0099'
+    segment_index: '009.0249'
     sample_rate: 16000
   - type: update
     segment_index: '012.0098'
@@ -178,13 +175,13 @@ configs:
     - ثُمَّ يَأتي مِن بَعدِ ذٰلِكَ سَبعٌ شِدادٌ يَأكُلنَ ما قَدَّمتُم لَهُنَّ إِلّا
       قَليلًا مِمّا تُحصِنونَ
     sample_rate: 16000
+  - type: delete
+    segment_index: '012.0099'
+    sample_rate: 16000
   - type: update
     segment_index: '012.0138'
     new_tarteel_transcript:
     - ' عَلَيهِ تَوَكَّلتُ'
-    sample_rate: 16000
-  - type: delete
-    segment_index: '028.0065'
     sample_rate: 16000
   - type: update
     segment_index: '028.0064'
@@ -192,26 +189,29 @@ configs:
     new_tarteel_transcript:
     - وَأَخي هارونُ هُوَ أَفصَحُ مِنّي لِسانًا فَأَرسِلهُ مَعِيَ رِدءًا يُصَدِّقُني
     sample_rate: 16000
+  - type: delete
+    segment_index: '028.0065'
+    sample_rate: 16000
   - type: update
     segment_index: '038.0079'
     new_tarteel_transcript:
     - 'هَٰذَا '
-    sample_rate: 16000
-  - type: delete
-    segment_index: '043.0030'
     sample_rate: 16000
   - type: update
     segment_index: '043.0029'
     new_audio_file: 0.1/043_0029.wav
     sample_rate: 16000
   - type: delete
-    segment_index: '043.0127'
+    segment_index: '043.0030'
     sample_rate: 16000
   - type: update
     segment_index: '043.0126'
     new_audio_file: 0.1/043_0126.wav
     new_tarteel_transcript:
     - فَاصْفَحْ عَنْهُمْ وَقُلْ سَلَامٌ
+    sample_rate: 16000
+  - type: delete
+    segment_index: '043.0127'
     sample_rate: 16000
   - type: update
     segment_index: '053.0037'
@@ -224,4 +224,107 @@ configs:
     segment_index: '038.0067'
     new_tarteel_transcript:
     - هَٰذَا
+    sample_rate: 16000
+- id: '0.3'
+  operations:
+  - type: delete
+    segment_index: '002.0602'
+    sample_rate: 16000
+  - type: update
+    segment_index: '002.0601'
+    new_audio_file: 0.3/002_0601.wav
+    new_tarteel_transcript:
+    - 'فَهَدَى اللَّهُ الَّذِينَ آمَنُوا لِمَا اخْتَلَفُوا فِيهِ مِنَ الْحَقِّ بِإِذْنِهِ '
+    sample_rate: 16000
+  - type: delete
+    segment_index: '003.0361'
+    sample_rate: 16000
+  - type: update
+    segment_index: '003.0360'
+    new_audio_file: 0.3/003_0360.wav
+    new_tarteel_transcript:
+    - وَمَا كَانَ قَوْلَهُمْ إِلَّا أَن قَالُوا رَبَّنَا اغْفِرْ لَنَا ذُنُوبَنَا
+      وَإِسْرَافَنَا فِي أَمْرِنَا وَثَبِّتْ أَقْدَامَنَا
+    sample_rate: 16000
+  - type: delete
+    segment_index: '004.0011'
+    sample_rate: 16000
+  - type: update
+    segment_index: '004.0010'
+    new_audio_file: 0.3/004_0010.wav
+    new_tarteel_transcript:
+    - وَإِنْ خِفْتُمْ أَلَّا تُقْسِطُوا فِي الْيَتَامَىٰ فَانكِحُوا مَا طَابَ لَكُم
+    sample_rate: 16000
+  - type: update
+    segment_index: '006.0190'
+    new_audio_file: 0.3/006_0190.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '009.0054'
+    sample_rate: 16000
+  - type: update
+    segment_index: '009.0053'
+    new_audio_file: 0.3/009_0053.wav
+    new_tarteel_transcript:
+    - الَّذِينَ آمَنُوا وَهَاجَرُوا وَجَاهَدُوا فِي سَبِيلِ اللَّهِ بِأَمْوَالِهِمْ
+      وَأَنفُسِهِمْ أَعْظَمُ دَرَجَةً
+    sample_rate: 16000
+  - type: update
+    segment_index: '009.0198'
+    new_tarteel_transcript:
+    - هِيَ حَسْبُهُمْ
+    sample_rate: 16000
+  - type: delete
+    segment_index: '011.0077'
+    sample_rate: 16000
+  - type: update
+    segment_index: '011.0076'
+    new_audio_file: 0.3/011_0076.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '012.0163'
+    sample_rate: 16000
+  - type: update
+    segment_index: '012.0162'
+    new_audio_file: 0.3/012_0162.wav
+    new_tarteel_transcript:
+    - عَلَيْهِ تَوَكَّلْتُ وَعَلَيْهِ فَلْيَتَوَكَّلِ الْمُتَوَكِّلُونَ
+    sample_rate: 16000
+  - type: update
+    segment_index: '016.0110'
+    new_tarteel_transcript:
+    - فَتَمَتَّعُوا
+    sample_rate: 16000
+  - type: delete
+    segment_index: '022.0176'
+    sample_rate: 16000
+  - type: update
+    segment_index: '022.0175'
+    new_audio_file: 0.3/022_0175.wav
+    new_tarteel_transcript:
+    - ' يَكَادُونَ يَسْطُونَ بِالَّذِينَ يَتْلُونَ عَلَيْهِمْ آيَاتِنَا'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '024.0064'
+    sample_rate: 16000
+  - type: update
+    segment_index: '024.0063'
+    new_audio_file: 0.3/024_0063.wav
+    sample_rate: 16000
+  - type: update
+    segment_index: '022.0193'
+    new_tarteel_transcript:
+    - هُوَ اجْتَبَاكُمْ
+    sample_rate: 16000
+  - type: delete
+    segment_index: '054.0070'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '088.0022'
+    sample_rate: 16000
+  - type: update
+    segment_index: '088.0021'
+    new_audio_file: 0.3/088_0021.wav
+    new_tarteel_transcript:
+    - فَذَكِّرْ إِنَّمَا أَنتَ مُذَكِّرٌ
     sample_rate: 16000
