@@ -156,6 +156,7 @@ def delete_item_with_confirmation(item: dict):
                     "تم إضافة عملية الحذف بنجاح",
                     "success",
                 )
+                st.rerun()
 
         with col2:
             if st.button("لا", use_container_width=True):
