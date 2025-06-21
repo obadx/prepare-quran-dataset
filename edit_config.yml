@@ -120,3 +120,101 @@ configs:
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
     sample_rate: 16000
+- id: '0.1'
+  operations:
+  - type: delete
+    segment_index: '004.0062'
+    sample_rate: 16000
+  - type: update
+    segment_index: '004.0061'
+    new_audio_file: 0.1/004_0061.wav
+    new_tarteel_transcript:
+    - وَإِن أَرَدتُمُ استِبدالَ زَوجٍ مَكانَ زَوجٍ وَآتَيتُم إِحداهُنَّ قِنطارًا فَلا
+      تَأخُذوا مِنهُ شَيئًا
+    sample_rate: 16000
+  - type: delete
+    segment_index: '006.0211'
+    sample_rate: 16000
+  - type: update
+    segment_index: '006.0210'
+    new_audio_file: 0.1/006_0210.wav
+    new_tarteel_transcript:
+    - ' لَقَد تَقَطَّعَ بَينَكُم وَضَلَّ عَنكُم ما كُنتُم تَزعُمونَ'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '006.0376'
+    sample_rate: 16000
+  - type: update
+    segment_index: '006.0375'
+    new_audio_file: 0.1/006_0375.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '009.0036'
+    sample_rate: 16000
+  - type: update
+    segment_index: '009.0035'
+    new_audio_file: 0.1/009_0035.wav
+    new_tarteel_transcript:
+    - أَم حَسِبتُم أَن تُترَكوا وَلَمّا يَعلَمِ اللَّهُ الَّذينَ جاهَدوا مِنكُم وَلَم
+      يَتَّخِذوا
+    sample_rate: 16000
+  - type: delete
+    segment_index: '009.0249'
+    sample_rate: 16000
+  - type: update
+    segment_index: '009.0248'
+    new_audio_file: 0.1/009_0248.wav
+    new_tarteel_transcript:
+    - وَالَّذينَ اتَّخَذوا مَسجِدًا ضِرارًا وَكُفرًا وَتَفريقًا بَينَ المُؤمِنينَ
+      وَإِرصادًا لِمَن حارَبَ اللَّهَ وَرَسولَهُ مِن قَبلُ وَلَيَحلِفُنَّ
+    sample_rate: 16000
+  - type: delete
+    segment_index: '012.0099'
+    sample_rate: 16000
+  - type: update
+    segment_index: '012.0098'
+    new_audio_file: 0.1/012_0098.wav
+    new_tarteel_transcript:
+    - ثُمَّ يَأتي مِن بَعدِ ذٰلِكَ سَبعٌ شِدادٌ يَأكُلنَ ما قَدَّمتُم لَهُنَّ إِلّا
+      قَليلًا مِمّا تُحصِنونَ
+    sample_rate: 16000
+  - type: update
+    segment_index: '012.0138'
+    new_tarteel_transcript:
+    - ' عَلَيهِ تَوَكَّلتُ'
+    sample_rate: 16000
+  - type: delete
+    segment_index: '028.0065'
+    sample_rate: 16000
+  - type: update
+    segment_index: '028.0064'
+    new_audio_file: 0.1/028_0064.wav
+    new_tarteel_transcript:
+    - وَأَخي هارونُ هُوَ أَفصَحُ مِنّي لِسانًا فَأَرسِلهُ مَعِيَ رِدءًا يُصَدِّقُني
+    sample_rate: 16000
+  - type: update
+    segment_index: '038.0079'
+    new_tarteel_transcript:
+    - 'هَٰذَا '
+    sample_rate: 16000
+  - type: delete
+    segment_index: '043.0030'
+    sample_rate: 16000
+  - type: update
+    segment_index: '043.0029'
+    new_audio_file: 0.1/043_0029.wav
+    sample_rate: 16000
+  - type: delete
+    segment_index: '043.0127'
+    sample_rate: 16000
+  - type: update
+    segment_index: '043.0126'
+    new_audio_file: 0.1/043_0126.wav
+    new_tarteel_transcript:
+    - فَاصْفَحْ عَنْهُمْ وَقُلْ سَلَامٌ
+    sample_rate: 16000
+  - type: update
+    segment_index: '053.0037'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+    sample_rate: 16000
