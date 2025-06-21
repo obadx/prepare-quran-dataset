@@ -77,7 +77,7 @@ def save_moshaf_operation(moshaf_id: str, op: Operation):
 
 
 @st.dialog("إضافة عنصر")
-def update_with_confirmation(item: dict):
+def insert_with_confirmation(item: dict):
     with st.form("add_form"):
         st.write(f"segment_index: {item['segment_index']}")
         st.write(f"Sura Index: {item['sura_or_aya_index']}")
@@ -294,7 +294,7 @@ def display_audio_file(
                 use_container_width=True,
                 key=f"{key_prefix}_track_{item['segment_index']}_add",
             ):
-                update_with_confirmation(item)
+                insert_with_confirmation(item)
 
         with right_col:
             if st.button(
