@@ -1,7 +1,6 @@
 import copy
-from uuid import uuid4
+import tempfile
 import subprocess
-import os
 from pathlib import Path
 
 import streamlit as st
@@ -34,120 +33,51 @@ def display_audio_file(
                     file_name=file_info.name,
                 )
 
-        # Create a unique key for this file's conversion state
-        conversion_key = f"conversion_{file_info.name}"
-        download_key = f"download_{file_info.name}"
-
-        # Initialize session state for this file
-        if conversion_key not in st.session_state:
-            st.session_state[conversion_key] = {
-                "status": "idle",  # 'idle', 'converting', 'ready', 'error'
-                "temp_path": None,
-                "wav_data": None,
-                "filename": None,
-            }
-
-        state = st.session_state[conversion_key]
-
         # New Download wav 16000 button
         if st.button(
-            "Convert to wav 16000",
+            "Convert to 16000 wav",
             key=f"wav_{file_info.name}",
             use_container_width=True,
-            disabled=state["status"] != "idle",
         ):
-            # Update state immediately to prevent re-triggering
-            state["status"] = "converting"
+            temp_dir = Path("temp")
+            temp_dir.mkdir(exist_ok=True)
 
-            # Create temporary directory if it doesn't exist
-            TEMP_DIR = Path("temp")
-            TEMP_DIR.mkdir(parents=True, exist_ok=True)
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(
+                delete=True, suffix=".wav", dir=temp_dir
+            ) as tmpfile:
+                temp_path = tmpfile.name
 
-            # Create temporary file path
-            temp_path = TEMP_DIR / f"{uuid4().hex}.wav"
-            state["temp_path"] = str(temp_path)
+                # Prepare file paths
+                input_path = str(conf.BASE_DIR / file_info.path)
+                output_path = temp_path
 
-            # Prepare file paths
-            input_path = str(conf.BASE_DIR / file_info.path)
+                with st.spinner("Converting to 16000 WAV ....."):
+                    # Run FFmpeg conversion
+                    cmd = [
+                        "ffmpeg",
+                        "-y",
+                        "-i",
+                        input_path,
+                        "-ar",
+                        "16000",
+                        output_path,
+                    ]
+                    subprocess.run(cmd)
 
-            # Run FFmpeg conversion
-            try:
-                cmd = [
-                    "ffmpeg",
-                    "-hide_banner",
-                    "-loglevel",
-                    "error",
-                    "-i",
-                    input_path,
-                    "-ar",
-                    "16000",
-                    "-y",  # Overwrite output file without asking
-                    str(temp_path),
-                ]
-                subprocess.run(cmd, check=True, timeout=120)
+                # Offer download and clean up
+                with open(output_path, "rb") as f:
+                    wav_data = f.read()
 
-                # Read converted file
-                with open(temp_path, "rb") as f:
-                    state["wav_data"] = f.read()
-
-                # Set download filename
+                # Create download button
                 base_name = file_info.name.split(".")[0]
-                state["filename"] = f"{base_name}_16000.wav"
-                state["status"] = "ready"
-
-            except subprocess.TimeoutExpired:
-                state["status"] = "error"
-                st.error("Conversion timed out (120 seconds)")
-                if temp_path.exists():
-                    os.unlink(temp_path)
-            except subprocess.CalledProcessError as e:
-                state["status"] = "error"
-                st.error(f"Conversion failed: {str(e)}")
-                if temp_path.exists():
-                    os.unlink(temp_path)
-            except Exception as e:
-                state["status"] = "error"
-                st.error(f"Error: {str(e)}")
-                if temp_path.exists():
-                    os.unlink(temp_path)
-
-        # Show conversion status
-        if state["status"] == "converting":
-            st.info("Converting to wav 16000... Please wait.")
-        elif state["status"] == "ready":
-            st.success("Conversion complete!")
-
-            # Create download button
-            st.download_button(
-                label="Download wav 16000",
-                data=state["wav_data"],
-                file_name=state["filename"],
-                key=download_key,
-                on_click=lambda: cleanup_temp_file(state),
-                use_container_width=True,
-            )
-
-            # Add button to reset conversion
-            if st.button(
-                "Convert another file",
-                key=f"reset_{file_info.name}",
-                use_container_width=True,
-            ):
-                cleanup_temp_file(state)
-                state["status"] = "idle"
-                state["wav_data"] = None
-                st.experimental_rerun()
-
-        elif state["status"] == "error":
-            st.error("Conversion failed. Please try again.")
-
-
-def cleanup_temp_file(state):
-    """Cleanup temporary file and reset state"""
-    if state.get("temp_path") and os.path.exists(state["temp_path"]):
-        os.unlink(state["temp_path"])
-    state["temp_path"] = None
-    state["wav_data"] = None
+                new_filename = f"{base_name}_16000.wav"
+                st.download_button(
+                    label="Click to download wav 16000",
+                    data=wav_data,
+                    file_name=new_filename,
+                    key=f"download_wav_{file_info.name}",
+                )
 
 
 def play_recitations():
