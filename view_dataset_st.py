@@ -341,6 +341,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     st.write(moshaf.reciter_arabic_name)
 
     col1, col2, col3, col4 = st.columns(4)
+    stat_coumns = st.columns(4)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -383,13 +384,31 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
                 for item in edited_ds:
                     display_audio_file(item, key_prefix="edit")
 
-    st.subheader("المقاطع القصيرة")
-    small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
-    display_small_durations(ds, small_duration)
+    with stat_coumns[3]:
+        if st.button("اظهر المقاطع القصيرة", use_container_width=True):
+            st.session_state.display_short = True
+    with stat_coumns[2]:
+        if st.button("اخف المقاطع القصيرة", use_container_width=True):
+            st.session_state.display_short = False
 
-    st.subheader("المقاطع الطويلة")
-    long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
-    display_higher_durations(ds, long_duration)
+    with stat_coumns[1]:
+        if st.button("اظهر المقاطع الطويلة", use_container_width=True):
+            st.session_state.display_long = True
+    with stat_coumns[0]:
+        if st.button("اخف المقاطع الطويلة", use_container_width=True):
+            st.session_state.display_long = False
+
+    if "display_short" in st.session_state:
+        if st.session_state.display_short:
+            st.subheader("المقاطع القصيرة")
+            small_duration = st.number_input("ادخل المدة بالثواني", value=3.0)
+            display_small_durations(ds, small_duration)
+
+    if "display_long" in st.session_state:
+        if st.session_state.display_long:
+            st.subheader("المقاطع الطويلة")
+            long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
+            display_higher_durations(ds, long_duration)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
