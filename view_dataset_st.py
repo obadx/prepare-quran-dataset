@@ -432,8 +432,11 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             display_higher_durations(ds, long_duration)
 
     with qlqal_columns[1]:
-        if st.button(use_container_width=True):
+        if st.button("اظهر القلقة الكبرى", use_container_width=True):
             st.session_state.display_qlqla = True
+    with qlqal_columns[0]:
+        if st.button("اخف القلقة الكبرى", use_container_width=True):
+            st.session_state.display_qlqla = False
 
     if "display_qlqla" in st.session_state:
         if st.session_state.display_qlqla:
