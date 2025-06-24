@@ -244,6 +244,7 @@ def numpy_to_wav_bytes(audio_array, sample_rate):
 def display_audio_file(
     item: dict,
     key_prefix="",
+    ignore_load_button=False,
 ):
     """Displayes an audio file with download button"""
     expander = st.expander(f"**{item['segment_index']}**")
@@ -277,7 +278,11 @@ def display_audio_file(
                         ):
                             view_insert_operation(item, op)
 
-        if st.button(
+        if ignore_load_button:
+            wav_bytes = numpy_to_wav_bytes(item["audio"]["array"], 16000)
+            st.audio(wav_bytes, format="audio/wav")
+
+        elif st.button(
             "Load File",
             key=f"{key_prefix}_track_{item['segment_index']}",
             use_container_width=True,
@@ -352,7 +357,7 @@ def display_qlqla_kobra(ds: Dataset):
         lambda ex: is_qlqla_kobra(ex["tarteel_transcript"][-1]), num_proc=16
     )
     for item in f_ds:
-        display_audio_file(item, key_prefix="small")
+        display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
