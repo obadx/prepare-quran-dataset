@@ -1,6 +1,7 @@
 from pathlib import Path
 from random import randint
 from dataclasses import dataclass
+import re
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -74,6 +75,17 @@ def save_moshaf_operation(moshaf_id: str, op: Operation):
     st.session_state.moshaf_to_seg_to_ops = (
         st.session_state.edit_config.to_moshaf_dict()
     )
+
+
+def is_qlqla_kobra(text) -> bool:
+    """Whethr the aya has قلقة كبرى or not"""
+
+    qlqla = "قطبجد"
+    shadda = "ّ"
+    text = re.sub(r"\s+", "", text)  # remvoe spaces
+    if re.search(f"[{qlqla}]{shadda}.$", text):
+        return True
+    return False
 
 
 @st.dialog("إضافة عنصر")
@@ -335,6 +347,14 @@ def display_small_durations(ds: Dataset, threshold: float):
         display_audio_file(item, key_prefix="small")
 
 
+def display_qlqla_kobra(ds: Dataset):
+    f_ds = ds.filter(
+        lambda ex: is_qlqla_kobra(ex["tarteel_transcript"][-1]), num_proc=16
+    )
+    for item in f_ds:
+        display_audio_file(item, key_prefix="small")
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
     st.write(f"عدد المقاطع: {len(ds)}")
@@ -342,6 +362,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
     col1, col2, col3, col4 = st.columns(4)
     stat_coumns = st.columns(4)
+    qlqal_columns = st.columns(2)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -409,6 +430,15 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             st.subheader("المقاطع الطويلة")
             long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
             display_higher_durations(ds, long_duration)
+
+    with qlqal_columns[1]:
+        if st.button(use_container_width=True):
+            st.session_state.display_qlqla = True
+
+    if "display_qlqla" in st.session_state:
+        if st.session_state.display_qlqla:
+            st.subheader("القلقة الكبرى")
+            display_qlqla_kobra(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
