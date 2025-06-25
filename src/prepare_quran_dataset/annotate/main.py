@@ -4,7 +4,16 @@ from typing import Optional
 import logging
 
 import librosa
-from datasets import Features, IterableDataset, load_dataset, Audio, Value, Sequence
+from datasets import (
+    Features,
+    Dataset,
+    IterableDataset,
+    load_dataset,
+    Audio,
+    Value,
+    Sequence,
+)
+import numpy as np
 import torch
 from recitations_segmenter import (
     segment_recitations,
@@ -14,6 +23,7 @@ from recitations_segmenter import (
 
 from ..construct.data_classes import Moshaf, Reciter
 from .tarteel import tarteel_transcribe
+from .edit import get_segment_format
 
 
 READ_FEATURES = Features(
@@ -45,6 +55,7 @@ OUT_FEATURES = Features(
         "index_type": Value(dtype="string"),
         "sample_rate": Value(dtype="int32"),
         "duration_seconds": Value(dtype="float32"),
+        "timestamp_seconds": Sequence(feature=Value(dtype="float32")),
     }
 )
 
@@ -87,6 +98,80 @@ SEGMET_MOSHAF_PARAMS = {
 
 # Moshaf Item thta loads the first channel only
 FIRST_CHANNEL_ONLY_MOSHAF = {"4.0"}
+
+
+def load_segment_intervals_from_cache(
+    moshaf: Moshaf,
+    moshaf_segment_cache_dir: str | Path,
+    moshaf_metada_jsonl_path: str | Path,
+) -> dict[str, np.array]:
+    """return the intervals for each segment intervals for a single moshaf in seconds as dict:
+    {'segment_index': np.array([start_seconds, end_seconsd])
+
+    We are trying here to load intervals produces by the segmenter during data annotation
+
+    """
+    # the number of track used to feed segment index each iteration
+    work_batch_size = 16
+    ds = Dataset.from_json(str(moshaf_metada_jsonl_path))
+    segment_dirs = sorted(
+        Path(moshaf_segment_cache_dir).glob("*"),
+        key=lambda p: int(p.name.split("_")[-1]),
+    )
+    mode = segment_dirs[0].name.split("_")[0]  # either "batch" or "track"
+    assert mode in {"batch", "track"}
+
+    if moshaf.id in SEGMET_MOSHAF_PARAMS:
+        segment_prams = SEGMET_MOSHAF_PARAMS[moshaf.id]
+    else:
+        segment_prams = SEGMET_PARAMS[moshaf.recitation_speed]
+
+    logging.info(f"Segment Params of moshaf: {moshaf.id} are: {segment_prams}")
+    segment_index_to_interval: dict[str, np.array] = {}
+
+    if mode == "batch":
+        # every item of the list is {'speech_intrvals': list[torch.tensor()], 'is_complete': list[bool]}
+        idx_to_segment_loads: list[dict] = []
+        for dir in segment_dirs:
+            pt_file = list(dir.glob("*.pt"))[0]
+            idx_to_segment_loads.append(torch.load(pt_file))
+
+        for idx, sura_idx in enumerate(ds["sura_or_aya_index"]):
+            sura_idx = int(sura_idx)
+            batch_idx = idx // work_batch_size
+            idx_in_batch = idx % work_batch_size
+
+            speech_intervals = idx_to_segment_loads[batch_idx]["speech_intervals"][
+                idx_in_batch
+            ]
+            is_complete = idx_to_segment_loads[batch_idx]["is_complete"][idx_in_batch]
+            out = clean_speech_intervals(
+                speech_intervals, is_complete, **segment_prams, return_seconds=True
+            )
+            for aya_idx, interval in enumerate(out.clean_speech_intervals):
+                segment_index = get_segment_format(sura_idx, aya_idx)
+                segment_index_to_interval[segment_index] = interval.numpy()
+
+    elif mode == "track":
+        # every item of the list is {'speech_intrvals': list[torch.tensor()], 'is_complete': list[bool]}
+        idx_to_segment_loads: list[dict] = []
+        # looping over every aya in this mode
+        for dir in segment_dirs:
+            pt_file = list(dir.glob("*.pt"))[0]
+            idx_to_segment_loads.append(torch.load(pt_file))
+
+        for idx, sura_idx in enumerate(ds["sura_or_aya_index"]):
+            sura_idx = int(sura_idx)
+            speech_intervals = idx_to_segment_loads[idx]["speech_intervals"][0]
+            is_complete = idx_to_segment_loads[idx]["is_complete"][0]
+            out = clean_speech_intervals(
+                speech_intervals, is_complete, **segment_prams, return_seconds=True
+            )
+            for aya_idx, interval in enumerate(out.clean_speech_intervals):
+                segment_index = get_segment_format(sura_idx, aya_idx)
+                segment_index_to_interval[segment_index] = interval.numpy()
+
+    return segment_index_to_interval
 
 
 def librosa_mono_decoder(
@@ -186,7 +271,12 @@ def segment_batch(
 
     # removing `duration_minutes` columns and rewriting `audio` column
     original_keys = set(batch.keys()) - {"audio", "duration_minutes"}
-    new_batch = {"audio": [], "segment_index": [], "duration_seconds": []}
+    new_batch = {
+        "audio": [],
+        "segment_index": [],
+        "duration_seconds": [],
+        "timestamp_seconds": [],
+    }
     for key in original_keys:
         new_batch[key] = []
     # Devising recitations into segments
@@ -194,7 +284,9 @@ def segment_batch(
         new_audios = []
         segment_ids = []
         durations_seconds = []
+        timestamp_list = []
         for span_idx, span in enumerate(clean_out.clean_speech_intervals):
+            timestamp_list.append(span.numpy())
             new_audios.append(
                 {
                     "array": batch["audio"][idx]["array"][span[0] : span[1]],
@@ -208,6 +300,7 @@ def segment_batch(
         new_batch["audio"] += new_audios
         new_batch["duration_seconds"] += durations_seconds
         new_batch["segment_index"] += segment_ids
+        new_batch["timestamp_seconds"] += timestamp_list
         for key in original_keys:
             new_batch[key] += [batch[key][idx]] * len(segment_ids)
 
