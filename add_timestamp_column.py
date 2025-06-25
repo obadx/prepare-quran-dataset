@@ -218,6 +218,7 @@ def main(args):
             moshaf_trunc_config = None
         job = executor.submit(
             add_timestamp_column,
+            moshaf=moshaf,
             path_to_parquets=args.dataset_dir / f"dataset/{moshaf.id}/train",
             metadata_jsonl_path=(
                 args.original_dataset_dir / f"dataset/{moshaf.id}/metadata.jsonl"
