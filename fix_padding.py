@@ -112,15 +112,19 @@ def truncate_example(
         case "start":
             logging.debug(f"Start Truncation strategy for: {example['segment_index']}")
             example["audio"]["array"] = example["audio"]["array"][:-trunc_samples]
+            example["timestamp_seconds"][1] -= trunc_samples / sample_rate
 
         case "middle":
             example["audio"]["array"] = example["audio"]["array"][
                 trunc_samples:-trunc_samples
             ]
+            example["timestamp_seconds"][0] += trunc_samples / sample_rate
+            example["timestamp_seconds"][1] -= trunc_samples / sample_rate
 
         case "end":
             logging.debug(f"End Truncation Strategy for: {example['segment_index']}")
             example["audio"]["array"] = example["audio"]["array"][trunc_samples:]
+            example["timestamp_seconds"][0] += trunc_samples / sample_rate
 
     example["duration_seconds"] = len(example["audio"]["array"]) / sample_rate
 
@@ -158,14 +162,10 @@ def truncate_moshaf(
             num_proc=num_proc,
         )
 
-        # caching
-        cache = [item for item in ds_shard]
-        del ds_shard
-        gc.collect()
-        to_save_ds = Dataset.from_list(cache)
+        ds_shard = ds_shard.sort("segment_index")
         logging.info(f"Done! Saving shard: {parquet_path}")
-        to_save_ds.to_parquet(parquet_path)
-        del to_save_ds
+        ds_shard.to_parquet(parquet_path)
+        del ds_shard
         gc.collect()
 
 
