@@ -23,7 +23,10 @@ from recitations_segmenter import (
 
 from ..construct.data_classes import Moshaf, Reciter
 from .tarteel import tarteel_transcribe
-from .edit import get_segment_format
+
+
+def get_segment_format(sura_idx, aya_idx):
+    return f"{sura_idx:03d}.{aya_idx:04d}"
 
 
 READ_FEATURES = Features(

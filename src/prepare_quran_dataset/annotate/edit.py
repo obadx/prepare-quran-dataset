@@ -4,11 +4,15 @@ import gc
 import logging
 from dataclasses import dataclass
 import sys
+from typing import Optional
 
 import yaml
-import librosa
+from librosa.core import load
 from pydantic import BaseModel, model_validator
 from datasets import Dataset
+import numpy as np
+
+from .main import FIRST_CHANNEL_ONLY_MOSHAF, get_segment_format
 
 
 def decode_segment_index(
@@ -33,8 +37,9 @@ class Operation(BaseModel):
     segment_index: str
     new_segment_index: Optional[str] = None
     new_audio_file: Optional[str | Path] = None
+    new_start_seconds: Optional[float] = None
+    new_end_seconds: Optional[float] = None
     new_tarteel_transcript: Optional[list[str] | str] = None
-    sample_rate: Optional[int] = 16000
 
     def model_post_init(
         self,
@@ -45,37 +50,154 @@ class Operation(BaseModel):
                 self.new_tarteel_transcript = [self.new_tarteel_transcript]
 
     @model_validator(mode="after")
+    def check_empty_update(self) -> Self:
+        if self.type == "update":
+            assert (
+                self.new_segment_index is not None
+                or self.new_audio_file is not None
+                or self.new_start_seconds is not None
+                or self.new_end_seconds is not None
+                or self.new_tarteel_transcript is not None
+            ), "Empty Update Operation"
+
+        return self
+
+    def is_meida_op(self) -> bool:
+        return (
+            self.new_start_seconds is not None
+            or self.new_end_seconds is not None
+            or self.new_audio_file is not None
+        )
+
+    @model_validator(mode="after")
     def check_addition(self) -> Self:
         if self.type == "insert":
-            assert self.new_audio_file is not None, (
-                "You have to add value for `new_audio_file` in `insert` operation"
-            )
+            assert self.is_meida_op(), "You have to insert media for `insert` operation"
             assert self.new_tarteel_transcript is not None, (
                 "You have to add value for `new_tarteel_transcript` in `insert` operation"
             )
 
         return self
 
-    def _to_hf_audio(self, base_path: str | Path = None) -> dict:
-        assert self.new_audio_file is not None, (
-            "No file supllied to convert it into hugginface array"
-        )
+    @model_validator(mode="after")
+    def check_media_handeling(self) -> Self:
+        if self.is_meida_op():
+            if not (
+                (
+                    # start, end
+                    self.new_start_seconds is not None
+                    and self.new_end_seconds is not None
+                    and self.new_audio_file is None
+                )
+                or (
+                    # audio, start
+                    self.new_audio_file is not None
+                    and self.new_start_seconds is not None
+                    and self.new_end_seconds is None
+                )
+                or (
+                    # audio
+                    self.new_audio_file is not None
+                    and self.new_start_seconds is None
+                    and self.new_end_seconds is None
+                )
+                or (
+                    # start
+                    self.new_start_seconds is not None
+                    and self.new_audio_file is None
+                    and self.new_end_seconds is None
+                )
+                or (
+                    # end
+                    self.new_end_seconds is not None
+                    and self.new_audio_file is None
+                    and self.new_start_seconds is None
+                )
+            ):
+                raise ValueError(
+                    "You can only add media files with : [`new_start_seconds` and `new_end_seconds] or [`new_aduio_file` and `new_start_seconds`] or [`new_audio_file`] or [`new_start_secnods`] or [`new_end_seconsd`] "
+                )
 
-        path = Path(self.new_audio_file)
-        if base_path is not None:
-            path = Path(base_path) / self.new_audio_file
+        return self
 
-        wave, _ = librosa.core.load(path, sr=self.sample_rate, mono=True)
+    def _to_hf_audio(
+        self,
+        timestamp: np.array,
+        media_files_path: str | Path,
+        fixes_base_path: str | Path,
+        first_channel_only: bool = False,
+        sample_rate=16000,
+    ) -> dict:
+        """
+        Returns:
+            {"aduio": {"array": audio_array, "sampling_rate": 16000}, "timestamp_seconds": 1D np.array}
+        """
+        # [start, aduio], [audio]
+        if self.new_audio_file:
+            path = Path(fixes_base_path) / self.new_audio_file
+            wave = load(path, sr=sample_rate, mono=not first_channel_only)[0]
 
-        return {"array": wave, "sampling_rate": self.sample_rate}
+            if self.new_start_seconds is not None:
+                start = self.new_start_seconds
+            else:
+                start = timestamp[0]
+            end = start + len(wave) / sample_rate
+        else:
+            # [start, end]
+            if self.new_start_seconds is not None and self.new_end_seconds is not None:
+                start = self.new_start_seconds
+                end = self.new_end_seconds
 
-    def to_hf(self, base_path: str | Path):
+            # [start]
+            elif self.new_start_seconds is not None:
+                start = self.new_start_seconds
+                end = timestamp[1]
+
+            # [end]
+            elif self.new_end_seconds is not None:
+                start = timestamp[0]
+                end = self.new_end_seconds
+
+            aya_index = self.segment_index.split(".")[0]
+            sura_track_path = list(Path(media_files_path).glob(f"{aya_index}.*"))[0]
+            wave = load(
+                sura_track_path,
+                sr=sample_rate,
+                offset=start,
+                duration=end - start,
+                mono=not first_channel_only,
+            )[0]
+
+        # some audio files has delay between channels which cause reducing quality if using mono
+        if first_channel_only:
+            wave = wave[0]
+
+        return {
+            "audio": {"array": wave, "sampling_rate": sample_rate},
+            "timestamp_seconds": np.array([start, end]),
+            "duration_seconds": len(wave) / sample_rate,
+        }
+
+    def to_hf(
+        self,
+        timestamp: np.array,
+        media_files_path: str | Path,
+        fixes_base_path: str | Path,
+        first_channel_only: bool = False,
+        sample_rate=16000,
+    ):
         item = {}
         if self.new_segment_index is not None:
             item["segment_index"] = self.new_segment_index
 
-        if self.new_audio_file is not None:
-            item["audio"] = self._to_hf_audio(base_path)
+        if self.is_meida_op():
+            item |= self._to_hf_audio(
+                timestamp,
+                media_files_path=media_files_path,
+                fixes_base_path=fixes_base_path,
+                first_channel_only=first_channel_only,
+                sample_rate=sample_rate,
+            )
 
         if self.new_tarteel_transcript is not None:
             item["tarteel_transcript"] = self.new_tarteel_transcript
@@ -225,10 +347,6 @@ def load_moshaf_dataset_info(
     )
 
 
-def get_segment_format(sura_idx, aya_idx):
-    return f"{sura_idx:03d}.{aya_idx:04d}"
-
-
 def plan_moshaf_edits(
     ds_info: MoshafDatasetInfo,
     moshaf_edit_configs: MoshafEditConfig,
@@ -334,6 +452,7 @@ def apply_edits_map(
     batch,
     segment_index_to_ops: dict[str, list[Operation]],
     new_audiofile_path: str | Path,
+    moshaf_media_files_path: Path,
 ) -> dict:
     new_batch = {k: [] for k in batch}
     if batch["segment_index"][0] in segment_index_to_ops:
@@ -341,7 +460,14 @@ def apply_edits_map(
             if op.type == "delete":
                 ...
             elif op.type in ["update", "insert"]:
-                new_item = op.to_hf(new_audiofile_path)
+                new_item = op.to_hf(
+                    batch["timestamp_seconds"][0],
+                    media_files_path=moshaf_media_files_path,
+                    fixes_base_path=new_audiofile_path,
+                    first_channel_only=batch["moshaf_id"][0]
+                    in FIRST_CHANNEL_ONLY_MOSHAF,
+                    sample_rate=16000,
+                )
                 for k in new_batch:
                     if k in new_item:
                         new_batch[k].append(new_item[k])
@@ -357,6 +483,7 @@ def apply_edits_map(
 def apply_ds_shard_edits(
     ds_shard_operations: DatasetShardOperations,
     new_audiofile_path: str | Path,
+    moshaf_media_files_path: Path,
     num_proc=16,
 ):
     ds_shard = Dataset.from_parquet(ds_shard_operations.path)
@@ -386,6 +513,7 @@ def apply_ds_shard_edits(
         fn_kwargs={
             "segment_index_to_ops": segment_index_to_ops,
             "new_audiofile_path": new_audiofile_path,
+            "moshaf_media_files_path": moshaf_media_files_path,
         },
     )
     ds_shard = ds_shard.sort("segment_index")

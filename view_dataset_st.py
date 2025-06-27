@@ -2,6 +2,7 @@ from pathlib import Path
 from random import randint
 from dataclasses import dataclass
 import re
+from typing import Literal
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -17,6 +18,12 @@ from prepare_quran_dataset.construct.quran_data_utils import (
     SURA_TO_AYA_COUNT,
 )
 from prepare_quran_dataset.annotate.edit import EditConfig, MoshafEditConfig, Operation
+from prepare_quran_dataset.annotate.main import FIRST_CHANNEL_ONLY_MOSHAF
+
+
+def float_equal_n(a, b, n):
+    return round(a, n) == round(b, n)
+
 
 POPUP_MSG_ICONS: dict[str, str] = {
     "success": "✅",
@@ -88,43 +95,7 @@ def is_qlqla_kobra(text) -> bool:
     return False
 
 
-@st.dialog("إضافة عنصر")
-def insert_with_confirmation(item: dict):
-    with st.form("add_form"):
-        st.write(f"segment_index: {item['segment_index']}")
-        st.write(f"Sura Index: {item['sura_or_aya_index']}")
-        new_tarteel_transcript = st.text_input(
-            "tarteel_transcript",
-        )
-        new_audio_file = st.text_input("audio_file")
-
-        if st.form_submit_button("موافق", use_container_width=True):
-            if (
-                new_tarteel_transcript != item["tarteel_transcript"][0]
-                and new_audio_file
-            ):
-                operation = Operation(
-                    type="insert",
-                    segment_index=item["segment_index"],
-                    new_tarteel_transcript=new_tarteel_transcript,
-                    new_audio_file=new_audio_file,
-                )
-                save_moshaf_operation(item["moshaf_id"], operation)
-                popup_message(
-                    f"تم إضافة عنصر بنجاح: **{item['segment_index']}**",
-                    "success",
-                )
-                st.rerun()
-
-            else:
-                popup_message(
-                    "يجب ملأ كل الحقول",
-                    "info",
-                )
-
-
-@st.dialog("عدل العنصر")
-def update_with_confirmation(item: dict):
+def add_operation(item: dict, operation_type: Literal["insert", "update"]):
     with st.form("update_form"):
         st.write(f"segment_index: {item['segment_index']}")
         st.write(f"Sura Index: {item['sura_or_aya_index']}")
@@ -132,33 +103,51 @@ def update_with_confirmation(item: dict):
             "tarteel_transcript",
             value=item["tarteel_transcript"][0],
         )
+        new_start_seconds = st.number_input(
+            "new_start_seconds", value=item["timestamp_seconds"][0]
+        )
+        new_end_seconds = st.number_input(
+            "new_end_seconds", value=item["timestamp_seconds"][1]
+        )
         new_audio_file = st.text_input("audio_file")
 
         if st.form_submit_button("موافق", use_container_width=True):
-            if (
-                new_tarteel_transcript != item["tarteel_transcript"][0]
-                or new_audio_file
-            ):
-                operation = Operation(
-                    type="update",
-                    segment_index=item["segment_index"],
-                    new_tarteel_transcript=new_tarteel_transcript
-                    if new_tarteel_transcript != item["tarteel_transcript"][0]
-                    else None,
-                    new_audio_file=new_audio_file if new_audio_file else None,
+            operation = Operation(
+                type=operation_type,
+                segment_index=item["segment_index"],
+                new_tarteel_transcript=new_tarteel_transcript
+                if new_tarteel_transcript != item["tarteel_transcript"][0]
+                else None,
+                new_audio_file=new_audio_file if new_audio_file else None,
+                new_start_seconds=new_start_seconds
+                if not float_equal_n(new_start_seconds, item["timestamp_seconds"][0], 3)
+                else None,
+                new_end_seconds=new_end_seconds
+                if not float_equal_n(new_end_seconds, item["timestamp_seconds"][1], 3)
+                else None,
+            )
+            save_moshaf_operation(item["moshaf_id"], operation)
+            if operation_type == "insert":
+                popup_message(
+                    f"تم إضافة عنصر بنجاح: **{item['segment_index']}**",
+                    "success",
                 )
-                save_moshaf_operation(item["moshaf_id"], operation)
+            elif operation_type == "update":
                 popup_message(
                     f"تم إضافة التعديل ل: **{item['segment_index']}**",
                     "success",
                 )
-                st.rerun()
+            st.rerun()
 
-            else:
-                popup_message(
-                    "لا يوجد تعديل",
-                    "info",
-                )
+
+@st.dialog("إضافة عنصر")
+def insert_with_confirmation(item: dict):
+    add_operation(item, "insert")
+
+
+@st.dialog("عدل العنصر")
+def update_with_confirmation(item: dict):
+    add_operation(item, "update")
 
 
 def view_operation(item: dict, op: Operation):
@@ -169,11 +158,27 @@ def view_operation(item: dict, op: Operation):
     if op.new_tarteel_transcript:
         st.write(f"**New Tarteel Transcript:** {op.new_tarteel_transcript}")
 
-    if op.new_audio_file:
-        st.write(f"**New aduio File Path:** {op.new_audio_file}")
-        base_path = st.session_state.update_wave_files_path
+    if (
+        op.new_audio_file is not None
+        or op.new_start_seconds is not None
+        or op.new_end_seconds is not None
+    ):
         try:
-            wav_bytes = numpy_to_wav_bytes(op.to_hf(base_path)["audio"]["array"], 16000)
+            base_path = st.session_state.update_wave_files_path
+            media_files_path = (
+                st.session_state.original_quran_dataset_path
+                / f"dataset/{item['moshaf_id']}"
+            )
+            new_item = op.to_hf(
+                item["timestamp_seconds"],
+                fixes_base_path=base_path,
+                media_files_path=media_files_path,
+                first_channel_only=item["moshaf_id"] in FIRST_CHANNEL_ONLY_MOSHAF,
+            )
+
+            wav_bytes = numpy_to_wav_bytes(new_item["audio"]["array"], 16000)
+            st.write(f"**New aduio File Path:** {op.new_audio_file}")
+            st.write(f"**New Timestamp:** {new_item['timestamp_seconds']}")
             st.audio(wav_bytes, format="audio/wav")
         except Exception as e:
             st.write(f"⚠️Error while loading file:, {e}")
@@ -454,12 +459,16 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
 if __name__ == "__main__":
     ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
-    # ds_path = "../out-quran-ds/"
-    # update_wave_files_path = "../moshaf-fixes/"
-    edit_config_path = "./edit_config.yml"
+    original_quran_dataset_path = "/cluster/users/shams035u1/data/quran-dataset"
     update_wave_files_path = (
         "/cluster/users/shams035u1/data/mualem-recitations-annotated/moshaf-fixes"
     )
+
+    # ds_path = "../out-quran-ds/"
+    # original_quran_dataset_path = "../quran-dataset"
+    # update_wave_files_path = "../moshaf-fixes/"
+
+    edit_config_path = "./edit_config.yml"
 
     if "edit_config" not in st.session_state:
         st.session_state.edit_config = EditConfig.from_yaml(edit_config_path)
@@ -472,6 +481,7 @@ if __name__ == "__main__":
         )
 
         st.session_state.update_wave_files_path = Path(update_wave_files_path)
+        st.session_state.original_quran_dataset_path = Path(original_quran_dataset_path)
 
     ds_path = Path(ds_path)
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")

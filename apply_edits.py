@@ -28,6 +28,7 @@ def setup_logging():
 def apply_moshaf_edits(
     moshaf_edit_config: MoshafEditConfig,
     ds_path: Path,
+    moshaf_media_files_path: Path,
     new_audiofile_path: Path,
     num_proc=16,
 ):
@@ -43,7 +44,12 @@ def apply_moshaf_edits(
         )
 
     for shards_ops in to_apply_shrads:
-        apply_ds_shard_edits(shards_ops, new_audiofile_path, num_proc=num_proc)
+        apply_ds_shard_edits(
+            shards_ops,
+            new_audiofile_path=new_audiofile_path,
+            moshaf_media_files_path=moshaf_media_files_path,
+            num_proc=num_proc,
+        )
 
 
 def main(args):
@@ -69,17 +75,26 @@ def main(args):
         #         # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
         #     },
         # )
-        job = executor.submit(
-            apply_moshaf_edits,
+        # job = executor.submit(
+        #     apply_moshaf_edits,
+        #     moshaf_edit_config,
+        #     ds_path=out_path / moshaf_edit_config.id / "train",
+        #     moshaf_media_files_path=(
+        #         args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+        #     ),
+        #     new_audiofile_path=args.new_audiofile_path,
+        #     num_proc=16,
+        # )
+        # print(job.job_id)
+        apply_moshaf_edits(
             moshaf_edit_config,
             ds_path=out_path / moshaf_edit_config.id / "train",
-            new_audiofile_path=args.new_audiofile_path,
+            moshaf_media_files_path=(
+                args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+            ),
+            new_audiofile_path=args.new_audiofile_base_path,
             num_proc=16,
         )
-        print(job.job_id)
-        # apply_moshaf_edits(
-        #     moshaf_edit_config, out_path / moshaf_edit_config.id / "train", num_proc=10
-        # )
 
 
 if __name__ == "__main__":
@@ -92,16 +107,41 @@ if __name__ == "__main__":
         "--dataset-dir",
         type=Path,
         required=True,
-        help="""The path to the quran dataset that has the following directory structure
-        ../quran-dataset/
-        ├── dataset
-        │   └── 0.1
-        ├── moshaf_pool.jsonl
-        └── reciter_pool.jsonl
+        help="""The path to the annoteted quran dataset that has the following directory structure
+            .
+            ├── dataset
+            │   └── 0.0
+            │       └── train
+            │           ├── shard_00016.parquet
+            │           └── shard_00017.parquet
+            ├── moshaf_pool.jsonl
+            ├── moshaf_pool.parquet
+            ├── README.md
+            ├── reciter_pool.jsonl
+            └── reciter_pool.parquet
         """,
     )
     parser.add_argument(
-        "--new-aduiofile-base-path",
+        "--original-dataset-dir",
+        type=Path,
+        required=True,
+        help="""The path to the original quran dataset which has original media files (before annotation)
+            .
+            ├── dataset
+            │   ├── 0.0
+            │   │   ├── 050.mp3
+            │   │   ├── 114.mp3
+            │   │   └── metadata.jsonl
+            ├── moshaf_pool.jsonl
+            ├── moshaf_pool.parquet
+            ├── README.md
+            ├── reciter_pool.jsonl
+            └── reciter_pool.parquet
+        """,
+    )
+
+    parser.add_argument(
+        "--new-audiofile-base-path",
         type=Path,
         required=True,
     )
