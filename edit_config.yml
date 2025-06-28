@@ -996,9 +996,6 @@ configs:
     segment_index: '010.0085'
     new_end_seconds: 998.225
   - type: update
-    segment_index: '012.0098'
-    new_end_seconds: 1260.8750244140624
-  - type: update
     segment_index: '013.0034'
     new_end_seconds: 368.9200073242188
   - type: update
@@ -1103,6 +1100,68 @@ configs:
   - type: update
     segment_index: '078.0040'
     new_end_seconds: 272.1050048828125
+  - type: update
+    segment_index: '030.0010'
+    new_start_seconds: 49.05
+    new_end_seconds: 51.2
+  - type: update
+    segment_index: '002.0530'
+    new_tarteel_transcript:
+    - قُلِ الْعَفْوَ
+  - type: delete
+    segment_index: '005.0192'
+  - type: update
+    segment_index: '005.0191'
+    new_end_seconds: 2321.330078125
+    new_tarteel_transcript:
+    - مَن لَّعَنَهُ اللَّهُ وَغَضِبَ عَلَيْهِ وَجَعَلَ مِنْهُمُ الْقِرَدَةَ وَالْخَنَازِيرَ
+      وَعَبَدَ الطَّاغُوتَ
+  - type: update
+    segment_index: '006.0036'
+    new_tarteel_transcript:
+    - ' قُلِ اللَّهُ'
+  - type: update
+    segment_index: '009.0146'
+    new_tarteel_transcript:
+    - هِيَ حَسْبُهُمْ
+  - type: delete
+    segment_index: '034.0006'
+  - type: update
+    segment_index: '034.0005'
+    new_end_seconds: 42.18000030517578
+    new_tarteel_transcript:
+    - وَقَالَ الَّذِينَ كَفَرُوا لَا تَأْتِينَا السَّاعَةُ
+  - type: update
+    segment_index: '058.0031'
+    new_end_seconds: 260.32
+  - type: update
+    segment_index: '058.0032'
+    new_start_seconds: 260.1
+  - type: delete
+    segment_index: '074.0025'
+  - type: update
+    segment_index: '074.0024'
+    new_end_seconds: 101.38500213623047
+  - type: delete
+    segment_index: '085.0026'
+  - type: update
+    segment_index: '085.0025'
+    new_end_seconds: 181.85499572753906
+  - type: delete
+    segment_index: '086.0004'
+  - type: update
+    segment_index: '086.0003'
+    new_end_seconds: 21.7450008392334
+    new_tarteel_transcript:
+    - النَّجْمُ الثَّاقِبُ
+  - type: delete
+    segment_index: '012.0099'
+  - type: update
+    segment_index: '012.0098'
+    new_end_seconds: 1270.2349853515625
+    new_tarteel_transcript:
+    - ' قَالَتِ امْرَأَتُ الْعَزِيزِ الْآنَ حَصْحَصَ الْحَقُّ أَنَا رَاوَدتُّهُ عَن
+      نَّفْسِهِ وَإِنَّهُ لَمِنَ الصَّادِقِينَ'
 - id: '2.0'
   operations:
   - type: update
