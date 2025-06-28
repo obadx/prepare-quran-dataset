@@ -82,16 +82,10 @@ configs:
     segment_index: '010.0067'
     new_end_seconds: 812.4900268554687
   - type: update
-    segment_index: '011.0078'
-    new_end_seconds: 960.535009765625
-  - type: update
     segment_index: '011.0205'
     new_audio_file: 0.0/011.0205.wav
   - type: delete
     segment_index: '011.0206'
-  - type: update
-    segment_index: '014.0033'
-    new_end_seconds: 460.79999389648435
   - type: update
     segment_index: '015.0088'
     new_end_seconds: 776.5799926757812
@@ -206,6 +200,24 @@ configs:
     - أَو أَمَرَ بِالتَّقوىٰ
   - type: delete
     segment_index: '096.0013'
+  - type: delete
+    segment_index: '011.0079'
+  - type: update
+    segment_index: '011.0078'
+    new_end_seconds: 964.95
+    new_tarteel_transcript:
+    - وَنَادَىٰ نُوحٌ رَّبَّهُ فَقَالَ رَبِّ إِنَّ ابْنِي مِنْ أَهْلِي وَإِنَّ وَعْدَكَ
+      الْحَقُّ وَأَنتَ أَحْكَمُ الْحَاكِمِينَ
+  - type: delete
+    segment_index: '014.0034'
+  - type: update
+    segment_index: '014.0033'
+    new_end_seconds: 467.6349792480469
+    new_tarteel_transcript:
+    - أَلَمْ تَرَ أَنَّ اللَّهَ خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ بِالْحَقِّ إِن يَشَأْ
+      يُذْهِبْكُمْ وَيَأْتِ بِخَلْقٍ جَدِيدٍ
+  - type: delete
+    segment_index: '022.0074'
 - id: '0.1'
   operations:
   - type: update
@@ -2441,6 +2453,9 @@ configs:
     segment_index: '006.0061'
     new_end_seconds: 595.7249633789063
   - type: update
+    segment_index: '006.0138'
+    new_end_seconds: 1450.0
+  - type: update
     segment_index: '006.0146'
     new_end_seconds: 1553.9449951171875
   - type: update
@@ -2545,9 +2560,6 @@ configs:
   - type: update
     segment_index: '057.0034'
     new_end_seconds: 398.89500732421874
-  - type: update
-    segment_index: '006.0138'
-    new_end_seconds: 1450.0
 - id: '24.0'
   operations:
   - type: update
@@ -2556,6 +2568,9 @@ configs:
   - type: update
     segment_index: '002.0197'
     new_end_seconds: 2293.355029296875
+  - type: update
+    segment_index: '002.0340'
+    new_end_seconds: 3773.7
   - type: update
     segment_index: '002.0575'
     new_end_seconds: 6084.6052734375
@@ -2646,9 +2661,6 @@ configs:
   - type: update
     segment_index: '078.0040'
     new_end_seconds: 230.03000183105468
-  - type: update
-    segment_index: '002.0340'
-    new_end_seconds: 3773.7
 - id: '26.1'
   operations:
   - type: update
@@ -3088,8 +3100,17 @@ configs:
     segment_index: '006.0365'
     new_end_seconds: 4231.934765625
   - type: update
+    segment_index: '007.0009'
+    new_end_seconds: 110.83
+  - type: update
+    segment_index: '007.0077'
+    new_end_seconds: 904.0
+  - type: update
     segment_index: '007.0197'
     new_end_seconds: 2285.3400390625
+  - type: update
+    segment_index: '010.0014'
+    new_end_seconds: 137.75
   - type: update
     segment_index: '010.0052'
     new_end_seconds: 575.3499877929687
@@ -3100,6 +3121,12 @@ configs:
     segment_index: '010.0076'
     new_end_seconds: 846.060009765625
   - type: update
+    segment_index: '010.0083'
+    new_end_seconds: 904.73
+  - type: update
+    segment_index: '010.0084'
+    new_end_seconds: 909.0
+  - type: update
     segment_index: '010.0120'
     new_end_seconds: 1276.6349609375
   - type: update
@@ -3109,11 +3136,44 @@ configs:
     segment_index: '013.0082'
     new_end_seconds: 834.94501953125
   - type: update
+    segment_index: '014.0040'
+    new_end_seconds: 420.63
+  - type: update
+    segment_index: '015.0088'
+    new_end_seconds: 766.81
+  - type: update
+    segment_index: '016.0004'
+    new_end_seconds: 49.61
+  - type: update
+    segment_index: '017.0057'
+    new_end_seconds: 582.28
+  - type: update
+    segment_index: '018.0015'
+    new_end_seconds: 149.0
+  - type: update
+    segment_index: '018.0079'
+    new_end_seconds: 834.355
+  - type: update
     segment_index: '018.0101'
     new_end_seconds: 1064.3250244140625
   - type: update
+    segment_index: '020.0152'
+    new_end_seconds: 1271.35
+  - type: update
+    segment_index: '021.0168'
+    new_end_seconds: 1475.41
+  - type: update
     segment_index: '023.0077'
     new_end_seconds: 793.5550048828125
+  - type: update
+    segment_index: '023.0147'
+    new_end_seconds: 1460.0
+  - type: update
+    segment_index: '029.0078'
+    new_end_seconds: 699.3
+  - type: update
+    segment_index: '031.0063'
+    new_end_seconds: 633.0
   - type: update
     segment_index: '033.0112'
     new_end_seconds: 1284.749951171875
@@ -3145,6 +3205,9 @@ configs:
     segment_index: '045.0006'
     new_end_seconds: 67.73500518798828
   - type: update
+    segment_index: '045.0048'
+    new_end_seconds: 475.5
+  - type: update
     segment_index: '046.0032'
     new_end_seconds: 368.62000732421876
   - type: update
@@ -3154,62 +3217,11 @@ configs:
     segment_index: '048.0057'
     new_end_seconds: 616.2000244140625
   - type: update
-    segment_index: '078.0040'
-    new_end_seconds: 252.8299987792969
-  - type: update
-    segment_index: '018.0015'
-    new_end_seconds: 149.0
-  - type: update
-    segment_index: '007.0009'
-    new_end_seconds: 110.83
-  - type: update
-    segment_index: '007.0077'
-    new_end_seconds: 904.0
-  - type: update
-    segment_index: '010.0014'
-    new_end_seconds: 137.75
-  - type: update
-    segment_index: '010.0083'
-    new_end_seconds: 904.73
-  - type: update
-    segment_index: '010.0084'
-    new_end_seconds: 909.0
-  - type: update
-    segment_index: '014.0040'
-    new_end_seconds: 420.63
-  - type: update
-    segment_index: '015.0088'
-    new_end_seconds: 766.81
-  - type: update
-    segment_index: '016.0004'
-    new_end_seconds: 49.61
-  - type: update
-    segment_index: '017.0057'
-    new_end_seconds: 582.28
-  - type: update
-    segment_index: '018.0079'
-    new_end_seconds: 834.355
-  - type: update
-    segment_index: '020.0152'
-    new_end_seconds: 1271.35
-  - type: update
-    segment_index: '021.0168'
-    new_end_seconds: 1475.41
-  - type: update
-    segment_index: '023.0147'
-    new_end_seconds: 1460.0
-  - type: update
-    segment_index: '029.0078'
-    new_end_seconds: 699.3
-  - type: update
-    segment_index: '031.0063'
-    new_end_seconds: 633.0
-  - type: update
-    segment_index: '045.0048'
-    new_end_seconds: 475.5
-  - type: update
     segment_index: '050.0028'
     new_end_seconds: 212.1
   - type: update
     segment_index: '050.0055'
     new_end_seconds: 436.0
+  - type: update
+    segment_index: '078.0040'
+    new_end_seconds: 252.8299987792969
