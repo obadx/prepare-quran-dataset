@@ -79,16 +79,20 @@ def delete_moshaf_operation(moshaf_id: str, op: Operation):
     save_to_config_to_disk()
 
 
-def save_moshaf_operation(moshaf_id: str, op: Operation):
+def save_moshaf_operation(moshaf_id: str, op_or_ops: Operation | list[Operation]):
+    if isinstance(op_or_ops, Operation):
+        op_or_ops = [op_or_ops]
+
     if moshaf_id not in st.session_state.moshaf_id_to_config:
         st.session_state.moshaf_id_to_config[moshaf_id] = MoshafEditConfig(
-            id=moshaf_id, operations=[op]
+            id=moshaf_id, operations=op_or_ops
         )
         st.session_state.edit_config.configs.append(
             st.session_state.moshaf_id_to_config[moshaf_id]
         )
     else:
-        st.session_state.moshaf_id_to_config[moshaf_id].add_operation(op)
+        for op in op_or_ops:
+            st.session_state.moshaf_id_to_config[moshaf_id].add_operation(op)
 
     save_to_config_to_disk()
 
@@ -100,6 +104,17 @@ def is_qlqla_kobra(text) -> bool:
     shadda = "ّ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
     if re.search(f"[{qlqla}]{shadda}.$", text):
+        return True
+    return False
+
+
+def is_qlqla_kobra_qaf(text) -> bool:
+    """Whethr the aya has قاف مقلقة متطرفة مشددة"""
+
+    qaf = "ق"
+    shadda = "ّ"
+    text = re.sub(r"\s+", "", text)  # remvoe spaces
+    if re.search(f"[{qaf}]{shadda}.$", text):
         return True
     return False
 
@@ -265,6 +280,40 @@ def abort_opearation_with_confirmation(item: dict, op: Operation):
             st.rerun()
 
 
+@st.dialog("ظبط زمن القلقة للقاف المشددة المتطرفة")
+def adjust_qlqla_qaf_duration(ds: Dataset):
+    with st.form("qlqal_form"):
+        qlqala_pad_ms = st.number_input("مدة الزيادة ms", value=0)
+
+        if st.form_submit_button("موافق"):
+            if qlqala_pad_ms:
+                with st.spinner("الضبط حارٍٍ"):
+                    filter_ds = ds.filter(
+                        lambda ex: is_qlqla_kobra_qaf(ex["tarteel_transcript"][-1]),
+                        num_proc=16,
+                    )
+
+                    if len(filter_ds) > 0:
+                        new_operations = []
+                        moshaf_id = filter_ds[0]["moshaf_id"]
+                        for item in filter_ds:
+                            new_operations.append(
+                                Operation(
+                                    type="update",
+                                    segment_index=item["segment_index"],
+                                    new_end_seconds=item["timestamp_seconds"][1]
+                                    + qlqala_pad_ms / 1000,
+                                )
+                            )
+                        save_moshaf_operation(moshaf_id, new_operations)
+                        popup_message(
+                            "تم طبط زمن القلقة للقاف المشددة المتطرفة بنجاح", "sucess"
+                        )
+                        st.rerun()
+                    else:
+                        popup_message("لا يوجد قاف مقلقة متطرفة !", "error")
+
+
 # Convert NumPy array to WAV bytes
 def numpy_to_wav_bytes(audio_array, sample_rate):
     # Normalize to 16-bit range (-32768 to 32767)
@@ -420,7 +469,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
 
     col1, col2, col3, col4 = st.columns(4)
     stat_coumns = st.columns(4)
-    qlqal_columns = st.columns(2)
+    qlqal_columns = st.columns(3)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -489,12 +538,15 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             long_duration = st.number_input("ادخل المدة بالثواني", value=30.0)
             display_higher_durations(ds, long_duration)
 
-    with qlqal_columns[1]:
+    with qlqal_columns[2]:
         if st.button("اظهر القلقة الكبرى", use_container_width=True):
             st.session_state.display_qlqla = True
     with qlqal_columns[0]:
         if st.button("اخف القلقة الكبرى", use_container_width=True):
             st.session_state.display_qlqla = False
+    with qlqal_columns[1]:
+        if st.button("اضبط زمن القاف المقلقة المتطرفة", use_container_width=True):
+            adjust_qlqla_qaf_duration(ds)
 
     if "display_qlqla" in st.session_state:
         if st.session_state.display_qlqla:
