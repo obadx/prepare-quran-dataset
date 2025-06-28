@@ -307,7 +307,7 @@ def adjust_qlqla_qaf_duration(ds: Dataset):
                             )
                         save_moshaf_operation(moshaf_id, new_operations)
                         popup_message(
-                            "تم طبط زمن القلقة للقاف المشددة المتطرفة بنجاح", "sucess"
+                            "تم طبط زمن القلقة للقاف المشددة المتطرفة بنجاح", "success"
                         )
                         st.rerun()
                     else:
