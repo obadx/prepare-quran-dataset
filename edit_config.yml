@@ -1431,9 +1431,6 @@ configs:
     segment_index: '002.0213'
     new_end_seconds: 2560.16494140625
   - type: update
-    segment_index: '002.0347'
-    new_end_seconds: 4040.029931640625
-  - type: update
     segment_index: '002.0576'
     new_end_seconds: 6363.03017578125
   - type: update
@@ -1455,9 +1452,6 @@ configs:
     segment_index: '005.0136'
     new_end_seconds: 1545.295068359375
   - type: update
-    segment_index: '006.0055'
-    new_end_seconds: 484.5000244140625
-  - type: update
     segment_index: '006.0119'
     new_end_seconds: 1140.755029296875
   - type: update
@@ -1476,29 +1470,17 @@ configs:
     segment_index: '006.0326'
     new_end_seconds: 3296.819970703125
   - type: update
-    segment_index: '007.0009'
-    new_end_seconds: 96.25999603271484
-  - type: update
     segment_index: '007.0072'
     new_end_seconds: 811.860009765625
   - type: update
     segment_index: '009.0062'
     new_end_seconds: 650.0000244140625
   - type: update
-    segment_index: '010.0014'
-    new_end_seconds: 115.79499969482421
-  - type: update
     segment_index: '010.0049'
     new_end_seconds: 492.4800048828125
   - type: update
-    segment_index: '010.0072'
-    new_end_seconds: 720.2849975585938
-  - type: update
     segment_index: '010.0079'
     new_end_seconds: 766.0500122070313
-  - type: update
-    segment_index: '010.0080'
-    new_end_seconds: 770.0299926757813
   - type: update
     segment_index: '013.0030'
     new_end_seconds: 318.46502075195315
@@ -1508,9 +1490,6 @@ configs:
   - type: update
     segment_index: '015.0088'
     new_end_seconds: 672.6950317382813
-  - type: update
-    segment_index: '016.0004'
-    new_end_seconds: 37.71499786376953
   - type: update
     segment_index: '017.0054'
     new_end_seconds: 577.1400390625
@@ -1572,14 +1551,8 @@ configs:
     segment_index: '042.0091'
     new_end_seconds: 767.5299926757813
   - type: update
-    segment_index: '045.0007'
-    new_end_seconds: 64.94500122070312
-  - type: update
     segment_index: '045.0049'
     new_end_seconds: 442.5500122070313
-  - type: update
-    segment_index: '050.0025'
-    new_end_seconds: 190.8550048828125
   - type: update
     segment_index: '050.0053'
     new_end_seconds: 397.225
