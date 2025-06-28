@@ -1518,9 +1518,6 @@ configs:
     segment_index: '048.0061'
     new_end_seconds: 681.5300048828125
   - type: update
-    segment_index: '048.0064'
-    new_end_seconds: 720.6849731445312
-  - type: update
     segment_index: '050.0027'
     new_end_seconds: 218.3499969482422
   - type: update
@@ -1536,6 +1533,64 @@ configs:
     segment_index: '053.0037'
     new_tarteel_transcript:
     - لَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: delete
+    segment_index: '002.0388'
+  - type: update
+    segment_index: '002.0387'
+    new_end_seconds: 5941.60498046875
+    new_tarteel_transcript:
+    - ' إِنَّ اللَّهَ لَا يُحِبُّ الْمُعْتَدِينَ'
+  - type: delete
+    segment_index: '048.0065'
+  - type: update
+    segment_index: '048.0064'
+    new_end_seconds: 724.8900146484375
+    new_tarteel_transcript:
+    - هُوَ الَّذِي أَرْسَلَ رَسُولَهُ بِالْهُدَىٰ وَدِينِ الْحَقِّ لِيُظْهِرَهُ عَلَى
+      الدِّينِ كُلِّهِ
+  - type: delete
+    segment_index: '003.0007'
+  - type: update
+    segment_index: '003.0006'
+    new_end_seconds: 61.51499938964844
+  - type: update
+    segment_index: '009.0144'
+    new_tarteel_transcript:
+    - هِيَ حَسْبُهُمْ
+  - type: delete
+    segment_index: '020.0036'
+  - type: update
+    segment_index: '020.0035'
+    new_end_seconds: 282.5
+    new_tarteel_transcript:
+    - كَيْ نُسَبِّحَكَ كَثِيرًا
+  - type: delete
+    segment_index: '023.0090'
+  - type: update
+    segment_index: '023.0089'
+    new_end_seconds: 972.2899780273438
+    new_tarteel_transcript:
+    - وَلَوِ اتَّبَعَ الْحَقُّ أَهْوَاءَهُمْ لَفَسَدَتِ السَّمَاوَاتُ وَالْأَرْضُ
+      وَمَن فِيهِنَّ
+  - type: delete
+    segment_index: '027.0126'
+  - type: update
+    segment_index: '027.0125'
+    new_end_seconds: 1542.3848876953125
+    new_tarteel_transcript:
+    - فَتَوَكَّلْ عَلَى اللَّهِ
+  - type: delete
+    segment_index: '043.0039'
+  - type: update
+    segment_index: '043.0038'
+    new_end_seconds: 436.3450012207031
+    new_tarteel_transcript:
+    - بَلْ مَتَّعْتُ هَٰؤُلَاءِ وَآبَاءَهُمْ حَتَّىٰ جَاءَهُمُ الْحَقُّ وَرَسُولٌ
+      مُّبِينٌ
+  - type: update
+    segment_index: '057.0036'
+    new_tarteel_transcript:
+    - ' هِيَ مَوْلَاكُمْ'
 - id: '3.0'
   operations:
   - type: update
