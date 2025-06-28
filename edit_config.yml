@@ -89,6 +89,123 @@ configs:
     - أَو أَمَرَ بِالتَّقوىٰ
   - type: delete
     segment_index: '096.0013'
+  - type: update
+    segment_index: '002.0088'
+    new_end_seconds: 1100.1000732421876
+  - type: update
+    segment_index: '002.0188'
+    new_end_seconds: 2192.184912109375
+  - type: update
+    segment_index: '002.0310'
+    new_end_seconds: 3690.490087890625
+  - type: update
+    segment_index: '002.0510'
+    new_end_seconds: 5988.79501953125
+  - type: update
+    segment_index: '003.0109'
+    new_end_seconds: 1268.6750244140626
+  - type: update
+    segment_index: '003.0189'
+    new_end_seconds: 2298.160009765625
+  - type: update
+    segment_index: '003.0198'
+    new_end_seconds: 2391.75498046875
+  - type: update
+    segment_index: '004.0369'
+    new_end_seconds: 4616.42001953125
+  - type: update
+    segment_index: '005.0114'
+    new_end_seconds: 1586.6149658203126
+  - type: update
+    segment_index: '005.0255'
+    new_end_seconds: 3464.285009765625
+  - type: update
+    segment_index: '006.0105'
+    new_end_seconds: 1297.9899658203126
+  - type: update
+    segment_index: '006.0111'
+    new_end_seconds: 1376.5099853515626
+  - type: update
+    segment_index: '006.0127'
+    new_end_seconds: 1557.7250732421876
+  - type: update
+    segment_index: '006.0284'
+    new_end_seconds: 3529.6099609375
+  - type: update
+    segment_index: '007.0011'
+    new_end_seconds: 102.78499450683594
+  - type: update
+    segment_index: '007.0067'
+    new_end_seconds: 904.0050415039062
+  - type: update
+    segment_index: '007.0170'
+    new_end_seconds: 2200.8599609375
+  - type: update
+    segment_index: '010.0013'
+    new_end_seconds: 129.06000366210938
+  - type: update
+    segment_index: '010.0045'
+    new_end_seconds: 531.7800048828125
+  - type: update
+    segment_index: '010.0066'
+    new_end_seconds: 807.8299926757812
+  - type: update
+    segment_index: '010.0067'
+    new_end_seconds: 812.4900268554687
+  - type: update
+    segment_index: '011.0078'
+    new_end_seconds: 960.535009765625
+  - type: update
+    segment_index: '014.0033'
+    new_end_seconds: 460.79999389648435
+  - type: update
+    segment_index: '015.0088'
+    new_end_seconds: 776.5799926757812
+  - type: update
+    segment_index: '016.0004'
+    new_end_seconds: 47.9
+  - type: update
+    segment_index: '017.0047'
+    new_end_seconds: 601.8600219726562
+  - type: update
+    segment_index: '018.0015'
+    new_end_seconds: 168.06999816894532
+  - type: update
+    segment_index: '018.0067'
+    new_end_seconds: 938.5799926757812
+  - type: update
+    segment_index: '020.0129'
+    new_end_seconds: 1493.6000732421876
+  - type: update
+    segment_index: '021.0135'
+    new_end_seconds: 1653.5400146484376
+  - type: update
+    segment_index: '029.0061'
+    new_end_seconds: 886.65
+  - type: update
+    segment_index: '033.0098'
+    new_end_seconds: 1368.930029296875
+  - type: update
+    segment_index: '038.0025'
+    new_end_seconds: 285.0199951171875
+  - type: update
+    segment_index: '040.0005'
+    new_end_seconds: 68.23499908447266
+  - type: update
+    segment_index: '041.0075'
+    new_end_seconds: 1096.37998046875
+  - type: update
+    segment_index: '042.0031'
+    new_end_seconds: 428.4849914550781
+  - type: update
+    segment_index: '042.0071'
+    new_end_seconds: 901.285009765625
+  - type: update
+    segment_index: '045.0037'
+    new_end_seconds: 507.4849914550781
+  - type: update
+    segment_index: '050.0047'
+    new_end_seconds: 482.5099853515625
 - id: '0.1'
   operations:
   - type: update
@@ -174,15 +291,13 @@ configs:
     - هَٰذَا
 - id: '0.3'
   operations:
-  - type: delete
-    segment_index: '002.0602'
   - type: update
     segment_index: '002.0601'
     new_audio_file: 0.3/002_0601.wav
     new_tarteel_transcript:
     - 'فَهَدَى اللَّهُ الَّذِينَ آمَنُوا لِمَا اخْتَلَفُوا فِيهِ مِنَ الْحَقِّ بِإِذْنِهِ '
   - type: delete
-    segment_index: '003.0361'
+    segment_index: '002.0602'
   - type: update
     segment_index: '003.0360'
     new_audio_file: 0.3/003_0360.wav
@@ -190,65 +305,67 @@ configs:
     - وَمَا كَانَ قَوْلَهُمْ إِلَّا أَن قَالُوا رَبَّنَا اغْفِرْ لَنَا ذُنُوبَنَا
       وَإِسْرَافَنَا فِي أَمْرِنَا وَثَبِّتْ أَقْدَامَنَا
   - type: delete
-    segment_index: '004.0011'
+    segment_index: '003.0361'
   - type: update
     segment_index: '004.0010'
     new_audio_file: 0.3/004_0010.wav
     new_tarteel_transcript:
     - وَإِنْ خِفْتُمْ أَلَّا تُقْسِطُوا فِي الْيَتَامَىٰ فَانكِحُوا مَا طَابَ لَكُم
+  - type: delete
+    segment_index: '004.0011'
   - type: update
     segment_index: '006.0190'
     new_audio_file: 0.3/006_0190.wav
-  - type: delete
-    segment_index: '009.0054'
   - type: update
     segment_index: '009.0053'
     new_audio_file: 0.3/009_0053.wav
     new_tarteel_transcript:
     - الَّذِينَ آمَنُوا وَهَاجَرُوا وَجَاهَدُوا فِي سَبِيلِ اللَّهِ بِأَمْوَالِهِمْ
       وَأَنفُسِهِمْ أَعْظَمُ دَرَجَةً
+  - type: delete
+    segment_index: '009.0054'
   - type: update
     segment_index: '009.0198'
     new_tarteel_transcript:
     - هِيَ حَسْبُهُمْ
-  - type: delete
-    segment_index: '011.0077'
   - type: update
     segment_index: '011.0076'
     new_audio_file: 0.3/011_0076.wav
   - type: delete
-    segment_index: '012.0163'
+    segment_index: '011.0077'
   - type: update
     segment_index: '012.0162'
     new_audio_file: 0.3/012_0162.wav
     new_tarteel_transcript:
     - عَلَيْهِ تَوَكَّلْتُ وَعَلَيْهِ فَلْيَتَوَكَّلِ الْمُتَوَكِّلُونَ
+  - type: delete
+    segment_index: '012.0163'
   - type: update
     segment_index: '016.0110'
     new_tarteel_transcript:
     - فَتَمَتَّعُوا
-  - type: delete
-    segment_index: '022.0176'
   - type: update
     segment_index: '022.0175'
     new_audio_file: 0.3/022_0175.wav
     new_tarteel_transcript:
     - ' يَكَادُونَ يَسْطُونَ بِالَّذِينَ يَتْلُونَ عَلَيْهِمْ آيَاتِنَا'
   - type: delete
-    segment_index: '024.0064'
-  - type: update
-    segment_index: '024.0063'
-    new_audio_file: 0.3/024_0063.wav
+    segment_index: '022.0176'
   - type: update
     segment_index: '022.0193'
     new_tarteel_transcript:
     - هُوَ اجْتَبَاكُمْ
+  - type: update
+    segment_index: '024.0063'
+    new_audio_file: 0.3/024_0063.wav
+  - type: delete
+    segment_index: '024.0064'
   - type: delete
     segment_index: '054.0070'
-  - type: delete
-    segment_index: '088.0022'
   - type: update
     segment_index: '088.0021'
     new_audio_file: 0.3/088_0021.wav
     new_tarteel_transcript:
     - فَذَكِّرْ إِنَّمَا أَنتَ مُذَكِّرٌ
+  - type: delete
+    segment_index: '088.0022'
