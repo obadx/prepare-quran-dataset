@@ -451,7 +451,7 @@ def display_small_durations(ds: Dataset, threshold: float):
     """
     f_ds = ds.filter(lambda ex: int(ex["duration_seconds"]) < threshold, num_proc=16)
     for item in f_ds:
-        display_audio_file(item, key_prefix="small")
+        display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
 def display_qlqla_kobra(ds: Dataset):
