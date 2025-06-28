@@ -209,81 +209,6 @@ configs:
 - id: '0.1'
   operations:
   - type: update
-    segment_index: '004.0061'
-    new_audio_file: 0.1/004_0061.wav
-    new_tarteel_transcript:
-    - وَإِن أَرَدتُمُ استِبدالَ زَوجٍ مَكانَ زَوجٍ وَآتَيتُم إِحداهُنَّ قِنطارًا فَلا
-      تَأخُذوا مِنهُ شَيئًا
-  - type: delete
-    segment_index: '004.0062'
-  - type: update
-    segment_index: '006.0210'
-    new_audio_file: 0.1/006_0210.wav
-    new_tarteel_transcript:
-    - ' لَقَد تَقَطَّعَ بَينَكُم وَضَلَّ عَنكُم ما كُنتُم تَزعُمونَ'
-  - type: delete
-    segment_index: '006.0211'
-  - type: update
-    segment_index: '006.0375'
-    new_audio_file: 0.1/006_0375.wav
-  - type: delete
-    segment_index: '006.0376'
-  - type: update
-    segment_index: '009.0035'
-    new_audio_file: 0.1/009_0035.wav
-    new_tarteel_transcript:
-    - أَم حَسِبتُم أَن تُترَكوا وَلَمّا يَعلَمِ اللَّهُ الَّذينَ جاهَدوا مِنكُم وَلَم
-      يَتَّخِذوا
-  - type: delete
-    segment_index: '009.0036'
-  - type: update
-    segment_index: '009.0248'
-    new_audio_file: 0.1/009_0248.wav
-    new_tarteel_transcript:
-    - وَالَّذينَ اتَّخَذوا مَسجِدًا ضِرارًا وَكُفرًا وَتَفريقًا بَينَ المُؤمِنينَ
-      وَإِرصادًا لِمَن حارَبَ اللَّهَ وَرَسولَهُ مِن قَبلُ وَلَيَحلِفُنَّ
-  - type: delete
-    segment_index: '009.0249'
-  - type: update
-    segment_index: '012.0098'
-    new_audio_file: 0.1/012_0098.wav
-    new_tarteel_transcript:
-    - ثُمَّ يَأتي مِن بَعدِ ذٰلِكَ سَبعٌ شِدادٌ يَأكُلنَ ما قَدَّمتُم لَهُنَّ إِلّا
-      قَليلًا مِمّا تُحصِنونَ
-  - type: delete
-    segment_index: '012.0099'
-  - type: update
-    segment_index: '012.0138'
-    new_tarteel_transcript:
-    - ' عَلَيهِ تَوَكَّلتُ'
-  - type: update
-    segment_index: '028.0064'
-    new_audio_file: 0.1/028_0064.wav
-    new_tarteel_transcript:
-    - وَأَخي هارونُ هُوَ أَفصَحُ مِنّي لِسانًا فَأَرسِلهُ مَعِيَ رِدءًا يُصَدِّقُني
-  - type: delete
-    segment_index: '028.0065'
-  - type: update
-    segment_index: '038.0079'
-    new_tarteel_transcript:
-    - 'هَٰذَا '
-  - type: update
-    segment_index: '043.0029'
-    new_audio_file: 0.1/043_0029.wav
-  - type: delete
-    segment_index: '043.0030'
-  - type: update
-    segment_index: '043.0126'
-    new_audio_file: 0.1/043_0126.wav
-    new_tarteel_transcript:
-    - فَاصْفَحْ عَنْهُمْ وَقُلْ سَلَامٌ
-  - type: delete
-    segment_index: '043.0127'
-  - type: update
-    segment_index: '053.0037'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: update
     segment_index: '002.0109'
     new_end_seconds: 1893.0499755859375
   - type: update
@@ -310,6 +235,14 @@ configs:
   - type: update
     segment_index: '003.0224'
     new_end_seconds: 3690.30009765625
+  - type: update
+    segment_index: '004.0061'
+    new_audio_file: 0.1/004_0061.wav
+    new_tarteel_transcript:
+    - وَإِن أَرَدتُمُ استِبدالَ زَوجٍ مَكانَ زَوجٍ وَآتَيتُم إِحداهُنَّ قِنطارًا فَلا
+      تَأخُذوا مِنهُ شَيئًا
+  - type: delete
+    segment_index: '004.0062'
   - type: update
     segment_index: '004.0384'
     new_end_seconds: 6159.825
@@ -338,11 +271,23 @@ configs:
     segment_index: '006.0155'
     new_end_seconds: 2430.1951171875
   - type: update
+    segment_index: '006.0210'
+    new_audio_file: 0.1/006_0210.wav
+    new_tarteel_transcript:
+    - ' لَقَد تَقَطَّعَ بَينَكُم وَضَلَّ عَنكُم ما كُنتُم تَزعُمونَ'
+  - type: delete
+    segment_index: '006.0211'
+  - type: update
     segment_index: '006.0262'
     new_end_seconds: 4040.4900390625
   - type: update
     segment_index: '006.0365'
     new_end_seconds: 5662.30498046875
+  - type: update
+    segment_index: '006.0375'
+    new_audio_file: 0.1/006_0375.wav
+  - type: delete
+    segment_index: '006.0376'
   - type: update
     segment_index: '007.0009'
     new_end_seconds: 165.97999877929686
@@ -353,8 +298,24 @@ configs:
     segment_index: '007.0202'
     new_end_seconds: 3338.250048828125
   - type: update
+    segment_index: '009.0035'
+    new_audio_file: 0.1/009_0035.wav
+    new_tarteel_transcript:
+    - أَم حَسِبتُم أَن تُترَكوا وَلَمّا يَعلَمِ اللَّهُ الَّذينَ جاهَدوا مِنكُم وَلَم
+      يَتَّخِذوا
+  - type: delete
+    segment_index: '009.0036'
+  - type: update
     segment_index: '009.0066'
     new_end_seconds: 1205.7400390625
+  - type: update
+    segment_index: '009.0248'
+    new_audio_file: 0.1/009_0248.wav
+    new_tarteel_transcript:
+    - وَالَّذينَ اتَّخَذوا مَسجِدًا ضِرارًا وَكُفرًا وَتَفريقًا بَينَ المُؤمِنينَ
+      وَإِرصادًا لِمَن حارَبَ اللَّهَ وَرَسولَهُ مِن قَبلُ وَلَيَحلِفُنَّ
+  - type: delete
+    segment_index: '009.0249'
   - type: update
     segment_index: '010.0015'
     new_end_seconds: 216.97000427246093
@@ -376,6 +337,18 @@ configs:
   - type: update
     segment_index: '010.0123'
     new_end_seconds: 1873.875048828125
+  - type: update
+    segment_index: '012.0098'
+    new_audio_file: 0.1/012_0098.wav
+    new_tarteel_transcript:
+    - ثُمَّ يَأتي مِن بَعدِ ذٰلِكَ سَبعٌ شِدادٌ يَأكُلنَ ما قَدَّمتُم لَهُنَّ إِلّا
+      قَليلًا مِمّا تُحصِنونَ
+  - type: delete
+    segment_index: '012.0099'
+  - type: update
+    segment_index: '012.0138'
+    new_tarteel_transcript:
+    - ' عَلَيهِ تَوَكَّلتُ'
   - type: update
     segment_index: '013.0035'
     new_end_seconds: 559.4849731445313
@@ -413,6 +386,13 @@ configs:
     segment_index: '023.0146'
     new_end_seconds: 2071.72490234375
   - type: update
+    segment_index: '028.0064'
+    new_audio_file: 0.1/028_0064.wav
+    new_tarteel_transcript:
+    - وَأَخي هارونُ هُوَ أَفصَحُ مِنّي لِسانًا فَأَرسِلهُ مَعِيَ رِدءًا يُصَدِّقُني
+  - type: delete
+    segment_index: '028.0065'
+  - type: update
     segment_index: '029.0083'
     new_end_seconds: 1272.1449462890625
   - type: update
@@ -433,6 +413,10 @@ configs:
   - type: update
     segment_index: '034.0096'
     new_end_seconds: 1349.2450439453125
+  - type: update
+    segment_index: '038.0079'
+    new_tarteel_transcript:
+    - 'هَٰذَا '
   - type: update
     segment_index: '039.0009'
     new_end_seconds: 132.84999389648436
@@ -458,6 +442,18 @@ configs:
     segment_index: '042.0093'
     new_end_seconds: 1291.1599609375
   - type: update
+    segment_index: '043.0029'
+    new_audio_file: 0.1/043_0029.wav
+  - type: delete
+    segment_index: '043.0030'
+  - type: update
+    segment_index: '043.0126'
+    new_audio_file: 0.1/043_0126.wav
+    new_tarteel_transcript:
+    - فَاصْفَحْ عَنْهُمْ وَقُلْ سَلَامٌ
+  - type: delete
+    segment_index: '043.0127'
+  - type: update
     segment_index: '045.0007'
     new_end_seconds: 121.1749984741211
   - type: update
@@ -482,14 +478,14 @@ configs:
     segment_index: '050.0055'
     new_end_seconds: 718.1450073242188
   - type: update
+    segment_index: '053.0037'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: update
     segment_index: '078.0039'
     new_end_seconds: 355.99501342773436
 - id: '0.2'
   operations:
-  - type: update
-    segment_index: '038.0067'
-    new_tarteel_transcript:
-    - هَٰذَا
   - type: update
     segment_index: '002.0112'
     new_end_seconds: 2633.254931640625
@@ -593,6 +589,10 @@ configs:
     segment_index: '033.0113'
     new_end_seconds: 2976.84990234375
   - type: update
+    segment_index: '038.0067'
+    new_tarteel_transcript:
+    - هَٰذَا
+  - type: update
     segment_index: '039.0084'
     new_end_seconds: 1845.2899658203125
   - type: update
@@ -637,9 +637,6 @@ configs:
     - وَإِنْ خِفْتُمْ أَلَّا تُقْسِطُوا فِي الْيَتَامَىٰ فَانكِحُوا مَا طَابَ لَكُم
   - type: delete
     segment_index: '004.0011'
-  - type: update
-    segment_index: '006.0190'
-    new_audio_file: 0.3/006_0190.wav
   - type: update
     segment_index: '009.0053'
     new_audio_file: 0.3/009_0053.wav
@@ -693,3 +690,201 @@ configs:
     - فَذَكِّرْ إِنَّمَا أَنتَ مُذَكِّرٌ
   - type: delete
     segment_index: '088.0022'
+  - type: update
+    segment_index: '002.0147'
+    new_end_seconds: 2178.6798828125
+  - type: update
+    segment_index: '002.0172'
+    new_end_seconds: 2553.144970703125
+  - type: update
+    segment_index: '002.0286'
+    new_end_seconds: 4365.98994140625
+  - type: update
+    segment_index: '002.0476'
+    new_end_seconds: 7236.83515625
+  - type: update
+    segment_index: '002.0771'
+    new_end_seconds: 11591.7248046875
+  - type: update
+    segment_index: '003.0160'
+    new_end_seconds: 2341.6349609375
+  - type: update
+    segment_index: '003.0267'
+    new_end_seconds: 4203.0900390625
+  - type: update
+    segment_index: '003.0278'
+    new_end_seconds: 4376.7501953125
+  - type: update
+    segment_index: '004.0519'
+    new_end_seconds: 8233.524609375
+  - type: update
+    segment_index: '005.0177'
+    new_end_seconds: 2802.620068359375
+  - type: update
+    segment_index: '005.0284'
+    new_end_seconds: 4482.73994140625
+  - type: update
+    segment_index: '005.0388'
+    new_end_seconds: 6232.02509765625
+  - type: update
+    segment_index: '006.0070'
+    new_end_seconds: 992.5949829101562
+  - type: update
+    segment_index: '006.0157'
+    new_end_seconds: 2292.870068359375
+  - type: update
+    segment_index: '006.0166'
+    new_end_seconds: 2439.1349609375
+  - type: update
+    segment_index: '006.0188'
+    new_end_seconds: 2763.55
+  - type: update
+    segment_index: '006.0190'
+    new_end_seconds: 2780.689892578125
+  - type: update
+    segment_index: '006.0318'
+    new_end_seconds: 4569.44013671875
+  - type: update
+    segment_index: '006.0440'
+    new_end_seconds: 6191.01484375
+  - type: update
+    segment_index: '007.0012'
+    new_end_seconds: 177.7600067138672
+  - type: update
+    segment_index: '007.0103'
+    new_end_seconds: 1379.32001953125
+  - type: update
+    segment_index: '007.0253'
+    new_end_seconds: 3379.979931640625
+  - type: update
+    segment_index: '010.0019'
+    new_end_seconds: 242.43999938964845
+  - type: update
+    segment_index: '010.0066'
+    new_end_seconds: 962.6800048828125
+  - type: update
+    segment_index: '010.0092'
+    new_end_seconds: 1333.0099609375
+  - type: update
+    segment_index: '010.0099'
+    new_end_seconds: 1417.310009765625
+  - type: update
+    segment_index: '010.0106'
+    new_end_seconds: 1506.94501953125
+  - type: update
+    segment_index: '010.0107'
+    new_end_seconds: 1515.6050537109375
+  - type: update
+    segment_index: '010.0149'
+    new_end_seconds: 2101.594921875
+  - type: update
+    segment_index: '013.0041'
+    new_end_seconds: 546.8850219726562
+  - type: update
+    segment_index: '013.0103'
+    new_end_seconds: 1471.0750244140625
+  - type: update
+    segment_index: '014.0052'
+    new_end_seconds: 809.3999755859375
+  - type: update
+    segment_index: '014.0059'
+    new_end_seconds: 908.894970703125
+  - type: update
+    segment_index: '015.0093'
+    new_end_seconds: 1349.6050537109375
+  - type: update
+    segment_index: '016.0005'
+    new_end_seconds: 85.3199966430664
+  - type: update
+    segment_index: '017.0071'
+    new_end_seconds: 1044.9400146484375
+  - type: update
+    segment_index: '018.0017'
+    new_end_seconds: 274.435009765625
+  - type: update
+    segment_index: '018.0102'
+    new_end_seconds: 1549.5750244140625
+  - type: update
+    segment_index: '018.0131'
+    new_end_seconds: 1942.8350341796875
+  - type: update
+    segment_index: '020.0177'
+    new_end_seconds: 2251.080029296875
+  - type: update
+    segment_index: '021.0193'
+    new_end_seconds: 2550.124951171875
+  - type: update
+    segment_index: '023.0089'
+    new_end_seconds: 1290.9199951171875
+  - type: update
+    segment_index: '023.0164'
+    new_end_seconds: 2297.65009765625
+  - type: update
+    segment_index: '029.0104'
+    new_end_seconds: 1434.225048828125
+  - type: update
+    segment_index: '030.0124'
+    new_end_seconds: 1721.1699951171875
+  - type: update
+    segment_index: '031.0076'
+    new_end_seconds: 1017.9900024414062
+  - type: update
+    segment_index: '033.0143'
+    new_end_seconds: 2071.0451171875
+  - type: update
+    segment_index: '034.0061'
+    new_end_seconds: 855.4300048828125
+  - type: update
+    segment_index: '034.0120'
+    new_end_seconds: 1676.1050537109375
+  - type: update
+    segment_index: '034.0122'
+    new_end_seconds: 1688.7200439453125
+  - type: update
+    segment_index: '035.0079'
+    new_end_seconds: 1091.5900390625
+  - type: update
+    segment_index: '039.0012'
+    new_end_seconds: 159.24500732421876
+  - type: update
+    segment_index: '039.0112'
+    new_end_seconds: 1490.9099853515625
+  - type: update
+    segment_index: '040.0045'
+    new_end_seconds: 537.2500122070312
+  - type: update
+    segment_index: '040.0169'
+    new_end_seconds: 2132.55
+  - type: update
+    segment_index: '041.0117'
+    new_end_seconds: 1636.2150390625
+  - type: update
+    segment_index: '042.0052'
+    new_end_seconds: 694.4900024414062
+  - type: update
+    segment_index: '042.0103'
+    new_end_seconds: 1484.61005859375
+  - type: update
+    segment_index: '045.0007'
+    new_end_seconds: 92.84000091552734
+  - type: update
+    segment_index: '045.0058'
+    new_end_seconds: 737.1599853515625
+  - type: update
+    segment_index: '046.0086'
+    new_end_seconds: 1218.23994140625
+  - type: update
+    segment_index: '048.0070'
+    new_end_seconds: 1037.8849609375
+  - type: update
+    segment_index: '050.0031'
+    new_end_seconds: 380.49000244140626
+  - type: update
+    segment_index: '050.0063'
+    new_end_seconds: 770.6699951171875
+  - type: update
+    segment_index: '060.0002'
+    new_end_seconds: 43.73000030517578
+  - type: update
+    segment_index: '078.0040'
+    new_end_seconds: 414.40000610351564
