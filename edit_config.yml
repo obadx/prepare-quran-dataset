@@ -1419,3 +1419,170 @@ configs:
   - type: update
     segment_index: '078.0042'
     new_end_seconds: 242.53999938964844
+- id: '3.0'
+  operations:
+  - type: update
+    segment_index: '002.0111'
+    new_end_seconds: 1336.7500244140624
+  - type: update
+    segment_index: '002.0130'
+    new_end_seconds: 1562.650048828125
+  - type: update
+    segment_index: '002.0213'
+    new_end_seconds: 2560.16494140625
+  - type: update
+    segment_index: '002.0347'
+    new_end_seconds: 4040.029931640625
+  - type: update
+    segment_index: '002.0576'
+    new_end_seconds: 6363.03017578125
+  - type: update
+    segment_index: '003.0133'
+    new_end_seconds: 1402.3099609375
+  - type: update
+    segment_index: '003.0216'
+    new_end_seconds: 2356.114892578125
+  - type: update
+    segment_index: '003.0227'
+    new_end_seconds: 2453.78994140625
+  - type: update
+    segment_index: '004.0382'
+    new_end_seconds: 4080.37978515625
+  - type: update
+    segment_index: '004.0415'
+    new_end_seconds: 4404.680078125
+  - type: update
+    segment_index: '005.0136'
+    new_end_seconds: 1545.295068359375
+  - type: update
+    segment_index: '006.0055'
+    new_end_seconds: 484.5000244140625
+  - type: update
+    segment_index: '006.0119'
+    new_end_seconds: 1140.755029296875
+  - type: update
+    segment_index: '006.0125'
+    new_end_seconds: 1211.0599609375
+  - type: update
+    segment_index: '006.0140'
+    new_end_seconds: 1362.2800537109374
+  - type: update
+    segment_index: '006.0142'
+    new_end_seconds: 1370.0000244140624
+  - type: update
+    segment_index: '006.0233'
+    new_end_seconds: 2322.839990234375
+  - type: update
+    segment_index: '006.0326'
+    new_end_seconds: 3296.819970703125
+  - type: update
+    segment_index: '007.0009'
+    new_end_seconds: 96.25999603271484
+  - type: update
+    segment_index: '007.0072'
+    new_end_seconds: 811.860009765625
+  - type: update
+    segment_index: '009.0062'
+    new_end_seconds: 650.0000244140625
+  - type: update
+    segment_index: '010.0014'
+    new_end_seconds: 115.79499969482421
+  - type: update
+    segment_index: '010.0049'
+    new_end_seconds: 492.4800048828125
+  - type: update
+    segment_index: '010.0072'
+    new_end_seconds: 720.2849975585938
+  - type: update
+    segment_index: '010.0079'
+    new_end_seconds: 766.0500122070313
+  - type: update
+    segment_index: '010.0080'
+    new_end_seconds: 770.0299926757813
+  - type: update
+    segment_index: '013.0030'
+    new_end_seconds: 318.46502075195315
+  - type: update
+    segment_index: '014.0040'
+    new_end_seconds: 392.82500610351565
+  - type: update
+    segment_index: '015.0088'
+    new_end_seconds: 672.6950317382813
+  - type: update
+    segment_index: '016.0004'
+    new_end_seconds: 37.71499786376953
+  - type: update
+    segment_index: '017.0054'
+    new_end_seconds: 577.1400390625
+  - type: update
+    segment_index: '018.0016'
+    new_end_seconds: 147.56499633789062
+  - type: update
+    segment_index: '018.0080'
+    new_end_seconds: 865.74501953125
+  - type: update
+    segment_index: '020.0146'
+    new_end_seconds: 1340.4499755859374
+  - type: update
+    segment_index: '021.0161'
+    new_end_seconds: 1485.8900390625
+  - type: update
+    segment_index: '023.0080'
+    new_end_seconds: 755.3750244140625
+  - type: update
+    segment_index: '029.0077'
+    new_end_seconds: 678.1950317382813
+  - type: update
+    segment_index: '031.0062'
+    new_end_seconds: 549.225
+  - type: update
+    segment_index: '033.0115'
+    new_end_seconds: 1140.380029296875
+  - type: update
+    segment_index: '034.0049'
+    new_end_seconds: 449.5300231933594
+  - type: update
+    segment_index: '034.0092'
+    new_end_seconds: 901.3349853515625
+  - type: update
+    segment_index: '034.0094'
+    new_end_seconds: 909.1150146484375
+  - type: update
+    segment_index: '038.0028'
+    new_end_seconds: 222.7649932861328
+  - type: update
+    segment_index: '039.0009'
+    new_end_seconds: 78.58500061035156
+  - type: update
+    segment_index: '039.0091'
+    new_end_seconds: 778.3900390625
+  - type: update
+    segment_index: '040.0037'
+    new_end_seconds: 288.5300231933594
+  - type: update
+    segment_index: '040.0136'
+    new_end_seconds: 1195.444970703125
+  - type: update
+    segment_index: '041.0093'
+    new_end_seconds: 934.0700317382813
+  - type: update
+    segment_index: '042.0046'
+    new_end_seconds: 371.2700134277344
+  - type: update
+    segment_index: '042.0091'
+    new_end_seconds: 767.5299926757813
+  - type: update
+    segment_index: '045.0007'
+    new_end_seconds: 64.94500122070312
+  - type: update
+    segment_index: '045.0049'
+    new_end_seconds: 442.5500122070313
+  - type: update
+    segment_index: '050.0025'
+    new_end_seconds: 190.8550048828125
+  - type: update
+    segment_index: '050.0053'
+    new_end_seconds: 397.225
+  - type: update
+    segment_index: '078.0041'
+    new_end_seconds: 222.3449951171875
