@@ -256,9 +256,6 @@ configs:
   - type: delete
     segment_index: '004.0062'
   - type: update
-    segment_index: '004.0384'
-    new_end_seconds: 6159.825
-  - type: update
     segment_index: '004.0417'
     new_end_seconds: 6624.92509765625
   - type: update
@@ -481,9 +478,6 @@ configs:
     segment_index: '048.0061'
     new_end_seconds: 839.4349853515625
   - type: update
-    segment_index: '050.0019'
-    new_end_seconds: 261.3000061035156
-  - type: update
     segment_index: '050.0027'
     new_end_seconds: 343.835009765625
   - type: update
@@ -496,6 +490,21 @@ configs:
   - type: update
     segment_index: '078.0039'
     new_end_seconds: 355.99501342773436
+  - type: delete
+    segment_index: '004.0385'
+  - type: update
+    segment_index: '004.0384'
+    new_end_seconds: 6165.240234375
+    new_tarteel_transcript:
+    - فَبِمَا نَقْضِهِم مِّيثَاقَهُمْ وَكُفْرِهِم بِآيَاتِ اللَّهِ وَقَتْلِهِمُ الْأَنبِيَاءَ
+      بِغَيْرِ حَقٍّ وَقَوْلِهِمْ قُلُوبُنَا غُلْفٌ
+  - type: delete
+    segment_index: '050.0020'
+  - type: update
+    segment_index: '050.0019'
+    new_end_seconds: 263.614990234375
+    new_tarteel_transcript:
+    - كُلٌّ كَذَّبَ الرُّسُلَ فَحَقَّ وَعِيدِ
 - id: '0.2'
   operations:
   - type: update
