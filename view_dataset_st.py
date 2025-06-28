@@ -66,6 +66,19 @@ def popup_message_rerun(msg: str, msg_type: str = "success"):
     st.session_state.popup_messages.append(PopupMessage(msg, msg_type))
 
 
+def save_to_config_to_disk():
+    # Save OPerations
+    st.session_state.edit_config.to_yaml(st.session_state.edit_config_path)
+    st.session_state.moshaf_to_seg_to_ops = (
+        st.session_state.edit_config.to_moshaf_dict()
+    )
+
+
+def delete_moshaf_operation(moshaf_id: str, op: Operation):
+    st.session_state.moshaf_id_to_config[moshaf_id].delete_operation(op)
+    save_to_config_to_disk()
+
+
 def save_moshaf_operation(moshaf_id: str, op: Operation):
     if moshaf_id not in st.session_state.moshaf_id_to_config:
         st.session_state.moshaf_id_to_config[moshaf_id] = MoshafEditConfig(
@@ -75,13 +88,9 @@ def save_moshaf_operation(moshaf_id: str, op: Operation):
             st.session_state.moshaf_id_to_config[moshaf_id]
         )
     else:
-        st.session_state.moshaf_id_to_config[moshaf_id].operations.append(op)
+        st.session_state.moshaf_id_to_config[moshaf_id].add_operation(op)
 
-    # Save OPerations
-    st.session_state.edit_config.to_yaml(st.session_state.edit_config_path)
-    st.session_state.moshaf_to_seg_to_ops = (
-        st.session_state.edit_config.to_moshaf_dict()
-    )
+    save_to_config_to_disk()
 
 
 def is_qlqla_kobra(text) -> bool:
@@ -228,6 +237,34 @@ def delete_item_with_confirmation(item: dict):
                 st.rerun()
 
 
+@st.dialog("هل أنت متأكد من حذف العملية?")
+def abort_opearation_with_confirmation(item: dict, op: Operation):
+    st.warning(
+        f"هل أنت متأكد من حذف عملية: **{op.type}** > **{item['segment_index']}** ?"
+    )
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button(
+            "نعم",
+            use_container_width=True,
+        ):
+            delete_moshaf_operation(item["moshaf_id"], op)
+            popup_message(
+                f"تم حذف العملية: **{op.type}** > **{item['segment_index']}**",
+                "success",
+            )
+            st.rerun()
+
+    with col2:
+        if st.button("لا", use_container_width=True):
+            popup_message(
+                "تم الإلغاء",
+                "info",
+            )
+            st.rerun()
+
+
 # Convert NumPy array to WAV bytes
 def numpy_to_wav_bytes(audio_array, sample_rate):
     # Normalize to 16-bit range (-32768 to 32767)
@@ -268,20 +305,31 @@ def display_audio_file(
                 for op in st.session_state.moshaf_to_seg_to_ops[item["moshaf_id"]][
                     item["segment_index"]
                 ]:
+                    op_cols = st.columns(5)
                     if op.type == "delete":
-                        st.write("DELETE ❌")
+                        with op_cols[0]:
+                            st.write("DELETE ❌")
                     elif op.type == "update":
-                        if st.button(
-                            "Update ℹ️",
-                            key=f"{key_prefix}_track_{item['segment_index']}_view_update",
-                        ):
-                            view_update_operation(item, op)
+                        with op_cols[0]:
+                            if st.button(
+                                "Update ℹ️",
+                                key=f"{key_prefix}_track_{item['segment_index']}_view_update",
+                            ):
+                                view_update_operation(item, op)
                     elif op.type == "insert":
+                        with op_cols[0]:
+                            if st.button(
+                                "Insert 📥",
+                                key=f"{key_prefix}_track_{item['segment_index']}_view_insert",
+                            ):
+                                view_insert_operation(item, op)
+
+                    with op_cols[-1]:
                         if st.button(
-                            "Insert 📥",
-                            key=f"{key_prefix}_track_{item['segment_index']}_view_insert",
+                            "Abort 🔄️❌",
+                            key=f"{key_prefix}_track_{item['segment_index']}_abort_op_{op.type}",
                         ):
-                            view_insert_operation(item, op)
+                            abort_opearation_with_confirmation(item, op)
 
         if ignore_load_button:
             wav_bytes = numpy_to_wav_bytes(item["audio"]["array"], 16000)

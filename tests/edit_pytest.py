@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from prepare_quran_dataset.annotate.edit import (
     MoshafEditConfig,
@@ -47,6 +48,7 @@ from prepare_quran_dataset.annotate.edit import (
                     Operation(
                         type="insert",
                         segment_index="112.0003",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
                     ),
@@ -62,6 +64,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0003",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -87,6 +90,7 @@ from prepare_quran_dataset.annotate.edit import (
                         segment_index="112.0004",
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
+                        new_start_seconds=3.22,
                     ),
                 ],
             ),
@@ -100,6 +104,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0004",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -120,12 +125,14 @@ from prepare_quran_dataset.annotate.edit import (
                         segment_index="112.0001",
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
+                        new_start_seconds=3.22,
                     ),
                     Operation(
                         type="insert",
                         segment_index="112.0003",
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
+                        new_start_seconds=3.22,
                     ),
                 ],
             ),
@@ -139,6 +146,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0001",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -156,6 +164,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0004",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -181,6 +190,7 @@ from prepare_quran_dataset.annotate.edit import (
                         segment_index="112.0001",
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
+                        new_start_seconds=3.22,
                     ),
                     Operation(
                         type="update",
@@ -192,6 +202,7 @@ from prepare_quran_dataset.annotate.edit import (
                         segment_index="112.0003",
                         new_tarteel_transcript="الحمد لله:",
                         new_audio_file="hamo.wav",
+                        new_start_seconds=3.22,
                     ),
                     Operation(
                         type="update",
@@ -210,6 +221,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0001",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -228,6 +240,7 @@ from prepare_quran_dataset.annotate.edit import (
                             new_segment_index="112.0004",
                             new_tarteel_transcript="الحمد لله:",
                             new_audio_file="hamo.wav",
+                            new_start_seconds=3.22,
                         ),
                         Operation(
                             type="update",
@@ -397,6 +410,7 @@ from prepare_quran_dataset.annotate.edit import (
                         type="insert",
                         segment_index="112.0001",
                         new_audio_file="hamo_insert.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
@@ -414,6 +428,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0001",
                             new_segment_index="112.0001",
                             new_audio_file="hamo_insert.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -443,12 +458,14 @@ from prepare_quran_dataset.annotate.edit import (
                         type="insert",
                         segment_index="112.0001",
                         new_audio_file="hamo_insert_1.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
                         type="insert",
                         segment_index="112.0002",
                         new_audio_file="hamo_insert_2.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
@@ -466,6 +483,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0001",
                             new_segment_index="112.0001",
                             new_audio_file="hamo_insert_1.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -478,6 +496,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0002",
                             new_segment_index="112.0003",
                             new_audio_file="hamo_insert_2.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -507,12 +526,14 @@ from prepare_quran_dataset.annotate.edit import (
                         type="insert",
                         segment_index="112.0001",
                         new_audio_file="hamo_insert_1.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
                         type="insert",
                         segment_index="112.0002",
                         new_audio_file="hamo_insert_2.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
@@ -540,6 +561,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0001",
                             new_segment_index="112.0001",
                             new_audio_file="hamo_insert_1.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -552,6 +574,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0002",
                             new_segment_index="112.0003",
                             new_audio_file="hamo_insert_2.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -583,18 +606,21 @@ from prepare_quran_dataset.annotate.edit import (
                         type="insert",
                         segment_index="112.0003",
                         new_audio_file="hamo_insert_1_1.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
                         type="insert",
                         segment_index="113.0001",
                         new_audio_file="hamo_insert_1.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
                         type="insert",
                         segment_index="113.0002",
                         new_audio_file="hamo_insert_2.wav",
+                        new_start_seconds=3.22,
                         new_tarteel_transcript="بسم الله الرحمن الرحيم",
                     ),
                     Operation(
@@ -622,6 +648,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="112.0003",
                             new_segment_index="112.0003",
                             new_audio_file="hamo_insert_1_1.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -639,6 +666,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="113.0001",
                             new_segment_index="113.0001",
                             new_audio_file="hamo_insert_1.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -656,6 +684,7 @@ from prepare_quran_dataset.annotate.edit import (
                             segment_index="113.0002",
                             new_segment_index="113.0003",
                             new_audio_file="hamo_insert_2.wav",
+                            new_start_seconds=3.22,
                             new_tarteel_transcript="بسم الله الرحمن الرحيم",
                         ),
                         Operation(
@@ -692,6 +721,7 @@ from prepare_quran_dataset.annotate.edit import (
         #                 type="insert",
         #                 segment_index="112.0005",
         #                 new_audio_file="hamo.wav",
+        #               new_start_seconds=3.22,
         #                 new_tarteel_transcript="الحمد لله",
         #             )
         #         ],
@@ -706,6 +736,7 @@ from prepare_quran_dataset.annotate.edit import (
         #                     new_segment_index="112.0005",
         #                     new_tarteel_transcript="الحمد لله",
         #                     new_audio_file="hamo.wav",
+        #               new_start_seconds=3.22,
         #                 )
         #             ],
         #         )
@@ -762,3 +793,62 @@ def test_plan_operations(
                     f"Expected Operation\n:{json.dumps(ex_op.model_dump(), ensure_ascii=False, indent=4)}"
                 )
                 raise ValueError()
+
+
+def test_invalid_insert():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="insert",
+            segment_index="001.0001",
+        )
+
+
+def test_invalid_insert_missing_start():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="insert",
+            segment_index="001.0001",
+            new_audio_file="./hamo.wav",
+        )
+
+
+def test_invalid_insert_end_and_audio():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="insert",
+            segment_index="001.0001",
+            new_end_seconds=3.3,
+            new_audio_file="./hamo.wav",
+        )
+
+
+def test_invalid_insert_start_and_end_and_aduio():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="insert",
+            segment_index="001.0001",
+            new_start_seconds=0,
+            new_end_seconds=3.3,
+            new_audio_file="./hamo.wav",
+        )
+
+
+def test_invalid_upate_start_and_end_and_aduio():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="update",
+            segment_index="001.0001",
+            new_end_seconds=3.3,
+            new_start_seconds=2.1,
+            new_audio_file="./hamo.wav",
+        )
+
+
+def test_invalid_upate_end_and_aduio():
+    with pytest.raises(ValidationError):
+        Operation(
+            type="update",
+            segment_index="001.0001",
+            new_end_seconds=3.3,
+            new_audio_file="./hamo.wav",
+        )

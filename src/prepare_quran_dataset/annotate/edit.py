@@ -204,6 +204,9 @@ class Operation(BaseModel):
 
         return item
 
+    def get_key(self):
+        return f"{self.segment_index}_{self.type}"
+
 
 class MoshafEditConfig(BaseModel):
     id: str
@@ -239,8 +242,21 @@ class MoshafEditConfig(BaseModel):
 
         return self
 
+    def add_operation(self, new_op: Operation):
+        self.operations.append(new_op)
+
+    def delete_operation(self, to_del_op: Operation):
+        to_del_idx = None
+        for idx, op in enumerate(self.operations):
+            if op.get_key() == to_del_op.get_key():
+                to_del_idx = idx
+                break
+
+        if to_del_idx is not None:
+            del self.operations[to_del_idx]
+
     def sura_format(self):
-        """returns a dictionary: sura_index: segment_index, list(segment_operationsj)"""
+        """returns a dictionary: sura_index: segment_index, list[segment_operations]"""
         seg_to_operations: dict[str, list] = {}
         for op in self.operations:
             if op.segment_index not in seg_to_operations:
