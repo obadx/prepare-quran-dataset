@@ -474,10 +474,9 @@ def display_suar_end(ds: Dataset):
     seg_to_idx = ds["segment_index"]
     chose_ids = []
     for idx in range(len(seg_to_idx) - 1):
-        if seg_to_idx[idx] != seg_to_idx[idx + 1]:
+        if seg_to_idx[idx].split(".")[0] != seg_to_idx[idx + 1].split(".")[0]:
             chose_ids.append(idx)
     chose_ids.append(len(seg_to_idx) - 1)
-    print(chose_ids)
 
     for idx in chose_ids:
         display_audio_file(ds[idx], key_prefix="end", ignore_load_button=True)
