@@ -462,6 +462,26 @@ def display_qlqla_kobra(ds: Dataset):
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
+def display_suar_beginning(ds: Dataset):
+    f_ds = ds.filter(
+        lambda ex: int(ex["segment_index"].split(".")[1]) == 0, num_proc=16
+    )
+    for item in f_ds:
+        display_audio_file(item, key_prefix="begin", ignore_load_button=True)
+
+
+def display_suar_end(ds: Dataset):
+    seg_to_idx = ds["segment_index"]
+    chose_ids = []
+    for idx in range(len(seg_to_idx) - 1):
+        if seg_to_idx[idx] != seg_to_idx[idx + 1]:
+            chose_ids.append(idx)
+    chose_ids.append(len(seg_to_idx) - 1)
+
+    for idx in chose_ids:
+        display_audio_file(ds[idx], key_prefix="end", ignore_load_button=True)
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
     st.write(f"عدد المقاطع: {len(ds)}")
@@ -470,6 +490,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     col1, col2, col3, col4 = st.columns(4)
     stat_coumns = st.columns(4)
     qlqal_columns = st.columns(3)
+    sura_stat_columns = st.columns(4)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -552,6 +573,28 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.display_qlqla:
             st.subheader("القلقة الكبرى")
             display_qlqla_kobra(ds)
+
+    with sura_stat_columns[3]:
+        if st.button("أظهر أوائل السور", use_container_width=True):
+            st.session_state.view_suar_beginning = True
+    with sura_stat_columns[2]:
+        if st.button("اخف أوائل السور", use_container_width=True):
+            st.session_state.view_suar_beginning = False
+    with sura_stat_columns[1]:
+        if st.button("أظهر أواخر السور", use_container_width=True):
+            st.session_state.view_suar_end = True
+    with sura_stat_columns[2]:
+        if st.button("اخف أواخر السور", use_container_width=True):
+            st.session_state.view_suar_end = False
+
+    if "view_suar_beginning" in st.session_state:
+        if st.session_state.view_suar_beginning:
+            st.subheader("أوائل السور")
+            display_suar_beginning(ds)
+    if "view_suar_end" in st.session_state:
+        if st.session_state.view_suar_end:
+            st.subheader("أواخر السور")
+            display_suar_end(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx)
