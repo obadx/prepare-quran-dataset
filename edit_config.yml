@@ -1127,12 +1127,6 @@ configs:
     segment_index: '050.0053'
     new_end_seconds: 407.2700134277344
   - type: update
-    segment_index: '058.0031'
-    new_end_seconds: 260.32
-  - type: update
-    segment_index: '058.0032'
-    new_start_seconds: 260.1
-  - type: update
     segment_index: '060.0002'
     new_end_seconds: 27.325000381469728
   - type: update
@@ -3476,6 +3470,50 @@ configs:
     segment_index: '053.0032'
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: update
+    segment_index: '019.0136'
+    new_tarteel_transcript:
+    - كَلَّا
+  - type: update
+    segment_index: '038.0088'
+    new_tarteel_transcript:
+    - هَٰذَا
+  - type: update
+    segment_index: '047.0009'
+    new_tarteel_transcript:
+    - ذَٰلِكَ
+  - type: update
+    segment_index: '002.0566'
+    new_tarteel_transcript:
+    - لِمَنِ اتَّقَىٰ
+  - type: update
+    segment_index: '009.0207'
+    new_tarteel_transcript:
+    - ' هِيَ حَسْبُهُمْ'
+  - type: update
+    segment_index: '016.0112'
+    new_tarteel_transcript:
+    - فَتَمَتَّعُوا
+  - type: update
+    segment_index: '026.0065'
+    new_tarteel_transcript:
+    - قَالَ كَلَّا
+  - type: update
+    segment_index: '037.0022'
+    new_tarteel_transcript:
+    - وَقِفُوهُمْ
+  - type: update
+    segment_index: '037.0149'
+    new_tarteel_transcript:
+    - فَكَفَرُوا بِهِ
+  - type: update
+    segment_index: '038.0052'
+    new_tarteel_transcript:
+    - ' نِعْمَ الْعَبْدُ'
+  - type: update
+    segment_index: '050.0060'
+    new_tarteel_transcript:
+    - وَاسْتَمِعْ
 - id: '5.0'
   operations:
   - type: update
