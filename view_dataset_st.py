@@ -477,6 +477,7 @@ def display_suar_end(ds: Dataset):
         if seg_to_idx[idx] != seg_to_idx[idx + 1]:
             chose_ids.append(idx)
     chose_ids.append(len(seg_to_idx) - 1)
+    print(chose_ids)
 
     for idx in chose_ids:
         display_audio_file(ds[idx], key_prefix="end", ignore_load_button=True)
@@ -583,7 +584,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     with sura_stat_columns[1]:
         if st.button("أظهر أواخر السور", use_container_width=True):
             st.session_state.view_suar_end = True
-    with sura_stat_columns[2]:
+    with sura_stat_columns[0]:
         if st.button("اخف أواخر السور", use_container_width=True):
             st.session_state.view_suar_end = False
 
