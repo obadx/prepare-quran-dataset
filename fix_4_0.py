@@ -156,6 +156,31 @@ def transcribe_and_save_operations(
             print(f"Track path: {track_path} is previously annotated")
 
 
+def merge_edits(moshaf_id, edit_config_path, moshaf_edit_config_path):
+    edit_config = EditConfig.from_yaml(edit_config_path)
+    new_moshaf_edit_config = EditConfig.from_yaml(moshaf_edit_config_path).configs[0]
+    for moshaf_edit_config in edit_config.configs:
+        if moshaf_edit_config.id == moshaf_id:
+            old_moshaf_edit_config = moshaf_edit_config
+            break
+
+    new_seg_to_ops = {op.segment_index: op for op in new_moshaf_edit_config.operations}
+    to_del_ops = []
+    for op in old_moshaf_edit_config.operations:
+        if op.segment_index in new_seg_to_ops:
+            to_del_ops.append(op)
+
+    for op in to_del_ops:
+        print(f"Deleting operations: {op}")
+        old_moshaf_edit_config.delete_operation(op)
+
+    # adding new_operations
+    for op in new_moshaf_edit_config.operations:
+        old_moshaf_edit_config.add_operation(op)
+
+    edit_config.to_yaml(edit_config_path)
+
+
 if __name__ == "__main__":
     sura_list = [
         6,
@@ -196,6 +221,7 @@ if __name__ == "__main__":
     ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
     moshaf_id = "4.0"
     moshaf_edit_config_path = f"./edit_config_{moshaf_id}.yml"
+    edit_config_path = "./edit_config.yml"
     fixes_path = Path(ds_path) / f"moshaf-fixes/{moshaf_id}"
     cache_dir = f".fix_{moshaf_id}_cache"
     batch_size = 8
@@ -251,3 +277,10 @@ if __name__ == "__main__":
         sample_rate=16000,
         vllm_endpoint=vllm_endpoint,
     )
+
+    merge_edits(
+        moshaf_id=moshaf_id,
+        edit_config_path=edit_config_path,
+        moshaf_edit_config_path=moshaf_edit_config_path,
+    )
+
