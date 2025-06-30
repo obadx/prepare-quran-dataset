@@ -202,7 +202,7 @@ if __name__ == "__main__":
     sample_rate = 16000
     chunk_sec = 80
     vllm_endpoint = ("http://localhost:8000/v1",)
-    device = torch.device("cuda")
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     dtype = torch.bfloat16
     processor = AutoFeatureExtractor.from_pretrained("obadx/recitation-segmenter-v2")
     model = AutoModelForAudioFrameClassification.from_pretrained(
@@ -251,3 +251,4 @@ if __name__ == "__main__":
         sample_rate=16000,
         vllm_endpoint=vllm_endpoint,
     )
+
