@@ -1,0 +1,171 @@
+configs:
+- id: '4.0'
+  operations:
+  - type: update
+    segment_index: '006.0409'
+    new_audio_file: 006_1.wav
+    new_tarteel_transcript:
+    - إِنَّ رَبَّكَ سَرِيعٌ لِقَابِ وَإِنَّهُ لَغَفُورٌ رَحِيمٌ
+  - type: update
+    segment_index: '008.0153'
+    new_audio_file: 008_1.wav
+    new_tarteel_transcript:
+    - إِنَّ اللَّهَ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: update
+    segment_index: '012.0237'
+    new_audio_file: 012_1.wav
+    new_tarteel_transcript:
+    - وَتَفْصِيلَ كُلِّ شَيْءٍ وَهُدًى وَرَحْمَةً لِقَوْمٍ يُؤْمِنُونَ
+  - type: update
+    segment_index: '013.0117'
+    new_audio_file: 013_1.wav
+    new_tarteel_transcript:
+    - قُلْ كَفَى بِاللَّهِ شَهِيدًا بَيْنِي وَبَيْنَكُمْ وَمَنْ عِنْدَهُ عِلْمُ الْكِتَابِ
+  - type: update
+    segment_index: '014.0112'
+    new_audio_file: 014_1.wav
+    new_tarteel_transcript:
+    - هَذَا بَلَاغٌ لِلنَّاسِ وَلِيُنْذَرُوا بِهِ وَلِيَعْلَمُوا أَنَّمَا هُوَ إِلَهٌ
+      وَاحِدٌ وَلِيَذَّكَّرَ أُولُو الْأَلْبَابِ
+  - type: update
+    segment_index: '015.0105'
+    new_audio_file: 015_1.wav
+    new_tarteel_transcript:
+    - وَاعْبُدْ رَبَّكَ حَتَّى يَأْتِيَكَ الْيَقِينُ
+  - type: update
+    segment_index: '017.0188'
+    new_audio_file: 017_1.wav
+    new_tarteel_transcript:
+    - وَقُلِ الْحَمْدُ لِلَّهِ الَّذِي لَمْ يَتَّخِذْ وَلَدًا وَلَمْ يَكُنْ لَهُ شَدِيكٌ
+      فِي الْمُلْكِ وَلَمْ يَكُنْ لَهُ وَلِيٌّ مِنَ الذُّلِّ وَكَبِّرْهُ تَكْبِيرًا
+  - type: update
+    segment_index: '023.0155'
+    new_audio_file: 023_1.wav
+    new_tarteel_transcript:
+    - وَقُلْ رَبِّ اغْفِرْ وَارْحَمْ وَأَنْتَ خَيْرُ الرَّاحِمِينَ
+  - type: update
+    segment_index: '025.0115'
+    new_audio_file: 025_1.wav
+    new_tarteel_transcript:
+    - فَقَدْ كَذَّبْتُمْ فَسَوْفَ يَكُونُ لِزَامًا
+  - type: update
+    segment_index: '030.0110'
+    new_audio_file: 030_1.wav
+    new_tarteel_transcript:
+    - وَلَا يَسْتَخِفَّنَّكَ الَّذِينَ لَا يُوقِنُونَ
+  - type: update
+    segment_index: '033.0160'
+    new_audio_file: 033_1.wav
+    new_tarteel_transcript:
+    - وَكَانَ اللَّهُ غَفُورًا رَحِيمًا
+  - type: update
+    segment_index: '034.0111'
+    new_audio_file: 034_1.wav
+    new_tarteel_transcript:
+    - إِنَّهُمْ كَانُوا فِي شَكٍّ مُرِيبٍ
+  - type: update
+    segment_index: '035.0113'
+    new_audio_file: 035_1.wav
+    new_tarteel_transcript:
+    - فَإِذَا جَاءَ أَجَلُهُمْ فَإِنَّ اللَّهَ كَانَ بِعِبَادِهِ بَصِيرًا
+  - type: update
+    segment_index: '036.0105'
+    new_audio_file: 036_1.wav
+    new_tarteel_transcript:
+    - فَسُبْحَانَ الَّذِي بِيَدِهِ مَلَكُوتُ كُلِّ شَيْءٍ وَإِلَيْهِ تُرْجَعُونَ
+  - type: update
+    segment_index: '037.0194'
+    new_audio_file: 037_1.wav
+    new_tarteel_transcript:
+    - وَالْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+  - type: update
+    segment_index: '039.0162'
+    new_audio_file: 039_1.wav
+    new_tarteel_transcript:
+    - وَقُضِيَ بَيْنَهُمْ بِالْحَقِّ وَقِيلَ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+  - type: update
+    segment_index: '040.0155'
+    new_audio_file: 040_1.wav
+    new_tarteel_transcript:
+    - وَخَسِرَ هُنَالِكَ الْكَافِرُونَ
+  - type: update
+    segment_index: '042.0125'
+    new_audio_file: 042_1.wav
+    new_tarteel_transcript:
+    - أَلَا إِلَى اللَّهِ تَصِيرُ الْأُمُورُ
+  - type: update
+    segment_index: '043.0123'
+    new_audio_file: 043_1.wav
+    new_tarteel_transcript:
+    - فَسَوْفَ يَعْلَمُونَ
+  - type: update
+    segment_index: '044.0076'
+    new_audio_file: 044_1.wav
+    new_tarteel_transcript:
+    - فَارْتَقِبْ إِنَّهُمْ مُرْتَقِبُونَ
+  - type: update
+    segment_index: '045.0062'
+    new_audio_file: 045_1.wav
+    new_tarteel_transcript:
+    - وَهُوَ الْعَزِيزُ الْحَكِيمُ
+  - type: update
+    segment_index: '046.0074'
+    new_audio_file: 046_1.wav
+    new_tarteel_transcript:
+    - فَهَلْ يُهْلَكُ إِلَّا الْقَوْمُ الْفَاسِقُونَ
+  - type: update
+    segment_index: '047.0072'
+    new_audio_file: 047_1.wav
+    new_tarteel_transcript:
+    - وَإِنْ تَتَوَلَّوْا يَسْتَبْدِلْ قَوْمًا غَيْرَكُمْ ثُمَّ لَا يَكُونُوا أَمْثَالَكُمْ
+  - type: update
+    segment_index: '048.0075'
+    new_audio_file: 048_1.wav
+    new_tarteel_transcript:
+    - وَعَدَ اللَّهُ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ مِنْهُمْ مَغْفِرَةً
+      وَأَجْرًا عَظِيمًا
+  - type: update
+    segment_index: '049.0052'
+    new_audio_file: 049_1.wav
+    new_tarteel_transcript:
+    - وَاللَّهُ بَصِيرٌ بِمَا تَعْمَلُونَ
+  - type: update
+    segment_index: '050.0062'
+    new_audio_file: 050_1.wav
+    new_tarteel_transcript:
+    - فَذَكِّرْ بِالْقُرْآنِ مَنْ يَخَافُ وَعِيدٌ
+  - type: update
+    segment_index: '051.0071'
+    new_audio_file: 051_1.wav
+    new_tarteel_transcript:
+    - فَوَيْلٌ لِلَّذِينَ كَفَرُوا مِنْ يَوْمِهِمُ الَّذِي يُوعَدُونَ
+  - type: update
+    segment_index: '052.0061'
+    new_audio_file: 052_1.wav
+    new_tarteel_transcript:
+    - وَمِنَ اللَّيْلِ فَسَبِّحْهُ وَإِدْبَارَ النُّجُومِ
+  - type: update
+    segment_index: '053.0071'
+    new_audio_file: 053_1.wav
+    new_tarteel_transcript:
+    - فَاسْجُدُوا لِلَّهِ وَاعْبُدُوا
+  - type: update
+    segment_index: '055.0081'
+    new_audio_file: 055_1.wav
+    new_tarteel_transcript:
+    - تَبَارَكَ اسْمُ رَبِّكَ ذِي الْجَلَالِ وَالْإِكْرَامِ
+  - type: update
+    segment_index: '056.0099'
+    new_audio_file: 056_1.wav
+    new_tarteel_transcript:
+    - فَسَبِّحْ بِاسْمِ رَبِّكَ الْعَظِيمِ
+  - type: update
+    segment_index: '059.0058'
+    new_audio_file: 059_1.wav
+    new_tarteel_transcript:
+    - وَهُوَ الْعَزِيزُ الْحَكِيمُ
+  - type: update
+    segment_index: '077.0051'
+    new_audio_file: 077_1.wav
+    new_tarteel_transcript:
+    - فَبِأَيِّ حَدِيثٍ بَعْدَهُ يُؤْمِنُونَ
