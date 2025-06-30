@@ -196,7 +196,7 @@ if __name__ == "__main__":
     ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
     moshaf_id = "4.0"
     moshaf_edit_config_path = f"./edit_config_{moshaf_id}.yml"
-    fixes_path = f"../moshaf-fixes/{moshaf_id}"
+    fixes_path = Path(ds_path) / f"moshaf-fixes/{moshaf_id}"
     cache_dir = f".fix_{moshaf_id}_cache"
     batch_size = 8
     sample_rate = 16000
