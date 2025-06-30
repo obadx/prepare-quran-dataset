@@ -169,7 +169,7 @@ class Operation(BaseModel):
             )[0]
 
         # some audio files has delay between channels which cause reducing quality if using mono
-        if first_channel_only:
+        if len(wave.shape) == 2:
             wave = wave[0]
 
         return {
