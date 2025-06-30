@@ -1583,6 +1583,8 @@ configs:
     new_end_seconds: 242.53999938964844
 - id: '3.0'
   operations:
+  - type: delete
+    segment_index: '001.0008'
   - type: update
     segment_index: '002.0111'
     new_end_seconds: 1336.7500244140624
@@ -1638,6 +1640,10 @@ configs:
     segment_index: '009.0062'
     new_end_seconds: 650.0000244140625
   - type: update
+    segment_index: '009.0147'
+    new_tarteel_transcript:
+    - ' هِيَ حَسْبُهُمْ'
+  - type: update
     segment_index: '010.0049'
     new_end_seconds: 492.4800048828125
   - type: update
@@ -1665,11 +1671,28 @@ configs:
     segment_index: '020.0146'
     new_end_seconds: 1340.4499755859374
   - type: update
+    segment_index: '021.0005'
+    new_end_seconds: 45.14999771118164
+    new_tarteel_transcript:
+    - أَفَتَأْتُونَ السِّحْرَ وَأَنتُمْ تُبْصِرُونَ
+  - type: delete
+    segment_index: '021.0006'
+  - type: update
     segment_index: '021.0161'
     new_end_seconds: 1485.8900390625
   - type: update
+    segment_index: '022.0160'
+    new_tarteel_transcript:
+    - هُوَ اجْتَبَاكُمْ
+  - type: update
     segment_index: '023.0080'
     new_end_seconds: 755.3750244140625
+  - type: update
+    segment_index: '026.0012'
+    new_end_seconds: 82.05
+  - type: update
+    segment_index: '026.0013'
+    new_start_seconds: 82.0
   - type: update
     segment_index: '029.0077'
     new_end_seconds: 678.1950317382813
@@ -1692,6 +1715,13 @@ configs:
     segment_index: '038.0028'
     new_end_seconds: 222.7649932861328
   - type: update
+    segment_index: '038.0054'
+    new_end_seconds: 482.4000244140625
+    new_tarteel_transcript:
+    - هَٰذَا عَطَاؤُنَا فَامْنُنْ أَوْ أَمْسِكْ بِغَيْرِ حِسَابٍ
+  - type: delete
+    segment_index: '038.0055'
+  - type: update
     segment_index: '039.0009'
     new_end_seconds: 78.58500061035156
   - type: update
@@ -1706,6 +1736,13 @@ configs:
   - type: update
     segment_index: '041.0093'
     new_end_seconds: 934.0700317382813
+  - type: update
+    segment_index: '042.0034'
+    new_end_seconds: 283.6100158691406
+    new_tarteel_transcript:
+    - وَلَا تَتَّبِعْ أَهْوَاءَهُمْ
+  - type: delete
+    segment_index: '042.0035'
   - type: update
     segment_index: '042.0046'
     new_end_seconds: 371.2700134277344
@@ -1723,53 +1760,16 @@ configs:
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
   - type: update
-    segment_index: '078.0041'
-    new_end_seconds: 222.3449951171875
-  - type: update
-    segment_index: '009.0147'
-    new_tarteel_transcript:
-    - ' هِيَ حَسْبُهُمْ'
-  - type: update
-    segment_index: '022.0160'
-    new_tarteel_transcript:
-    - هُوَ اجْتَبَاكُمْ
-  - type: update
-    segment_index: '026.0012'
-    new_end_seconds: 82.05
-  - type: update
-    segment_index: '026.0013'
-    new_start_seconds: 82.0
-  - type: delete
-    segment_index: '001.0008'
-  - type: delete
-    segment_index: '021.0006'
-  - type: update
-    segment_index: '021.0005'
-    new_end_seconds: 45.14999771118164
-    new_tarteel_transcript:
-    - أَفَتَأْتُونَ السِّحْرَ وَأَنتُمْ تُبْصِرُونَ
-  - type: delete
-    segment_index: '038.0055'
-  - type: update
-    segment_index: '038.0054'
-    new_end_seconds: 482.4000244140625
-    new_tarteel_transcript:
-    - هَٰذَا عَطَاؤُنَا فَامْنُنْ أَوْ أَمْسِكْ بِغَيْرِ حِسَابٍ
-  - type: delete
-    segment_index: '042.0035'
-  - type: update
-    segment_index: '042.0034'
-    new_end_seconds: 283.6100158691406
-    new_tarteel_transcript:
-    - وَلَا تَتَّبِعْ أَهْوَاءَهُمْ
-  - type: delete
-    segment_index: '057.0065'
-  - type: update
     segment_index: '057.0064'
     new_end_seconds: 602.3900146484375
     new_tarteel_transcript:
     - وَرَهْبَانِيَّةً ابْتَدَعُوهَا مَا كَتَبْنَاهَا عَلَيْهِمْ إِلَّا ابْتِغَاءَ
       رِضْوَانِ اللَّهِ فَمَا رَعَوْهَا حَقَّ رِعَايَتِهَا
+  - type: delete
+    segment_index: '057.0065'
+  - type: update
+    segment_index: '078.0041'
+    new_end_seconds: 222.3449951171875
 - id: '4.0'
   operations:
   - type: update
@@ -1787,6 +1787,10 @@ configs:
   - type: update
     segment_index: '002.0628'
     new_end_seconds: 5974.65009765625
+  - type: update
+    segment_index: '003.0058'
+    new_tarteel_transcript:
+    - ' بِيَدِكَ الْخَيْرُ'
   - type: update
     segment_index: '003.0138'
     new_end_seconds: 1278.44501953125
@@ -1919,6 +1923,14 @@ configs:
   - type: update
     segment_index: '035.0013'
     new_end_seconds: 117.61500244140625
+  - type: update
+    segment_index: '036.0102'
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '037.0025'
+    new_tarteel_transcript:
+    - وَقِفُوهُمْ
   - type: update
     segment_index: '039.0010'
     new_end_seconds: 91.92000274658203
@@ -3467,22 +3479,6 @@ configs:
 - id: '3.1'
   operations:
   - type: update
-    segment_index: '053.0032'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: update
-    segment_index: '019.0136'
-    new_tarteel_transcript:
-    - كَلَّا
-  - type: update
-    segment_index: '038.0088'
-    new_tarteel_transcript:
-    - هَٰذَا
-  - type: update
-    segment_index: '047.0009'
-    new_tarteel_transcript:
-    - ذَٰلِكَ
-  - type: update
     segment_index: '002.0566'
     new_tarteel_transcript:
     - لِمَنِ اتَّقَىٰ
@@ -3494,6 +3490,10 @@ configs:
     segment_index: '016.0112'
     new_tarteel_transcript:
     - فَتَمَتَّعُوا
+  - type: update
+    segment_index: '019.0136'
+    new_tarteel_transcript:
+    - كَلَّا
   - type: update
     segment_index: '026.0065'
     new_tarteel_transcript:
@@ -3511,9 +3511,21 @@ configs:
     new_tarteel_transcript:
     - ' نِعْمَ الْعَبْدُ'
   - type: update
+    segment_index: '038.0088'
+    new_tarteel_transcript:
+    - هَٰذَا
+  - type: update
+    segment_index: '047.0009'
+    new_tarteel_transcript:
+    - ذَٰلِكَ
+  - type: update
     segment_index: '050.0060'
     new_tarteel_transcript:
     - وَاسْتَمِعْ
+  - type: update
+    segment_index: '053.0032'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
 - id: '5.0'
   operations:
   - type: update
