@@ -140,7 +140,7 @@ def transcribe_and_save_operations(
                 type="update",
                 segment_index=segment_index,
                 new_tarteel_transcript=tarteel_transcript,
-                new_audio_file=str(track_path.relative_to(media_track_path)),
+                new_audio_file=str(track_path.relative_to(media_track_path.parent)),
             )
             if not edit_config_path.is_file():
                 edit_config = EditConfig(
@@ -283,4 +283,3 @@ if __name__ == "__main__":
         edit_config_path=edit_config_path,
         moshaf_edit_config_path=moshaf_edit_config_path,
     )
-
