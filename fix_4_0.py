@@ -193,11 +193,11 @@ if __name__ == "__main__":
         77,
     ]
     download_path = "/home/abdullah/Downloads/4_0_missing/"
-    fixes_path = "../moshaf-fixes/4.0"
-    moshaf_edit_config_path = "./edit_config_4_0.yml"
-    ds_path = ""
+    ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
     moshaf_id = "4.0"
-    cache_dir = ".fix_4_cache"
+    moshaf_edit_config_path = f"./edit_config_{moshaf_id}.yml"
+    fixes_path = f"../moshaf-fixes/{moshaf_id}"
+    cache_dir = f".fix_{moshaf_id}_cache"
     batch_size = 8
     sample_rate = 16000
     chunk_sec = 80
@@ -216,7 +216,14 @@ if __name__ == "__main__":
 
     model.to(device, dtype=dtype)
 
+    fixes_path = Path(fixes_path)
     for sura_idx in sura_list:
+        sura_str = f"{sura_idx:03d}"
+        sura_converted_tracks = list(fixes_path.glob(f"{sura_str}*"))
+        if len(sura_converted_tracks) == 2:
+            print(f"Skipping Loading: {sura_str}")
+            continue
+
         sura_info = get_sura_track_info(sura_idx, download_path)
         segment_and_save(
             model=model,
@@ -239,9 +246,8 @@ if __name__ == "__main__":
         sura_list=sura_list,
         sura_idx_to_last_segment_index=sura_idx_to_last_seg_idx,
         edit_config_path=moshaf_edit_config_path,
-        media_track_path=Path(fixes_path) / moshaf_id,
+        media_track_path=fixes_path,
         chosen_idx=1,
         sample_rate=16000,
         vllm_endpoint=vllm_endpoint,
     )
-
