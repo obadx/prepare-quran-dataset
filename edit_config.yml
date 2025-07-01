@@ -212,9 +212,6 @@ configs:
   - type: delete
     segment_index: '096.0013'
   - type: update
-    segment_index: '008.0039'
-    new_end_seconds: 548.2950439453125
-  - type: update
     segment_index: '022.0074'
     new_audio_file: 0.0/022_0074.wav
     new_tarteel_transcript:
@@ -226,6 +223,9 @@ configs:
     - يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَتَّخِذُوا آبَاءَكُمْ وَإِخْوَانَكُمْ أَوْلِيَاءَ
       إِنِ اسْتَحَبُّوا الْكُفْرَ عَلَى الْإِيمَانِ وَمَن يَتَوَلَّهُم مِّنكُمْ فَأُولَٰئِكَ
       هُمُ الظَّالِمُونَ
+  - type: update
+    segment_index: '008.0039'
+    new_audio_file: 0.0/008_0039.wav
 - id: '0.1'
   operations:
   - type: update
