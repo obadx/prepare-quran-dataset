@@ -56,13 +56,8 @@ configs:
   - type: update
     segment_index: '007.0170'
     new_end_seconds: 2200.8599609375
-  - type: update
-    segment_index: '008.0039'
-    new_audio_file: 0.0/008_0039.wav
   - type: delete
     segment_index: '008.0040'
-  - type: delete
-    segment_index: '009.0042'
   - type: delete
     segment_index: '009.0043'
   - type: update
@@ -141,8 +136,6 @@ configs:
   - type: update
     segment_index: '021.0135'
     new_end_seconds: 1653.5400146484376
-  - type: delete
-    segment_index: '022.0074'
   - type: update
     segment_index: '026.0146'
     new_audio_file: 0.0/026_0146.wav
@@ -218,6 +211,21 @@ configs:
     - أَو أَمَرَ بِالتَّقوىٰ
   - type: delete
     segment_index: '096.0013'
+  - type: update
+    segment_index: '008.0039'
+    new_end_seconds: 548.2950439453125
+  - type: update
+    segment_index: '022.0074'
+    new_audio_file: 0.0/022_0074.wav
+    new_tarteel_transcript:
+    - وَإِنَّ يَوْمًا عِندَ رَبِّكَ كَأَلْفِ سَنَةٍ مِّمَّا تَعُدُّونَ
+  - type: update
+    segment_index: '009.0042'
+    new_audio_file: 0.0/009_0042.wav
+    new_tarteel_transcript:
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَتَّخِذُوا آبَاءَكُمْ وَإِخْوَانَكُمْ أَوْلِيَاءَ
+      إِنِ اسْتَحَبُّوا الْكُفْرَ عَلَى الْإِيمَانِ وَمَن يَتَوَلَّهُم مِّنكُمْ فَأُولَٰئِكَ
+      هُمُ الظَّالِمُونَ
 - id: '0.1'
   operations:
   - type: update
