@@ -128,10 +128,14 @@ def add_operation(item: dict, operation_type: Literal["insert", "update"]):
             value=item["tarteel_transcript"][0],
         )
         new_start_seconds = st.number_input(
-            "new_start_seconds", value=item["timestamp_seconds"][0]
+            "new_start_seconds",
+            value=item["timestamp_seconds"][0],
+            step=0.001,
         )
         new_end_seconds = st.number_input(
-            "new_end_seconds", value=item["timestamp_seconds"][1]
+            "new_end_seconds",
+            value=item["timestamp_seconds"][1],
+            step=0.001,
         )
         new_audio_file = st.text_input("audio_file")
 
