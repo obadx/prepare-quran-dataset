@@ -3741,6 +3741,35 @@ configs:
     segment_index: '089.0001'
     new_tarteel_transcript:
     - وَالْفَجْرِ
+  - type: delete
+    segment_index: '016.0051'
+  - type: update
+    segment_index: '016.0050'
+    new_end_seconds: 488.05999755859375
+    new_tarteel_transcript:
+    - وَقِيلَ لِلَّذِينَ اتَّقَوْا مَاذَا أَنزَلَ رَبُّكُمْ قَالُوا خَيْرًا
+  - type: delete
+    segment_index: '025.0066'
+  - type: update
+    segment_index: '025.0065'
+    new_end_seconds: 685.8900146484375
+    new_tarteel_transcript:
+    - ثُمَّ قَبَضْنَاهُ إِلَيْنَا قَبْضًا يَسِيرًا
+  - type: delete
+    segment_index: '038.0107'
+  - type: update
+    segment_index: '038.0106'
+    new_end_seconds: 1062.7349853515625
+  - type: delete
+    segment_index: '045.0060'
+  - type: update
+    segment_index: '045.0059'
+    new_end_seconds: 682.22998046875
+  - type: delete
+    segment_index: '063.0023'
+  - type: update
+    segment_index: '063.0022'
+    new_end_seconds: 282.8299865722656
 - id: '12.0'
   operations:
   - type: update
