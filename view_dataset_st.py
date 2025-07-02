@@ -428,14 +428,51 @@ def display_audio_file(
                 update_with_confirmation(item)
 
 
-def display_sura(ds: Dataset, sura_idx):
+def display_sura(ds: Dataset, sura_idx, moshaf_id):
     """
     Args:
         sura_idx (int): Absolute sura index
     """
+    # Reset
+    if "sura_view_info" not in st.session_state:
+        st.session_state.sura_view_info = {
+            "sura_idx": sura_idx,
+            "moshaf_id": moshaf_id,
+            "start_idx": 0,
+        }
+    if (
+        st.session_state.sura_view_info["sura_idx"] != sura_idx
+        or st.session_state.sura_view_info["moshaf_id"] != moshaf_id
+    ):
+        st.session_state.sura_view_info = {
+            "sura_idx": sura_idx,
+            "moshaf_id": moshaf_id,
+            "start_idx": 0,
+        }
+
+    range_columns = st.columns(5)
+    with range_columns[0]:
+        count_per_page = st.number_input("عدد العناصر بالصفحة", value=20)
+    with range_columns[-1]:
+        start_idx = st.number_input(
+            "بداية الصفحة", value=st.session_state.sura_view_info["start_idx"]
+        )
+
     f_ds = ds.filter(lambda ex: int(ex["sura_or_aya_index"]) == sura_idx, num_proc=16)
-    for item in f_ds:
-        display_audio_file(item)
+    for item in f_ds[start_idx : start_idx + count_per_page]:
+        display_audio_file(item, ignore_load_button=True)
+
+    pages_columns = st.columns(2)
+
+    # Moving pages
+    with pages_columns[1]:
+        if len(ds) > (start_idx + count_per_page):
+            if st.button("الصفحة التالية", use_container_width=True):
+                st.session_state.sura_view_info["start_idx"] += count_per_page
+    with pages_columns[0]:
+        if (start_idx - count_per_page) >= 0:
+            if st.button("الصفحة السابقة", use_container_width=True):
+                st.session_state.sura_view_info["start_idx"] -= count_per_page
 
 
 def display_higher_durations(ds: Dataset, threshold: float):
@@ -601,7 +638,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             display_suar_end(ds)
 
     st.subheader("مقاطع السورة")
-    display_sura(ds, sura_idx)
+    display_sura(ds, sura_idx, moshaf.id)
 
 
 if __name__ == "__main__":
