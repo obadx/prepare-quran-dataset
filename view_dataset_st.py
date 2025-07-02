@@ -111,11 +111,20 @@ def is_qlqla_kobra(text) -> bool:
 def is_sakt_end(text) -> bool:
     """Whethr the aya has سكت متطرف or not"""
 
-    # sakt = "فحثهشخصسكت"
-    sakt = "كت"
+    sakt = "فحثهشخصسكت"
     shadda = "ّ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
     if re.search(f"[{sakt}]{shadda}?.$", text):
+        return True
+    return False
+
+
+def is_sakt_end_for_char(text, char="ت") -> bool:
+    """Whethr the aya has سكت متطرف or not"""
+
+    shadda = "ّ"
+    text = re.sub(r"\s+", "", text)  # remvoe spaces
+    if re.search(f"[{char}]{shadda}?.$", text):
         return True
     return False
 
@@ -559,7 +568,10 @@ def display_qlqla_kobra(ds: Dataset):
 
 
 def display_sakt_end(ds: Dataset):
-    f_ds = ds.filter(lambda ex: is_sakt_end(ex["tarteel_transcript"][-1]), num_proc=16)
+    char = st.selectbox("اختر حرف السكت", "فحثهشخصسكت".split())
+    f_ds = ds.filter(
+        lambda ex: is_sakt_end_for_char(ex["tarteel_transcript"][-1], char), num_proc=16
+    )
     for item in f_ds:
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
