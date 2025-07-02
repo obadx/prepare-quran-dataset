@@ -428,6 +428,12 @@ def display_audio_file(
                 update_with_confirmation(item)
 
 
+def update_sura_start_idx():
+    st.session_state.sura_view_info["start_idx"] = (
+        st.session_state.sura_start_idx_number_input
+    )
+
+
 def display_sura(ds: Dataset, sura_idx, moshaf_id):
     """
     Args:
@@ -455,7 +461,10 @@ def display_sura(ds: Dataset, sura_idx, moshaf_id):
         count_per_page = st.number_input("عدد العناصر بالصفحة", value=20)
     with range_columns[-1]:
         start_idx = st.number_input(
-            "بداية الصفحة", value=st.session_state.sura_view_info["start_idx"]
+            "بداية الصفحة",
+            value=st.session_state.sura_view_info["start_idx"],
+            on_change=update_sura_start_idx,
+            key="sura_start_idx_number_input",
         )
 
     f_ds = ds.filter(lambda ex: int(ex["sura_or_aya_index"]) == sura_idx, num_proc=16)
@@ -469,10 +478,16 @@ def display_sura(ds: Dataset, sura_idx, moshaf_id):
         if len(ds) > (start_idx + count_per_page):
             if st.button("الصفحة التالية", use_container_width=True):
                 st.session_state.sura_view_info["start_idx"] += count_per_page
+                st.session_state.sura_start_idx_number_input = (
+                    st.session_state.sura_view_info["start_idx"]
+                )
     with pages_columns[0]:
         if (start_idx - count_per_page) >= 0:
             if st.button("الصفحة السابقة", use_container_width=True):
                 st.session_state.sura_view_info["start_idx"] -= count_per_page
+                st.session_state.sura_start_idx_number_input = (
+                    st.session_state.sura_view_info["start_idx"]
+                )
 
 
 def display_higher_durations(ds: Dataset, threshold: float):
