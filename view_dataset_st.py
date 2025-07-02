@@ -568,7 +568,7 @@ def display_qlqla_kobra(ds: Dataset):
 
 
 def display_sakt_end(ds: Dataset):
-    char = st.selectbox("اختر حرف السكت", "فحثهشخصسكت".split())
+    char = st.selectbox("اختر حرف السكت", list("فحثهشخصسكت"))
     f_ds = ds.filter(
         lambda ex: is_sakt_end_for_char(ex["tarteel_transcript"][-1], char), num_proc=16
     )
