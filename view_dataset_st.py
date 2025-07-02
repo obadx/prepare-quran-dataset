@@ -478,16 +478,10 @@ def display_sura(ds: Dataset, sura_idx, moshaf_id):
         if len(ds) > (start_idx + count_per_page):
             if st.button("الصفحة التالية", use_container_width=True):
                 st.session_state.sura_view_info["start_idx"] += count_per_page
-                st.session_state.sura_start_idx_number_input = (
-                    st.session_state.sura_view_info["start_idx"]
-                )
     with pages_columns[0]:
         if (start_idx - count_per_page) >= 0:
             if st.button("الصفحة السابقة", use_container_width=True):
                 st.session_state.sura_view_info["start_idx"] -= count_per_page
-                st.session_state.sura_start_idx_number_input = (
-                    st.session_state.sura_view_info["start_idx"]
-                )
 
 
 def display_higher_durations(ds: Dataset, threshold: float):
