@@ -111,7 +111,8 @@ def is_qlqla_kobra(text) -> bool:
 def is_sakt_end(text) -> bool:
     """Whethr the aya has سكت متطرف or not"""
 
-    sakt = "فحثهشخصسكت"
+    # sakt = "فحثهشخصسكت"
+    sakt = "كت"
     shadda = "ّ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
     if re.search(f"[{sakt}]{shadda}?.$", text):
