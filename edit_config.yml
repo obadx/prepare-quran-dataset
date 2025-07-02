@@ -2671,6 +2671,19 @@ configs:
     segment_index: '079.0028'
     new_tarteel_transcript:
     - بَنَاهَا
+  - type: delete
+    segment_index: '002.0249'
+  - type: update
+    segment_index: '002.0248'
+    new_end_seconds: 2515.259765625
+    new_tarteel_transcript:
+    - وَلَئِنِ اتَّبَعْتَ أَهْوَاءَهُم بَعْدَ الَّذِي جَاءَكَ مِنَ الْعِلْمِ مَا لَكَ
+      مِنَ اللَّهِ مِن وَلِيٍّ وَلَا نَصِيرٍ
+  - type: delete
+    segment_index: '069.0057'
+  - type: update
+    segment_index: '069.0056'
+    new_end_seconds: 362.6499938964844
 - id: '17.0'
   operations:
   - type: update
