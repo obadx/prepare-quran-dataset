@@ -686,7 +686,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.button("اضبط زمن السكت المتطرف", use_container_width=True):
             adjust_sakt_end_duration(ds)
 
-    if "display_sakt" not in st.session_state:
+    if "display_sakt" in st.session_state:
         if st.session_state.display_sakt:
             st.subheader("السكت المتطرف")
             display_sakt_end(ds)
