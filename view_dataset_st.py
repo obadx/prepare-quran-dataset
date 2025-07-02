@@ -108,6 +108,17 @@ def is_qlqla_kobra(text) -> bool:
     return False
 
 
+def is_sakt_end(text) -> bool:
+    """Whethr the aya has سكت متطرف or not"""
+
+    sakt = "فحثهشخصسكت"
+    shadda = "ّ"
+    text = re.sub(r"\s+", "", text)  # remvoe spaces
+    if re.search(f"[{sakt}]{shadda}?.$", text):
+        return True
+    return False
+
+
 def is_qlqla_kobra_qaf(text) -> bool:
     """Whethr the aya has قاف مقلقة متطرفة مشددة"""
 
@@ -286,6 +297,40 @@ def abort_opearation_with_confirmation(item: dict, op: Operation):
 
 @st.dialog("ظبط زمن القلقة للقاف المشددة المتطرفة")
 def adjust_qlqla_qaf_duration(ds: Dataset):
+    with st.form("qlqal_form"):
+        qlqala_pad_ms = st.number_input("مدة الزيادة ms", value=0)
+
+        if st.form_submit_button("موافق"):
+            if qlqala_pad_ms:
+                with st.spinner("الضبط حارٍٍ"):
+                    filter_ds = ds.filter(
+                        lambda ex: is_qlqla_kobra_qaf(ex["tarteel_transcript"][-1]),
+                        num_proc=16,
+                    )
+
+                    if len(filter_ds) > 0:
+                        new_operations = []
+                        moshaf_id = filter_ds[0]["moshaf_id"]
+                        for item in filter_ds:
+                            new_operations.append(
+                                Operation(
+                                    type="update",
+                                    segment_index=item["segment_index"],
+                                    new_end_seconds=item["timestamp_seconds"][1]
+                                    + qlqala_pad_ms / 1000,
+                                )
+                            )
+                        save_moshaf_operation(moshaf_id, new_operations)
+                        popup_message(
+                            "تم طبط زمن القلقة للقاف المشددة المتطرفة بنجاح", "success"
+                        )
+                        st.rerun()
+                    else:
+                        popup_message("لا يوجد قاف مقلقة متطرفة !", "error")
+
+
+@st.dialog("ظبط زمن القلقة للقاف المشددة المتطرفة")
+def adjust_sakt_end_duration(ds: Dataset):
     with st.form("qlqal_form"):
         qlqala_pad_ms = st.number_input("مدة الزيادة ms", value=0)
 
@@ -512,6 +557,12 @@ def display_qlqla_kobra(ds: Dataset):
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
+def display_sakt_end(ds: Dataset):
+    f_ds = ds.filter(lambda ex: is_sakt_end(ex["tarteel_transcript"][-1]), num_proc=16)
+    for item in f_ds:
+        display_audio_file(item, key_prefix="small", ignore_load_button=True)
+
+
 def display_suar_beginning(ds: Dataset):
     f_ds = ds.filter(
         lambda ex: int(ex["segment_index"].split(".")[1]) == 0, num_proc=16
@@ -540,6 +591,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     col1, col2, col3, col4 = st.columns(4)
     stat_coumns = st.columns(4)
     qlqal_columns = st.columns(3)
+    sakt_columns = st.columns(3)
     sura_stat_columns = st.columns(4)
 
     with col4:
@@ -623,6 +675,21 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.display_qlqla:
             st.subheader("القلقة الكبرى")
             display_qlqla_kobra(ds)
+
+    with sakt_columns[2]:
+        if st.button("اظهر السكت المتطرف", use_container_width=True):
+            st.session_state.display_sakt = True
+    with sakt_columns[0]:
+        if st.button("اخف السكت المتطرف", use_container_width=True):
+            st.session_state.display_sakt = False
+    with sakt_columns[1]:
+        if st.button("اضبط زمن السكت المتطرف", use_container_width=True):
+            adjust_sakt_end_duration(ds)
+
+    if "display_sakt" not in st.session_state:
+        if st.session_state.display_sakt:
+            st.subheader("السكت المتطرف")
+            display_sakt_end(ds)
 
     with sura_stat_columns[3]:
         if st.button("أظهر أوائل السور", use_container_width=True):
