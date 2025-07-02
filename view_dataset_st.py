@@ -113,8 +113,9 @@ def is_sakt_end(text) -> bool:
 
     sakt = "فحثهشخصسكت"
     shadda = "ّ"
+    haraka = "ًٌٍَُِْ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
-    if re.search(f"[{sakt}]{shadda}?.$", text):
+    if re.search(f"[{sakt}]{shadda}?[{haraka}]$", text):
         return True
     return False
 
@@ -123,8 +124,9 @@ def is_sakt_end_for_char(text, char="ت") -> bool:
     """Whethr the aya has سكت متطرف or not"""
 
     shadda = "ّ"
+    haraka = "ًٌٍَُِْ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
-    if re.search(f"[{char}]{shadda}?.$", text):
+    if re.search(f"[{char}]{shadda}?[{haraka}]$", text):
         return True
     return False
 
