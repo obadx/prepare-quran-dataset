@@ -459,9 +459,8 @@ def display_sura(ds: Dataset, sura_idx, moshaf_id):
         )
 
     f_ds = ds.filter(lambda ex: int(ex["sura_or_aya_index"]) == sura_idx, num_proc=16)
-    for item in f_ds[start_idx : start_idx + count_per_page]:
-        print(item)
-        display_audio_file(item, ignore_load_button=True)
+    for idx in range(start_idx, start_idx + count_per_page):
+        display_audio_file(f_ds[idx], ignore_load_button=True)
 
     pages_columns = st.columns(2)
 
