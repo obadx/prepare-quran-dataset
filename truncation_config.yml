@@ -21,7 +21,7 @@ items:
     turnc_ms: 635
 
   - id: "9.0"
-    turnc_ms: 240
+    turnc_ms: 390
 
   - id: "11.0"
     turnc_ms: 425
