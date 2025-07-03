@@ -30,7 +30,7 @@ items:
     turnc_ms: 90
 
   - id: "13.0"
-    turnc_ms: 120
+    turnc_ms: 220
 
   - id: "17.0"
     turnc_ms: 355
