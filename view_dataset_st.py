@@ -395,9 +395,10 @@ def display_audio_file(
     item: dict,
     key_prefix="",
     ignore_load_button=False,
+    expanded=False,
 ):
     """Displayes an audio file with download button"""
-    expander = st.expander(f"**{item['segment_index']}**")
+    expander = st.expander(f"**{item['segment_index']}**", expanded=expanded)
     with expander:
         keys = set(item.keys()) - {"audio"}
         for key in keys:
@@ -593,7 +594,9 @@ def display_suar_end(ds: Dataset):
     chose_ids.append(len(seg_to_idx) - 1)
 
     for idx in chose_ids:
-        display_audio_file(ds[idx], key_prefix="end", ignore_load_button=True)
+        display_audio_file(
+            ds[idx], key_prefix="end", ignore_load_button=True, expanded=True
+        )
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
