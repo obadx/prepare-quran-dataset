@@ -226,6 +226,8 @@ def main(args):
         model.to(args.device, dtype=torch.bfloat16)
 
         for moshaf in moshaf_pool:
+            if moshaf.id not in {"0.2", "3.0", "6.0", "30.0"}:
+                continue
             if (out_path / moshaf.id).is_dir():
                 if moshaf.id in args.continue_moshaf_ids:
                     logging.info(f"Continue Moshaf: {moshaf.id}")
@@ -263,7 +265,7 @@ def main(args):
                 ds,
                 moshaf.id,
                 out_path=out_path,
-                samples_per_shard=512,
+                samples_per_shard=16,
                 annotated_segment_ids=annotated_segment_ids,
             )
 
