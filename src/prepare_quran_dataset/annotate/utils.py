@@ -23,7 +23,7 @@ def load_segment_ids(ds_path: Path, segment_column="segment_index") -> set[str]:
 
 
 def save_to_disk_split(
-    dataset: IterableDataset,
+    dataset: IterableDataset | Dataset,
     split_name: str,
     out_path: str | Path,
     samples_per_shard: int = 128,
@@ -31,8 +31,8 @@ def save_to_disk_split(
     segment_column="segment_index",
 ):
     """save an Iterable hugginfce dataset onto disk to avoid memory overfill"""
-    assert isinstance(dataset, IterableDataset), (
-        f"We only support IterableDatset we got {type(dataset)}"
+    assert isinstance(dataset, IterableDataset) or isinstance(dataset, Dataset), (
+        f"We only support `IterableDatset` and `Dataset` we got {type(dataset)}"
     )
 
     out_path = Path(out_path)
