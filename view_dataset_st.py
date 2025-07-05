@@ -545,7 +545,7 @@ def display_higher_durations(ds: Dataset, threshold: float):
     Args:
         sura_idx (int): Absolute sura index
     """
-    f_ds = ds.filter(lambda ex: int(ex["duration_seconds"]) > threshold, num_proc=16)
+    f_ds = ds.filter(lambda ex: ex["duration_seconds"] > threshold, num_proc=16)
     for item in f_ds:
         display_audio_file(item, key_prefix="high")
 
@@ -555,7 +555,7 @@ def display_small_durations(ds: Dataset, threshold: float):
     Args:
         sura_idx (int): Absolute sura index
     """
-    f_ds = ds.filter(lambda ex: int(ex["duration_seconds"]) < threshold, num_proc=16)
+    f_ds = ds.filter(lambda ex: ex["duration_seconds"] < threshold, num_proc=16)
     for item in f_ds:
         display_audio_file(
             item, key_prefix="small", ignore_load_button=True, expanded=True
