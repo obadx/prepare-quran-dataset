@@ -289,8 +289,8 @@ if __name__ == "__main__":
         vllm_endpoint=vllm_endpoint,
     )
 
-    # merge_edits(
-    #     moshaf_id=moshaf_id,
-    #     edit_config_path=edit_config_path,
-    #     moshaf_edit_config_path=moshaf_edit_config_path,
-    # )
+    merge_edits(
+        moshaf_id=moshaf_id,
+        edit_config_path=edit_config_path,
+        moshaf_edit_config_path=moshaf_edit_config_path,
+    )
