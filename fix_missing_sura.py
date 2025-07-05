@@ -29,7 +29,7 @@ def add_missing_suar(moshaf_id, ds_path: Path, added_shard_path: Path):
     added_suar_set = set(added_shard["sura_or_aya_index"])
     print(f"Len of added shard: {len(added_shard)}")
 
-    ds = load_dataset(ds_path, name=f"moshaf_{moshaf_id}", split="train")
+    ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf_id}", split="train")
     print(f"Len of ds: {len(ds)}")
 
     # clean dataset from addes suar
