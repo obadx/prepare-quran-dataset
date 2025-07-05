@@ -4678,6 +4678,40 @@ configs:
   - type: update
     segment_index: '109.0006'
     new_end_seconds: 21.4
+  - type: delete
+    segment_index: '002.0545'
+  - type: update
+    segment_index: '002.0544'
+    new_end_seconds: 4560.6
+    new_tarteel_transcript:
+    - أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ
+  - type: delete
+    segment_index: '003.0332'
+  - type: update
+    segment_index: '003.0331'
+    new_end_seconds: 2821.31494140625
+    new_tarteel_transcript:
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا اصْبِرُوا وَصَابِرُوا وَرَابِطُوا وَاتَّقُوا
+      اللَّهَ لَعَلَّكُمْ تُفْلِحُونَ
+  - type: delete
+    segment_index: '004.0195'
+  - type: update
+    segment_index: '004.0194'
+    new_end_seconds: 1729.5650634765625
+    new_tarteel_transcript:
+    - وَكَانَ اللَّهُ عَفُوًّا غَفُورًا
+  - type: delete
+    segment_index: '005.0014'
+  - type: update
+    segment_index: '005.0013'
+    new_end_seconds: 130.02499389648438
+    new_tarteel_transcript:
+    - فَكُلُوا مِمَّا أَمْسَكْنَ عَلَيْكُمْ وَاذْكُرُوا اسْمَ اللَّهِ عَلَيْهِ وَاتَّقُوا
+      اللَّهَ إِنَّ اللَّهَ سَرِيعُ الْحِسَابِ
+  - type: delete
+    segment_index: '024.0042'
+  - type: delete
+    segment_index: '106.0005'
 - id: '26.0'
   operations:
   - type: update
