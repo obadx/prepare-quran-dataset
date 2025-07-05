@@ -289,7 +289,7 @@ def segment_batch(
         durations_seconds = []
         timestamp_list = []
         for span_idx, span in enumerate(clean_out.clean_speech_intervals):
-            timestamp_list.append(span.numpy())
+            timestamp_list.append(span.numpy() / 16000)
             new_audios.append(
                 {
                     "array": batch["audio"][idx]["array"][span[0] : span[1]],

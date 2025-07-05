@@ -4,6 +4,7 @@ import logging
 
 import submitit
 from datasets import Dataset, load_dataset, concatenate_datasets
+import numpy as np
 
 from prepare_quran_dataset.annotate.utils import save_to_disk_split
 from prepare_quran_dataset.annotate.main import OUT_FEATURES
@@ -24,6 +25,10 @@ def add_missing_suar(moshaf_id, ds_path: Path, added_shard_path: Path):
     """Adding missing suar into the dataset"""
 
     added_shard = Dataset.from_parquet(str(added_shard_path))
+    # BUG: forget to divide by 16000
+    added_shard = added_shard.map(
+        lambda ex: {"timestamp_seconds": np.array(ex["timestamp_seconds"]) / 16000}
+    )
     added_shard = added_shard.cast(OUT_FEATURES)
 
     added_suar_set = set(added_shard["sura_or_aya_index"])
