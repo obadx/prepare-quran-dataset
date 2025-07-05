@@ -25,10 +25,6 @@ def add_missing_suar(moshaf_id, ds_path: Path, added_shard_path: Path):
     """Adding missing suar into the dataset"""
 
     added_shard = Dataset.from_parquet(str(added_shard_path))
-    # BUG: forget to divide by 16000
-    added_shard = added_shard.map(
-        lambda ex: {"timestamp_seconds": np.array(ex["timestamp_seconds"]) / 16000}
-    )
     added_shard = added_shard.cast(OUT_FEATURES)
 
     added_suar_set = set(added_shard["sura_or_aya_index"])
@@ -64,7 +60,8 @@ def main(args):
         cpus_per_task=16,
     )
 
-    for moshaf_id in {"0.2", "3.0", "6.0", "30.0"}:
+    # for moshaf_id in {"0.2", "3.0", "6.0", "30.0"}:
+    for moshaf_id in {"2.0"}:
         executor.update_parameters(
             slurm_job_name=f"ADD{moshaf_id}",
             slurm_additional_parameters={
