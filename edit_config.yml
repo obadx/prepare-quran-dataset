@@ -1374,6 +1374,13 @@ configs:
   - type: delete
     segment_index: '059.0064'
   - type: update
+    segment_index: '075.0027'
+    new_end_seconds: 290.7
+  - type: update
+    segment_index: '075.0028'
+    new_tarteel_transcript:
+    - رَاقٍ
+  - type: update
     segment_index: '077.0050'
     new_end_seconds: 582.76
   - type: update
@@ -1382,13 +1389,6 @@ configs:
   - type: update
     segment_index: '083.0014'
     new_end_seconds: 192.0
-  - type: update
-    segment_index: '075.0027'
-    new_end_seconds: 290.7
-  - type: update
-    segment_index: '075.0028'
-    new_tarteel_transcript:
-    - رَاقٍ
 - id: '2.1'
   operations:
   - type: update
@@ -3260,9 +3260,6 @@ configs:
     segment_index: '033.0108'
     new_end_seconds: 1226.0199462890625
   - type: update
-    segment_index: '035.0012'
-    new_end_seconds: 100.66499633789063
-  - type: update
     segment_index: '039.0125'
     new_end_seconds: 1267.6100341796875
   - type: update
@@ -3293,6 +3290,61 @@ configs:
   - type: update
     segment_index: '083.0038'
     new_end_seconds: 282.73
+  - type: update
+    segment_index: '112.0001'
+    new_end_seconds: 8.7
+  - type: delete
+    segment_index: '066.0030'
+  - type: delete
+    segment_index: '066.0031'
+  - type: delete
+    segment_index: '066.0032'
+  - type: delete
+    segment_index: '066.0033'
+  - type: delete
+    segment_index: '066.0034'
+  - type: delete
+    segment_index: '066.0035'
+  - type: delete
+    segment_index: '066.0036'
+  - type: delete
+    segment_index: '066.0037'
+  - type: delete
+    segment_index: '066.0038'
+  - type: delete
+    segment_index: '066.0039'
+  - type: delete
+    segment_index: '066.0040'
+  - type: delete
+    segment_index: '066.0028'
+  - type: delete
+    segment_index: '066.0029'
+  - type: delete
+    segment_index: '035.0013'
+  - type: update
+    segment_index: '035.0012'
+    new_end_seconds: 112.19999694824219
+    new_tarteel_transcript:
+    - يَا أَيُّهَا النَّاسُ إِنَّ وَعْدَ اللَّهِ حَقٌّ فَلَا تَغُرَّنَّكُمُ الْحَيَاةُ
+      الدُّنْيَا وَلَا يَغُرَّنَّكُم بِاللَّهِ الْغَرُورُ
+  - type: delete
+    segment_index: '007.0355'
+  - type: update
+    segment_index: '007.0354'
+    new_end_seconds: 4162.240234375
+  - type: delete
+    segment_index: '059.0050'
+  - type: update
+    segment_index: '059.0049'
+    new_end_seconds: 602.9099731445312
+  - type: delete
+    segment_index: '085.0025'
+  - type: update
+    segment_index: '085.0024'
+    new_end_seconds: 163.0800018310547
+  - type: update
+    segment_index: '023.0124'
+    new_end_seconds: 1186.8
 - id: '26.1'
   operations:
   - type: update
@@ -4333,31 +4385,6 @@ configs:
     new_start_seconds: 118.81
 - id: '19.0'
   operations:
-  - type: update
-    segment_index: '053.0038'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: update
-    segment_index: '101.0011'
-    new_end_seconds: 60.97
-  - type: update
-    segment_index: '102.0008'
-    new_end_seconds: 60.97
-  - type: update
-    segment_index: '020.0034'
-    new_end_seconds: 242.5
-  - type: update
-    segment_index: '074.0013'
-    new_end_seconds: 55.6
-  - type: update
-    segment_index: '074.0016'
-    new_end_seconds: 65.55
-  - type: update
-    segment_index: '075.0036'
-    new_end_seconds: 172.25
-  - type: update
-    segment_index: '077.0006'
-    new_end_seconds: 23.25
   - type: delete
     segment_index: '002.0786'
   - type: delete
@@ -4366,6 +4393,11 @@ configs:
     segment_index: '002.0788'
   - type: delete
     segment_index: '002.0789'
+  - type: update
+    segment_index: '003.0353'
+    new_audio_file: 19.0/003_00353.wav
+  - type: delete
+    segment_index: '003.0354'
   - type: delete
     segment_index: '003.0447'
   - type: delete
@@ -4375,15 +4407,22 @@ configs:
   - type: delete
     segment_index: '003.0450'
   - type: update
-    segment_index: '004.0501'
-    new_end_seconds: 4779.58
+    segment_index: '004.0406'
+    new_end_seconds: 3968.059814453125
     new_tarteel_transcript:
-    - يُبَيِّنُ اللَّهُ لَكُمْ أَنْ تَضِلُّوا
+    - قَالُوا أَلَمْ نَسْتَحْوِذْ عَلَيْكُمْ وَنَمْنَعْكُمْ مِنَ الْمُؤْمِنِينَ
+  - type: delete
+    segment_index: '004.0407'
   - type: insert
     segment_index: '004.0501'
     new_start_seconds: 4779.5
     new_tarteel_transcript:
     - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: update
+    segment_index: '004.0501'
+    new_end_seconds: 4779.58
+    new_tarteel_transcript:
+    - يُبَيِّنُ اللَّهُ لَكُمْ أَنْ تَضِلُّوا
   - type: delete
     segment_index: '004.0502'
   - type: delete
@@ -4440,6 +4479,14 @@ configs:
     segment_index: '018.0201'
   - type: delete
     segment_index: '018.0202'
+  - type: update
+    segment_index: '019.0135'
+    new_end_seconds: 1280.8399658203125
+  - type: delete
+    segment_index: '019.0136'
+  - type: update
+    segment_index: '020.0034'
+    new_end_seconds: 242.5
   - type: delete
     segment_index: '021.0171'
   - type: delete
@@ -4464,6 +4511,16 @@ configs:
     segment_index: '026.0253'
   - type: delete
     segment_index: '026.0254'
+  - type: insert
+    segment_index: '029.0139'
+    new_start_seconds: 1262.54
+    new_tarteel_transcript:
+    - وَإِنَّ اللَّهَ لَمَعَ الْمُحْسِنِينَ
+  - type: update
+    segment_index: '029.0139'
+    new_end_seconds: 1262.5
+    new_tarteel_transcript:
+    - وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا
   - type: delete
     segment_index: '029.0140'
   - type: delete
@@ -4473,15 +4530,10 @@ configs:
   - type: delete
     segment_index: '029.0143'
   - type: update
-    segment_index: '029.0139'
-    new_end_seconds: 1262.5
-    new_tarteel_transcript:
-    - وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا
-  - type: insert
-    segment_index: '029.0139'
-    new_start_seconds: 1262.54
-    new_tarteel_transcript:
-    - وَإِنَّ اللَّهَ لَمَعَ الْمُحْسِنِينَ
+    segment_index: '032.0053'
+    new_end_seconds: 522.3699951171875
+  - type: delete
+    segment_index: '032.0054'
   - type: delete
     segment_index: '033.0174'
   - type: delete
@@ -4522,6 +4574,10 @@ configs:
     segment_index: '049.0050'
   - type: delete
     segment_index: '049.0051'
+  - type: update
+    segment_index: '053.0038'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
   - type: delete
     segment_index: '057.0077'
   - type: delete
@@ -4530,6 +4586,11 @@ configs:
     segment_index: '057.0079'
   - type: delete
     segment_index: '057.0080'
+  - type: update
+    segment_index: '064.0039'
+    new_end_seconds: 323.05999755859375
+  - type: delete
+    segment_index: '064.0040'
   - type: delete
     segment_index: '066.0035'
   - type: delete
@@ -4538,6 +4599,18 @@ configs:
     segment_index: '066.0037'
   - type: delete
     segment_index: '066.0038'
+  - type: update
+    segment_index: '074.0013'
+    new_end_seconds: 55.6
+  - type: update
+    segment_index: '074.0016'
+    new_end_seconds: 65.55
+  - type: update
+    segment_index: '075.0036'
+    new_end_seconds: 172.25
+  - type: update
+    segment_index: '077.0006'
+    new_end_seconds: 23.25
   - type: delete
     segment_index: '077.0051'
   - type: delete
@@ -4546,38 +4619,17 @@ configs:
     segment_index: '077.0053'
   - type: delete
     segment_index: '077.0054'
-  - type: delete
-    segment_index: '019.0136'
   - type: update
-    segment_index: '019.0135'
-    new_end_seconds: 1280.8399658203125
-  - type: delete
-    segment_index: '032.0054'
+    segment_index: '101.0011'
+    new_end_seconds: 60.97
   - type: update
-    segment_index: '032.0053'
-    new_end_seconds: 522.3699951171875
-  - type: delete
-    segment_index: '064.0040'
-  - type: update
-    segment_index: '064.0039'
-    new_end_seconds: 323.05999755859375
-  - type: delete
-    segment_index: '106.0005'
+    segment_index: '102.0008'
+    new_end_seconds: 60.97
   - type: update
     segment_index: '106.0004'
     new_end_seconds: 41.189998626708984
   - type: delete
-    segment_index: '003.0354'
-  - type: update
-    segment_index: '003.0353'
-    new_audio_file: 19.0/003_00353.wav
-  - type: delete
-    segment_index: '004.0407'
-  - type: update
-    segment_index: '004.0406'
-    new_end_seconds: 3968.059814453125
-    new_tarteel_transcript:
-    - قَالُوا أَلَمْ نَسْتَحْوِذْ عَلَيْكُمْ وَنَمْنَعْكُمْ مِنَ الْمُؤْمِنِينَ
+    segment_index: '106.0005'
 - id: '25.0'
   operations:
   - type: update
@@ -8175,3 +8227,6 @@ configs:
   - type: update
     segment_index: '045.0058'
     new_end_seconds: 581.66
+  - type: update
+    segment_index: '083.0014'
+    new_end_seconds: 84.3
