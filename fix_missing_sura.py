@@ -1,14 +1,12 @@
 import argparse
 from pathlib import Path
-import yaml
 import logging
-import gc
-from typing import Literal
 
 import submitit
 from datasets import Dataset, load_dataset, concatenate_datasets
 
 from prepare_quran_dataset.annotate.utils import save_to_disk_split
+from prepare_quran_dataset.annotate.main import OUT_FEATURES
 
 
 # Setup logging configuration
@@ -26,6 +24,8 @@ def add_missing_suar(moshaf_id, ds_path: Path, added_shard_path: Path):
     """Adding missing suar into the dataset"""
 
     added_shard = Dataset.from_parquet(str(added_shard_path))
+    added_shard = added_shard.cast(OUT_FEATURES)
+
     added_suar_set = set(added_shard["sura_or_aya_index"])
     print(f"Len of added shard: {len(added_shard)}")
 
