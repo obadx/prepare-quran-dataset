@@ -25,17 +25,22 @@ def setup_logging():
 def add_missing_suar(moshaf_id, ds_path: Path, added_shard_path: Path):
     """Adding missing suar into the dataset"""
 
-    added_shard = Dataset.from_parquet(added_shard_path)
+    added_shard = Dataset.from_parquet(str(added_shard_path))
     added_suar_set = set(added_shard["sura_or_aya_index"])
+    print(f"Len of added shard: {len(added_shard)}")
 
     ds = load_dataset(ds_path, name=f"moshaf_{moshaf_id}", split="train")
+    print(f"Len of ds: {len(ds)}")
 
     # clean dataset from addes suar
     ds = ds.filter(
         lambda ex: ex["sura_or_aya_index"] not in added_suar_set, num_proc=16
     )
+    print(f"Len of ds after removing to be addes suar: {len(ds)}")
+
     ds = concatenate_datasets([ds, added_shard])
     ds = ds.sort("segment_index")
+    print(f"Len of ds after adding new suar: {len(ds)}")
 
     save_to_disk_split(ds, moshaf_id, ds_path / "dataset", samples_per_shard=512)
 
