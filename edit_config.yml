@@ -1382,6 +1382,13 @@ configs:
   - type: update
     segment_index: '083.0014'
     new_end_seconds: 192.0
+  - type: update
+    segment_index: '075.0027'
+    new_end_seconds: 290.7
+  - type: update
+    segment_index: '075.0028'
+    new_tarteel_transcript:
+    - رَاقٍ
 - id: '2.1'
   operations:
   - type: update
@@ -2896,6 +2903,13 @@ configs:
     segment_index: '021.0182'
     new_end_seconds: 1407.275048828125
   - type: update
+    segment_index: '023.0054'
+    new_end_seconds: 421.4700012207031
+    new_tarteel_transcript:
+    - إِلَّا بَشَرٌ مِّثْلُكُمْ يَأْكُلُ مِمَّا تَأْكُلُونَ مِنْهُ
+  - type: delete
+    segment_index: '023.0055'
+  - type: update
     segment_index: '029.0093'
     new_end_seconds: 770.5349975585938
   - type: update
@@ -2917,6 +2931,17 @@ configs:
   - type: update
     segment_index: '035.0014'
     new_end_seconds: 98.32499847412109
+  - type: update
+    segment_index: '038.0082'
+    new_end_seconds: 603.5250244140625
+    new_tarteel_transcript:
+    - وَاذْكُرْ إِسْمَاعِيلَ وَالْيَسَعَ وَذَا الْكِفْلِ
+  - type: delete
+    segment_index: '038.0083'
+  - type: update
+    segment_index: '039.0075'
+    new_tarteel_transcript:
+    - وَمَن يُضْلِلِ اللَّهُ فَمَا لَهُ مِنْ هَادٍ
   - type: update
     segment_index: '039.0110'
     new_end_seconds: 818.025048828125
@@ -2963,9 +2988,18 @@ configs:
     segment_index: '051.0023'
     new_end_seconds: 123.17499694824218
   - type: update
+    segment_index: '052.0011'
+    new_end_seconds: 61.55999755859375
+  - type: delete
+    segment_index: '052.0012'
+  - type: update
     segment_index: '053.0030'
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: delete
+    segment_index: '056.0016'
+  - type: delete
+    segment_index: '056.0017'
   - type: update
     segment_index: '057.0041'
     new_end_seconds: 326.8850036621094
@@ -2981,6 +3015,10 @@ configs:
     new_tarteel_transcript:
     - بَنَاهَا
   - type: update
+    segment_index: '083.0013'
+    new_tarteel_transcript:
+    - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
+  - type: update
     segment_index: '086.0010'
     new_tarteel_transcript:
     - وَمَا هُوَ بِالْهَزْلِ
@@ -2991,37 +3029,6 @@ configs:
   - type: update
     segment_index: '103.0002'
     new_end_seconds: 19.464999771118165
-  - type: delete
-    segment_index: '023.0055'
-  - type: update
-    segment_index: '023.0054'
-    new_end_seconds: 421.4700012207031
-    new_tarteel_transcript:
-    - إِلَّا بَشَرٌ مِّثْلُكُمْ يَأْكُلُ مِمَّا تَأْكُلُونَ مِنْهُ
-  - type: delete
-    segment_index: '038.0083'
-  - type: update
-    segment_index: '038.0082'
-    new_end_seconds: 603.5250244140625
-    new_tarteel_transcript:
-    - وَاذْكُرْ إِسْمَاعِيلَ وَالْيَسَعَ وَذَا الْكِفْلِ
-  - type: delete
-    segment_index: '052.0012'
-  - type: update
-    segment_index: '052.0011'
-    new_end_seconds: 61.55999755859375
-  - type: delete
-    segment_index: '056.0017'
-  - type: delete
-    segment_index: '056.0016'
-  - type: update
-    segment_index: '083.0013'
-    new_tarteel_transcript:
-    - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
-  - type: update
-    segment_index: '039.0075'
-    new_tarteel_transcript:
-    - وَمَن يُضْلِلِ اللَّهُ فَمَا لَهُ مِنْ هَادٍ
 - id: '22.0'
   operations:
   - type: update
@@ -4336,6 +4343,241 @@ configs:
   - type: update
     segment_index: '102.0008'
     new_end_seconds: 60.97
+  - type: update
+    segment_index: '020.0034'
+    new_end_seconds: 242.5
+  - type: update
+    segment_index: '074.0013'
+    new_end_seconds: 55.6
+  - type: update
+    segment_index: '074.0016'
+    new_end_seconds: 65.55
+  - type: update
+    segment_index: '075.0036'
+    new_end_seconds: 172.25
+  - type: update
+    segment_index: '077.0006'
+    new_end_seconds: 23.25
+  - type: delete
+    segment_index: '002.0786'
+  - type: delete
+    segment_index: '002.0787'
+  - type: delete
+    segment_index: '002.0788'
+  - type: delete
+    segment_index: '002.0789'
+  - type: delete
+    segment_index: '003.0447'
+  - type: delete
+    segment_index: '003.0448'
+  - type: delete
+    segment_index: '003.0449'
+  - type: delete
+    segment_index: '003.0450'
+  - type: update
+    segment_index: '004.0501'
+    new_end_seconds: 4779.58
+    new_tarteel_transcript:
+    - يُبَيِّنُ اللَّهُ لَكُمْ أَنْ تَضِلُّوا
+  - type: insert
+    segment_index: '004.0501'
+    new_start_seconds: 4779.5
+    new_tarteel_transcript:
+    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: delete
+    segment_index: '004.0502'
+  - type: delete
+    segment_index: '004.0503'
+  - type: delete
+    segment_index: '004.0504'
+  - type: delete
+    segment_index: '004.0505'
+  - type: delete
+    segment_index: '006.0428'
+  - type: delete
+    segment_index: '006.0429'
+  - type: delete
+    segment_index: '006.0430'
+  - type: delete
+    segment_index: '006.0431'
+  - type: delete
+    segment_index: '008.0163'
+  - type: delete
+    segment_index: '008.0164'
+  - type: delete
+    segment_index: '008.0165'
+  - type: delete
+    segment_index: '008.0166'
+  - type: delete
+    segment_index: '011.0266'
+  - type: delete
+    segment_index: '011.0267'
+  - type: delete
+    segment_index: '011.0268'
+  - type: delete
+    segment_index: '011.0269'
+  - type: delete
+    segment_index: '013.0117'
+  - type: delete
+    segment_index: '013.0118'
+  - type: delete
+    segment_index: '013.0119'
+  - type: delete
+    segment_index: '013.0120'
+  - type: delete
+    segment_index: '016.0244'
+  - type: delete
+    segment_index: '016.0245'
+  - type: delete
+    segment_index: '016.0246'
+  - type: delete
+    segment_index: '016.0247'
+  - type: delete
+    segment_index: '018.0199'
+  - type: delete
+    segment_index: '018.0200'
+  - type: delete
+    segment_index: '018.0201'
+  - type: delete
+    segment_index: '018.0202'
+  - type: delete
+    segment_index: '021.0171'
+  - type: delete
+    segment_index: '021.0172'
+  - type: delete
+    segment_index: '021.0173'
+  - type: delete
+    segment_index: '021.0174'
+  - type: delete
+    segment_index: '023.0158'
+  - type: delete
+    segment_index: '023.0159'
+  - type: delete
+    segment_index: '023.0160'
+  - type: delete
+    segment_index: '023.0161'
+  - type: delete
+    segment_index: '026.0251'
+  - type: delete
+    segment_index: '026.0252'
+  - type: delete
+    segment_index: '026.0253'
+  - type: delete
+    segment_index: '026.0254'
+  - type: delete
+    segment_index: '029.0140'
+  - type: delete
+    segment_index: '029.0141'
+  - type: delete
+    segment_index: '029.0142'
+  - type: delete
+    segment_index: '029.0143'
+  - type: update
+    segment_index: '029.0139'
+    new_end_seconds: 1262.5
+    new_tarteel_transcript:
+    - وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا
+  - type: insert
+    segment_index: '029.0139'
+    new_start_seconds: 1262.54
+    new_tarteel_transcript:
+    - وَإِنَّ اللَّهَ لَمَعَ الْمُحْسِنِينَ
+  - type: delete
+    segment_index: '033.0174'
+  - type: delete
+    segment_index: '033.0175'
+  - type: delete
+    segment_index: '033.0176'
+  - type: delete
+    segment_index: '033.0177'
+  - type: delete
+    segment_index: '037.0195'
+  - type: delete
+    segment_index: '037.0196'
+  - type: delete
+    segment_index: '037.0197'
+  - type: delete
+    segment_index: '037.0198'
+  - type: delete
+    segment_index: '040.0154'
+  - type: delete
+    segment_index: '040.0155'
+  - type: delete
+    segment_index: '040.0156'
+  - type: delete
+    segment_index: '040.0157'
+  - type: delete
+    segment_index: '044.0074'
+  - type: delete
+    segment_index: '044.0075'
+  - type: delete
+    segment_index: '044.0076'
+  - type: delete
+    segment_index: '044.0077'
+  - type: delete
+    segment_index: '049.0048'
+  - type: delete
+    segment_index: '049.0049'
+  - type: delete
+    segment_index: '049.0050'
+  - type: delete
+    segment_index: '049.0051'
+  - type: delete
+    segment_index: '057.0077'
+  - type: delete
+    segment_index: '057.0078'
+  - type: delete
+    segment_index: '057.0079'
+  - type: delete
+    segment_index: '057.0080'
+  - type: delete
+    segment_index: '066.0035'
+  - type: delete
+    segment_index: '066.0036'
+  - type: delete
+    segment_index: '066.0037'
+  - type: delete
+    segment_index: '066.0038'
+  - type: delete
+    segment_index: '077.0051'
+  - type: delete
+    segment_index: '077.0052'
+  - type: delete
+    segment_index: '077.0053'
+  - type: delete
+    segment_index: '077.0054'
+  - type: delete
+    segment_index: '019.0136'
+  - type: update
+    segment_index: '019.0135'
+    new_end_seconds: 1280.8399658203125
+  - type: delete
+    segment_index: '032.0054'
+  - type: update
+    segment_index: '032.0053'
+    new_end_seconds: 522.3699951171875
+  - type: delete
+    segment_index: '064.0040'
+  - type: update
+    segment_index: '064.0039'
+    new_end_seconds: 323.05999755859375
+  - type: delete
+    segment_index: '106.0005'
+  - type: update
+    segment_index: '106.0004'
+    new_end_seconds: 41.189998626708984
+  - type: delete
+    segment_index: '003.0354'
+  - type: update
+    segment_index: '003.0353'
+    new_audio_file: 19.0/003_00353.wav
+  - type: delete
+    segment_index: '004.0407'
+  - type: update
+    segment_index: '004.0406'
+    new_end_seconds: 3968.059814453125
+    new_tarteel_transcript:
+    - قَالُوا أَلَمْ نَسْتَحْوِذْ عَلَيْكُمْ وَنَمْنَعْكُمْ مِنَ الْمُؤْمِنِينَ
 - id: '25.0'
   operations:
   - type: update
