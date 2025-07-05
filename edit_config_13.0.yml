@@ -1,0 +1,138 @@
+configs:
+- id: '13.0'
+  operations:
+  - type: insert
+    segment_index: '002.0687'
+    new_audio_file: 13.0/002_1.wav
+    new_tarteel_transcript:
+    - أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ
+  - type: update
+    segment_index: '003.0394'
+    new_audio_file: 13.0/003_1.wav
+    new_tarteel_transcript:
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا اصْبِرُوا وَصَابِرُوا وَرَابِطُوا وَاتَّقُوا
+      اللَّهَ لَعَلَّكُمْ تُفْلِحُونَ
+  - type: insert
+    segment_index: '004.0401'
+    new_audio_file: 13.0/004_1.wav
+    new_tarteel_transcript:
+    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: update
+    segment_index: '005.0274'
+    new_audio_file: 13.0/005_1.wav
+    new_tarteel_transcript:
+    - لِلَّهِ مُلْكُ السَّمَاوَاتِ وَالْأَرْضِ وَمَا فِيهِنَّ وَهُوَ عَلَى كُلِّ شَيْءٍ
+      قَدِيرٌ
+  - type: update
+    segment_index: '007.0337'
+    new_audio_file: 13.0/007_1.wav
+    new_tarteel_transcript:
+    - إِنَّ الَّذِينَ عِنْدَ رَبِّكَ لَا يَسْتَكْبِرُونَ عَنْ عِبَادَتِهِ وَيُسَبِّحُونَهُ
+      وَلَهُ يَسْجُدُونَ
+  - type: update
+    segment_index: '009.0249'
+    new_audio_file: 13.0/009_1.wav
+    new_tarteel_transcript:
+    - فَإِنْ تَوَلَّوْا فَقُلْ حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ
+      وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ
+  - type: update
+    segment_index: '010.0191'
+    new_audio_file: 13.0/010_1.wav
+    new_tarteel_transcript:
+    - وَهُوَ خَيْرُ الْحَاكِمِينَ
+  - type: update
+    segment_index: '011.0208'
+    new_audio_file: 13.0/011_1.wav
+    new_tarteel_transcript:
+    - وَمَا رَبُّكَ بِغَافِلٍ عَمَّا تَعْمَلُونَ
+  - type: update
+    segment_index: '016.0206'
+    new_audio_file: 13.0/016_1.wav
+    new_tarteel_transcript:
+    - إِنَّ اللَّهَ مَعَ الَّذِينَ اتَّقَوْا وَالَّذِينَ هُمْ مُحْسِنُونَ
+  - type: update
+    segment_index: '017.0156'
+    new_audio_file: 13.0/017_1.wav
+    new_tarteel_transcript:
+    - وَقُلِ الْحَمْدُ لِلَّهِ الَّذِي لَمْ يَتَّخِذْ وَلَدًا وَلَمْ يَكُنْ لَهُ شَرِيكٌ
+      فِي الْمُلْكِ وَلَمْ يَكُنْ لَهُ وَلِيٌّ مِنَ الذُّلِّ وَكَبِّرْهُ تَكْبِيرًا
+  - type: update
+    segment_index: '018.0151'
+    new_audio_file: 13.0/018_1.wav
+    new_tarteel_transcript:
+    - فَمَنْ كَانَ يَرْجُو لِقَاءَ رَبِّهِ فَلْيَعْمَلْ عَمَلًا صَالِحًا وَلَا يُشْرِكْ
+      بِعِبَادَةِ رَبِّهِ أَحَدًا
+  - type: update
+    segment_index: '019.0113'
+    new_audio_file: 13.0/019_1.wav
+    new_tarteel_transcript:
+    - وَكَمْ أَهْلَكْنَا قَبْلَهُمْ مِنْ قَرْنٍ هَلْ تُحِسُّ مِنْهُمْ مِنْ أَحَدٍ
+      أَوْ تَسْمَعُ لَهُمْ رِكْزًا
+  - type: update
+    segment_index: '021.0145'
+    new_audio_file: 13.0/021_1.wav
+    new_tarteel_transcript:
+    - وَرَبُّنَا الرَّحْمَنُ الْمُسْتَعَانُ عَلَى مَا تَصِفُونَ
+  - type: update
+    segment_index: '022.0137'
+    new_audio_file: 13.0/022_1.wav
+    new_tarteel_transcript:
+    - فَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ وَاعْتَصِمُوا بِاللَّهِ هُوَ مَوْلَاكُمْ
+      فَنِعْمَ الْمَوْلَى وَنِعْمَ النَّصِيرُ
+  - type: update
+    segment_index: '024.0143'
+    new_audio_file: 13.0/024_1.wav
+    new_tarteel_transcript:
+    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: update
+    segment_index: '026.0233'
+    new_audio_file: 13.0/026_1.wav
+    new_tarteel_transcript:
+    - وَسَيَعْلَمُ الَّذِينَ ظَلَمُوا أَيَّ مُنْقَلَبٍ يَنْقَلِبُونَ
+  - type: update
+    segment_index: '027.0123'
+    new_audio_file: 13.0/027_1.wav
+    new_tarteel_transcript:
+    - وَمَا رَبُّكَ بِغَافِلٍ عَمَّا تَعْمَلُونَ
+  - type: update
+    segment_index: '030.0089'
+    new_audio_file: 13.0/030_1.wav
+    new_tarteel_transcript:
+    - فَاصْبِرْ إِنَّ وَعْدَ اللَّهِ حَقٌّ وَلَا يَسْتَخِفَّنَّكَ الَّذِينَ لَا يُوقِنُونَ
+  - type: update
+    segment_index: '034.0076'
+    new_audio_file: 13.0/034_1.wav
+    new_tarteel_transcript:
+    - إِنَّهُمْ كَانُوا فِي شَكٍّ مُرِيبٍ
+  - type: update
+    segment_index: '037.0188'
+    new_audio_file: 13.0/037_1.wav
+    new_tarteel_transcript:
+    - وَالْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+  - type: update
+    segment_index: '040.0133'
+    new_audio_file: 13.0/040_1.wav
+    new_tarteel_transcript:
+    - فَلَمْ يَكُ يَنْفَعُهُمْ إِيمَانُهُمْ لَمَّا رَأَوْا بَأْسَنَا سُنَّتَ اللَّهِ
+      الَّتِي قَدْ خَلَتْ فِي عِبَادِهِ وَحَسِرَ هُنَالِكَ الْكَافِرُونَ
+  - type: update
+    segment_index: '041.0077'
+    new_audio_file: 13.0/041_1.wav
+    new_tarteel_transcript:
+    - أَلَا إِنَّهُ بِكُلِّ شَيْءٍ مُحِيطٌ
+  - type: update
+    segment_index: '042.0094'
+    new_audio_file: 13.0/042_1.wav
+    new_tarteel_transcript:
+    - أَلَا إِلَى اللَّهِ تَصِيرُ الْأُمُورُ
+  - type: update
+    segment_index: '043.0108'
+    new_audio_file: 13.0/043_1.wav
+    new_tarteel_transcript:
+    - فَسَوْفَ يَعْلَمُونَ
+  - type: update
+    segment_index: '067.0038'
+    new_audio_file: 13.0/067_1.wav
+    new_tarteel_transcript:
+    - قُلْ أَرَأَيْتُمْ إِنْ أَصْبَحَ مَاؤُكُمْ غَوْرًا فَمَنْ يَأْتِيكُمْ بِمَاءٍ
+      مَعِينٍ
