@@ -8418,4 +8418,38 @@ configs:
     segment_index: '083.0014'
     new_end_seconds: 84.3
 - id: '29.0'
-  operations: []
+  operations:
+  - type: delete
+    segment_index: '016.0176'
+  - type: update
+    segment_index: '016.0175'
+    new_end_seconds: 1901.7249755859375
+  - type: delete
+    segment_index: '039.0134'
+  - type: update
+    segment_index: '039.0133'
+    new_end_seconds: 1421.5250244140625
+    new_tarteel_transcript:
+    - وَيَوْمَ الْقِيَامَةِ تَرَى الَّذِينَ كَذَبُوا عَلَى اللَّهِ وُجُوهُهُم مُّسْوَدَّةٌ
+  - type: delete
+    segment_index: '080.0012'
+  - type: update
+    segment_index: '080.0011'
+    new_end_seconds: 62.20499801635742
+    new_tarteel_transcript:
+    - كَلَّا إِنَّهَا تَذْكِرَةٌ
+  - type: update
+    segment_index: '075.0028'
+    new_end_seconds: 143.35
+    new_tarteel_transcript:
+    - وَقِيلَ مَنْ
+  - type: update
+    segment_index: '083.0014'
+    new_end_seconds: 85.18
+    new_tarteel_transcript:
+    - كَلَّا بَلْ
+  - type: insert
+    segment_index: '083.0014'
+    new_start_seconds: 85.18
+    new_tarteel_transcript:
+    - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
