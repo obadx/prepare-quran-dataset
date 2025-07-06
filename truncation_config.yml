@@ -39,7 +39,7 @@ items:
     turnc_ms: 110
 
   - id: "21.0"
-    turnc_ms: 190
+    turnc_ms: 370
 
   - id: "21.1"
     turnc_ms: 390
@@ -54,7 +54,7 @@ items:
     turnc_ms: 345
 
   - id: "26.1"
-    turnc_ms: 90
+    turnc_ms: 190
 
   - id: "28.0"
     turnc_ms: 500
