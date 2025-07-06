@@ -4783,6 +4783,43 @@ configs:
     segment_index: '053.0036'
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: delete
+    segment_index: '008.0010'
+  - type: update
+    segment_index: '008.0009'
+    new_end_seconds: 108.57500457763672
+    new_tarteel_transcript:
+    - كَمَا أَخْرَجَكَ رَبُّكَ مِن بَيْتِكَ بِالْحَقِّ وَإِنَّ فَرِيقًا مِّنَ الْمُؤْمِنِينَ
+      لَكَارِهُونَ
+  - type: update
+    segment_index: '006.0414'
+    new_audio_file: 27.0/006_last.wav
+  - type: update
+    segment_index: '007.0410'
+    new_audio_file: 27.0/007_last.wav
+    new_tarteel_transcript:
+    - إِنَّ الَّذِينَ عِندَ رَبِّكَ لَا يَسْتَكْبِرُونَ عَنْ عِبَادَتِهِ وَيُسَبِّحُونَهُ
+      وَلَهُ يَسْجُدُونَ
+  - type: update
+    segment_index: '008.0153'
+    new_audio_file: 27.0/008_last.wav
+    new_tarteel_transcript:
+    - إِنَّ اللَّهَ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: delete
+    segment_index: '011.0116'
+  - type: update
+    segment_index: '011.0115'
+    new_end_seconds: 1181.985107421875
+    new_tarteel_transcript:
+    - إِنِّي تَوَكَّلْتُ عَلَى اللَّهِ رَبِّي وَرَبِّكُم
+  - type: delete
+    segment_index: '030.0089'
+  - type: update
+    segment_index: '030.0088'
+    new_audio_file: 27.0/030_0088.wav
+    new_tarteel_transcript:
+    - اللَّهُ الَّذِي يُرْسِلُ الرِّيَاحَ فَتُثِيرُ سَحَابًا فَيَبْسُطُهُ فِي السَّمَاءِ
+      كَيْفَ يَشَاءُ وَيَجْعَلُهُ كِسَفًا فَتَرَى الْوَدْقَ يَخْرُجُ مِنْ خِلَالِهِ
 - id: '30.0'
   operations:
   - type: update
