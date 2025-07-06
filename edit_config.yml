@@ -4886,6 +4886,47 @@ configs:
     segment_index: '053.0036'
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: delete
+    segment_index: '017.0196'
+  - type: update
+    segment_index: '017.0195'
+    new_end_seconds: 2201.1298828125
+    new_tarteel_transcript:
+    - وَبِالْحَقِّ أَنْزَلْنَاهُ وَبِالْحَقِّ نَزَلَ
+  - type: delete
+    segment_index: '056.0100'
+  - type: update
+    segment_index: '056.0099'
+    new_end_seconds: 583.114990234375
+    new_tarteel_transcript:
+    - فَسَبِّحْ بِاسْمِ رَبِّكَ الْعَظِيمِ
+  - type: delete
+    segment_index: '012.0039'
+  - type: update
+    segment_index: '012.0038'
+    new_end_seconds: 467.1650085449219
+    new_tarteel_transcript:
+    - وَرَاوَدَتْهُ الَّتِي هُوَ فِي بَيْتِهَا عَنْ نَفْسِهِ وَغَلَّقَتِ الْأَبْوَابَ
+      وَقَالَتْ هَيْتَ لَكَ
+  - type: delete
+    segment_index: '016.0130'
+  - type: update
+    segment_index: '016.0129'
+    new_end_seconds: 1201.679931640625
+    new_tarteel_transcript:
+    - 'ثُمَّ كُلِي مِن كُلِّ الثَّمَرَاتِ فَاسْلُكِي سُبُلَ رَبِّكِ ذُلُلًا '
+  - type: delete
+    segment_index: '027.0123'
+  - type: update
+    segment_index: '027.0122'
+    new_end_seconds: 1322.75
+    new_tarteel_transcript:
+    - بَلْ هُمْ فِي شَكٍّ مِنْهَا
+  - type: delete
+    segment_index: '036.0093'
+  - type: update
+    segment_index: '036.0092'
+    new_end_seconds: 821.4949951171875
 - id: '7.0'
   operations:
   - type: update
