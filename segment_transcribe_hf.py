@@ -247,7 +247,7 @@ def main(args):
                 sample_rate=16000,
                 tarteel_batch_size=args.tarteel_batch_size,
                 segment_batch_size=args.segment_batch_size,
-                segment_device="cuda",
+                segment_device=args.device,
                 segment_model=model,
                 segment_feature_extractor=processor,
                 segment_cache_dir=".segment_cache",
