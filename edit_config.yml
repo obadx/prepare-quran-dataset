@@ -3381,6 +3381,9 @@ configs:
     segment_index: '004.0492'
     new_end_seconds: 5108.73525390625
   - type: update
+    segment_index: '004.0518'
+    new_end_seconds: 5360.3
+  - type: update
     segment_index: '005.0155'
     new_end_seconds: 1752.775048828125
   - type: update
@@ -3405,6 +3408,10 @@ configs:
     segment_index: '006.0170'
     new_end_seconds: 1766.2900634765624
   - type: update
+    segment_index: '006.0172'
+    new_start_seconds: 1772.83
+    new_end_seconds: 1775.79006348
+  - type: update
     segment_index: '006.0231'
     new_end_seconds: 2345.304833984375
   - type: update
@@ -3413,6 +3420,11 @@ configs:
   - type: update
     segment_index: '006.0400'
     new_end_seconds: 4073.174951171875
+  - type: update
+    segment_index: '006.0436'
+    new_end_seconds: 4481.66015625
+  - type: delete
+    segment_index: '006.0437'
   - type: update
     segment_index: '007.0011'
     new_end_seconds: 117.48500213623046
@@ -3510,6 +3522,11 @@ configs:
     segment_index: '035.0014'
     new_end_seconds: 118.30500183105468
   - type: update
+    segment_index: '037.0176'
+    new_end_seconds: 1382.205078125
+  - type: delete
+    segment_index: '037.0177'
+  - type: update
     segment_index: '038.0044'
     new_end_seconds: 408.71001586914065
   - type: update
@@ -3564,30 +3581,6 @@ configs:
     segment_index: '063.0027'
     new_end_seconds: 282.0
   - type: update
-    segment_index: '078.0042'
-    new_end_seconds: 268.6249938964844
-  - type: update
-    segment_index: '006.0172'
-    new_start_seconds: 1772.83
-    new_end_seconds: 1775.79006348
-  - type: delete
-    segment_index: '006.0437'
-  - type: update
-    segment_index: '006.0436'
-    new_end_seconds: 4481.66015625
-  - type: delete
-    segment_index: '089.0034'
-  - type: update
-    segment_index: '089.0033'
-    new_end_seconds: 222.36500549316406
-    new_tarteel_transcript:
-    - وَادْخُلِي جَنَّتِي
-  - type: delete
-    segment_index: '037.0177'
-  - type: update
-    segment_index: '037.0176'
-    new_end_seconds: 1382.205078125
-  - type: update
     segment_index: '075.0028'
     new_end_seconds: 167.4
     new_tarteel_transcript:
@@ -3596,8 +3589,15 @@ configs:
     segment_index: '075.0029'
     new_start_seconds: 167.0
   - type: update
-    segment_index: '004.0518'
-    new_end_seconds: 5360.3
+    segment_index: '078.0042'
+    new_end_seconds: 268.6249938964844
+  - type: update
+    segment_index: '089.0033'
+    new_end_seconds: 222.36500549316406
+    new_tarteel_transcript:
+    - وَادْخُلِي جَنَّتِي
+  - type: delete
+    segment_index: '089.0034'
 - id: '28.0'
   operations:
   - type: update
@@ -3606,6 +3606,12 @@ configs:
   - type: update
     segment_index: '002.0377'
     new_end_seconds: 4500.4951171875
+  - type: update
+    segment_index: '002.0422'
+    new_end_seconds: 4957.0
+  - type: update
+    segment_index: '002.0450'
+    new_end_seconds: 5214.56
   - type: update
     segment_index: '002.0485'
     new_end_seconds: 5609.89990234375
@@ -3616,6 +3622,9 @@ configs:
     segment_index: '002.0753'
     new_tarteel_transcript:
     - أَنْتَ مَوْلَى مَا سَنْصُرْنَا عَلَى الْقَمِّ الْكَافِرِينَ
+  - type: update
+    segment_index: '003.0139'
+    new_end_seconds: 1556.4
   - type: update
     segment_index: '003.0228'
     new_end_seconds: 2741.195068359375
@@ -3692,6 +3701,11 @@ configs:
     segment_index: '018.0077'
     new_end_seconds: 1032.324951171875
   - type: update
+    segment_index: '019.0106'
+    new_end_seconds: 1128.64
+    new_tarteel_transcript:
+    - كَلَّا
+  - type: update
     segment_index: '028.0020'
     new_end_seconds: 248.5800018310547
   - type: update
@@ -3735,27 +3749,70 @@ configs:
     segment_index: '078.0039'
     new_end_seconds: 231.6649932861328
   - type: update
-    segment_index: '002.0422'
-    new_end_seconds: 4957.0
+    segment_index: '043.0023'
+    new_end_seconds: 223.18
   - type: update
-    segment_index: '002.0450'
-    new_end_seconds: 5214.56
+    segment_index: '056.0037'
+    new_end_seconds: 195.9
   - type: update
-    segment_index: '003.0139'
-    new_end_seconds: 1556.4
+    segment_index: '066.0005'
+    new_end_seconds: 33.3
   - type: update
-    segment_index: '019.0106'
-    new_end_seconds: 1128.64
+    segment_index: '070.0017'
+    new_end_seconds: 82.04
+  - type: update
+    segment_index: '090.0013'
+    new_start_seconds: 62.2
+  - type: update
+    segment_index: '096.0006'
+    new_start_seconds: 32.4
+  - type: update
+    segment_index: '106.0001'
+    new_end_seconds: 9.69
     new_tarteel_transcript:
-    - كَلَّا
-  - type: update
-    segment_index: '032.0029'
+    - لِإِيلَافِ قُرَيْشٍ
+  - type: insert
+    segment_index: '106.0001'
+    new_start_seconds: 9.69
     new_tarteel_transcript:
-    - لَا يَسْتَوُونَ
+    - إِيلَافِهِمْ رِحْلَةَ الشِّتَاءِ وَالصَّيْفِ
+  - type: delete
+    segment_index: '011.0006'
   - type: update
-    segment_index: '033.0038'
+    segment_index: '011.0005'
+    new_end_seconds: 64.48500061035156
     new_tarteel_transcript:
-    - أَشِحَّةً عَلَيْكُمْ
+    - وَأَنِ اسْتَغْفِرُوا رَبَّكُمْ ثُمَّ تُوبُوا إِلَيْهِ يُمَتِّعْكُم مَّتَاعًا
+      حَسَنًا إِلَىٰ أَجَلٍ مُّسَمًّى وَيُؤْتِ كُلَّ ذِي فَضْلٍ فَضْلَهُ
+  - type: delete
+    segment_index: '015.0091'
+  - type: update
+    segment_index: '015.0090'
+    new_end_seconds: 862.2650146484375
+    new_tarteel_transcript:
+    - وَإِنَّ السَّاعَةَ لَآتِيَةٌ فَاصْفَحِ الصَّفْحَ الْجَمِيلَ
+  - type: delete
+    segment_index: '018.0139'
+  - type: update
+    segment_index: '018.0138'
+    new_end_seconds: 1762.239990234375
+    new_tarteel_transcript:
+    - سَأُنَبِّئُكَ بِتَأْوِيلِ مَا لَمْ تَسْتَطِع عَّلَيْهِ صَبْرًا
+  - type: delete
+    segment_index: '020.0108'
+  - type: update
+    segment_index: '020.0107'
+    new_end_seconds: 1001.1500244140625
+    new_tarteel_transcript:
+    - وَإِنِّي لَغَفَّارٌ لِّمَن تَابَ وَآمَنَ وَعَمِلَ صَالِحًا ثُمَّ اهْتَدَىٰ
+  - type: delete
+    segment_index: '017.0049'
+  - type: update
+    segment_index: '017.0048'
+    new_end_seconds: 545.864990234375
+    new_tarteel_transcript:
+    - وَاخْفِضْ لَهُمَا جَنَاحَ الذُّلِّ مِنَ الرَّحْمَةِ وَقُل رَّبِّ ارْحَمْهُمَا
+      كَمَا رَبَّيَانِي صَغِيرًا
 - id: '31.0'
   operations:
   - type: update
@@ -3770,6 +3827,9 @@ configs:
   - type: update
     segment_index: '002.0370'
     new_end_seconds: 4040.32001953125
+  - type: update
+    segment_index: '002.0413'
+    new_end_seconds: 4475.2
   - type: update
     segment_index: '002.0616'
     new_end_seconds: 6760.19990234375
@@ -4721,76 +4781,64 @@ configs:
 - id: '26.0'
   operations:
   - type: update
-    segment_index: '053.0038'
+    segment_index: '003.0227'
+    new_end_seconds: 2272.375
     new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: update
-    segment_index: '114.0007'
-    new_end_seconds: 42.0
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ حَقَّ تُقَاتِهِ وَلَا تَمُوتُنَّ
+      إِلَّا وَأَنتُم مُّسْلِمُونَ
   - type: delete
-    segment_index: '081.0031'
-  - type: update
-    segment_index: '081.0030'
-    new_end_seconds: 162.97999572753906
-    new_tarteel_transcript:
-    - وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ رَبُّ الْعَالَمِينَ
-  - type: update
-    segment_index: '083.0015'
-    new_end_seconds: 94.0
-  - type: update
-    segment_index: '083.0016'
-    new_start_seconds: 93.6
-  - type: delete
-    segment_index: '083.0040'
-  - type: update
-    segment_index: '083.0039'
-    new_end_seconds: 262.2550048828125
-  - type: delete
-    segment_index: '016.0082'
+    segment_index: '003.0228'
   - type: update
     segment_index: '016.0081'
     new_end_seconds: 702.0250244140625
   - type: delete
-    segment_index: '019.0134'
+    segment_index: '016.0082'
   - type: update
     segment_index: '019.0133'
     new_end_seconds: 1183.844970703125
     new_tarteel_transcript:
     - قَالُوا اتَّخَذَ الرَّحْمَنُ وَلَدًا
   - type: delete
-    segment_index: '058.0028'
-  - type: update
-    segment_index: '058.0027'
-    new_end_seconds: 261.81500244140625
-  - type: delete
-    segment_index: '039.0037'
+    segment_index: '019.0134'
   - type: update
     segment_index: '039.0036'
     new_end_seconds: 302.7449951171875
     new_tarteel_transcript:
     - قُلْ يَا عِبَادِ الَّذِينَ آمَنُوا اتَّقُوا رَبَّكُمْ
   - type: delete
-    segment_index: '003.0228'
+    segment_index: '039.0037'
   - type: update
-    segment_index: '003.0227'
-    new_end_seconds: 2272.375
-    new_tarteel_transcript:
-    - يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ حَقَّ تُقَاتِهِ وَلَا تَمُوتُنَّ
-      إِلَّا وَأَنتُم مُّسْلِمُونَ
-- id: '27.0'
-  operations:
-  - type: update
-    segment_index: '053.0036'
+    segment_index: '053.0038'
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: delete
-    segment_index: '008.0010'
   - type: update
-    segment_index: '008.0009'
-    new_end_seconds: 108.57500457763672
+    segment_index: '058.0027'
+    new_end_seconds: 261.81500244140625
+  - type: delete
+    segment_index: '058.0028'
+  - type: update
+    segment_index: '081.0030'
+    new_end_seconds: 162.97999572753906
     new_tarteel_transcript:
-    - كَمَا أَخْرَجَكَ رَبُّكَ مِن بَيْتِكَ بِالْحَقِّ وَإِنَّ فَرِيقًا مِّنَ الْمُؤْمِنِينَ
-      لَكَارِهُونَ
+    - وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ رَبُّ الْعَالَمِينَ
+  - type: delete
+    segment_index: '081.0031'
+  - type: update
+    segment_index: '083.0015'
+    new_end_seconds: 94.0
+  - type: update
+    segment_index: '083.0016'
+    new_start_seconds: 93.6
+  - type: update
+    segment_index: '083.0039'
+    new_end_seconds: 262.2550048828125
+  - type: delete
+    segment_index: '083.0040'
+  - type: update
+    segment_index: '114.0007'
+    new_end_seconds: 42.0
+- id: '27.0'
+  operations:
   - type: update
     segment_index: '006.0414'
     new_audio_file: 27.0/006_last.wav
@@ -4801,25 +4849,37 @@ configs:
     - إِنَّ الَّذِينَ عِندَ رَبِّكَ لَا يَسْتَكْبِرُونَ عَنْ عِبَادَتِهِ وَيُسَبِّحُونَهُ
       وَلَهُ يَسْجُدُونَ
   - type: update
+    segment_index: '008.0009'
+    new_end_seconds: 108.57500457763672
+    new_tarteel_transcript:
+    - كَمَا أَخْرَجَكَ رَبُّكَ مِن بَيْتِكَ بِالْحَقِّ وَإِنَّ فَرِيقًا مِّنَ الْمُؤْمِنِينَ
+      لَكَارِهُونَ
+  - type: delete
+    segment_index: '008.0010'
+  - type: update
     segment_index: '008.0153'
     new_audio_file: 27.0/008_last.wav
     new_tarteel_transcript:
     - إِنَّ اللَّهَ بِكُلِّ شَيْءٍ عَلِيمٌ
-  - type: delete
-    segment_index: '011.0116'
   - type: update
     segment_index: '011.0115'
     new_end_seconds: 1181.985107421875
     new_tarteel_transcript:
     - إِنِّي تَوَكَّلْتُ عَلَى اللَّهِ رَبِّي وَرَبِّكُم
   - type: delete
-    segment_index: '030.0089'
+    segment_index: '011.0116'
   - type: update
     segment_index: '030.0088'
     new_audio_file: 27.0/030_0088.wav
     new_tarteel_transcript:
     - اللَّهُ الَّذِي يُرْسِلُ الرِّيَاحَ فَتُثِيرُ سَحَابًا فَيَبْسُطُهُ فِي السَّمَاءِ
       كَيْفَ يَشَاءُ وَيَجْعَلُهُ كِسَفًا فَتَرَى الْوَدْقَ يَخْرُجُ مِنْ خِلَالِهِ
+  - type: delete
+    segment_index: '030.0089'
+  - type: update
+    segment_index: '053.0036'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
 - id: '30.0'
   operations:
   - type: update
@@ -8357,3 +8417,5 @@ configs:
   - type: update
     segment_index: '083.0014'
     new_end_seconds: 84.3
+- id: '29.0'
+  operations: []
