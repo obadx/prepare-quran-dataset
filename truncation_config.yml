@@ -59,8 +59,5 @@ items:
   - id: "27.0"
     turnc_ms: 200
 
-  - id: "28.0"
-    turnc_ms: 500
-
   - id: "31.0"
     turnc_ms: 240

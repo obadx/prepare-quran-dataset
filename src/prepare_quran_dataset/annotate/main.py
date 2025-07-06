@@ -96,6 +96,11 @@ SEGMET_MOSHAF_PARAMS = {
         "min_speech_duration_ms": 600,
         "pad_duration_ms": 700,
     },
+    "28.0": {
+        "min_silence_duration_ms": 30,
+        "min_speech_duration_ms": 700,
+        "pad_duration_ms": 300,
+    },
 }
 
 
