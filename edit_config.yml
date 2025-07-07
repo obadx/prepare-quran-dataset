@@ -526,6 +526,18 @@ configs:
   - type: update
     segment_index: '078.0039'
     new_end_seconds: 355.99501342773436
+  - type: update
+    segment_index: '031.0062'
+    new_audio_file: 0.1/031_0062.wav
+    new_tarteel_transcript:
+    - أَلَمْ تَرَ أَنَّ الْفُلْكَ تَجْرِي فِي الْبَحْرِ بِنِعْمَتِ اللَّهِ لِيُرِيَكُم
+      مِّنْ آيَاتِهِ
+  - type: update
+    segment_index: '011.0017'
+    new_audio_file: 0.1/011_0017.wav
+    new_tarteel_transcript:
+    - ' وَلَئِن قُلْتَ إِنَّكُم مَّبْعُوثُونَ مِن بَعْدِ الْمَوْتِ لَيَقُولَنَّ الَّذِينَ
+      كَفَرُوا إِنْ هَٰذَا إِلَّا سِحْرٌ مُّبِينٌ'
 - id: '0.2'
   operations:
   - type: update
@@ -3683,6 +3695,14 @@ configs:
     segment_index: '010.0077'
     new_end_seconds: 964.5599975585938
   - type: update
+    segment_index: '011.0005'
+    new_end_seconds: 64.48500061035156
+    new_tarteel_transcript:
+    - وَأَنِ اسْتَغْفِرُوا رَبَّكُمْ ثُمَّ تُوبُوا إِلَيْهِ يُمَتِّعْكُم مَّتَاعًا
+      حَسَنًا إِلَىٰ أَجَلٍ مُّسَمًّى وَيُؤْتِ كُلَّ ذِي فَضْلٍ فَضْلَهُ
+  - type: delete
+    segment_index: '011.0006'
+  - type: update
     segment_index: '013.0030'
     new_end_seconds: 386.0849914550781
   - type: update
@@ -3695,16 +3715,45 @@ configs:
     segment_index: '015.0089'
     new_end_seconds: 852.5900268554688
   - type: update
+    segment_index: '015.0090'
+    new_end_seconds: 862.2650146484375
+    new_tarteel_transcript:
+    - وَإِنَّ السَّاعَةَ لَآتِيَةٌ فَاصْفَحِ الصَّفْحَ الْجَمِيلَ
+  - type: delete
+    segment_index: '015.0091'
+  - type: update
+    segment_index: '017.0048'
+    new_end_seconds: 545.864990234375
+    new_tarteel_transcript:
+    - وَاخْفِضْ لَهُمَا جَنَاحَ الذُّلِّ مِنَ الرَّحْمَةِ وَقُل رَّبِّ ارْحَمْهُمَا
+      كَمَا رَبَّيَانِي صَغِيرًا
+  - type: delete
+    segment_index: '017.0049'
+  - type: update
     segment_index: '018.0014'
     new_end_seconds: 174.97999572753906
   - type: update
     segment_index: '018.0077'
     new_end_seconds: 1032.324951171875
   - type: update
+    segment_index: '018.0138'
+    new_end_seconds: 1762.239990234375
+    new_tarteel_transcript:
+    - سَأُنَبِّئُكَ بِتَأْوِيلِ مَا لَمْ تَسْتَطِع عَّلَيْهِ صَبْرًا
+  - type: delete
+    segment_index: '018.0139'
+  - type: update
     segment_index: '019.0106'
     new_end_seconds: 1128.64
     new_tarteel_transcript:
     - كَلَّا
+  - type: update
+    segment_index: '020.0107'
+    new_end_seconds: 1001.1500244140625
+    new_tarteel_transcript:
+    - وَإِنِّي لَغَفَّارٌ لِّمَن تَابَ وَآمَنَ وَعَمِلَ صَالِحًا ثُمَّ اهْتَدَىٰ
+  - type: delete
+    segment_index: '020.0108'
   - type: update
     segment_index: '028.0020'
     new_end_seconds: 248.5800018310547
@@ -3730,6 +3779,9 @@ configs:
     segment_index: '042.0038'
     new_end_seconds: 428.19500732421875
   - type: update
+    segment_index: '043.0023'
+    new_end_seconds: 223.18
+  - type: update
     segment_index: '045.0006'
     new_end_seconds: 77.625
   - type: update
@@ -3743,17 +3795,11 @@ configs:
     new_tarteel_transcript:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
   - type: update
-    segment_index: '056.0096'
-    new_end_seconds: 582.66
-  - type: update
-    segment_index: '078.0039'
-    new_end_seconds: 231.6649932861328
-  - type: update
-    segment_index: '043.0023'
-    new_end_seconds: 223.18
-  - type: update
     segment_index: '056.0037'
     new_end_seconds: 195.9
+  - type: update
+    segment_index: '056.0096'
+    new_end_seconds: 582.66
   - type: update
     segment_index: '066.0005'
     new_end_seconds: 33.3
@@ -3761,300 +3807,24 @@ configs:
     segment_index: '070.0017'
     new_end_seconds: 82.04
   - type: update
+    segment_index: '078.0039'
+    new_end_seconds: 231.6649932861328
+  - type: update
     segment_index: '090.0013'
     new_start_seconds: 62.2
   - type: update
     segment_index: '096.0006'
     new_start_seconds: 32.4
-  - type: update
-    segment_index: '106.0001'
-    new_end_seconds: 9.69
-    new_tarteel_transcript:
-    - لِإِيلَافِ قُرَيْشٍ
   - type: insert
     segment_index: '106.0001'
     new_start_seconds: 9.69
     new_tarteel_transcript:
     - إِيلَافِهِمْ رِحْلَةَ الشِّتَاءِ وَالصَّيْفِ
-  - type: delete
-    segment_index: '011.0006'
   - type: update
-    segment_index: '011.0005'
-    new_end_seconds: 64.48500061035156
+    segment_index: '106.0001'
+    new_end_seconds: 9.69
     new_tarteel_transcript:
-    - وَأَنِ اسْتَغْفِرُوا رَبَّكُمْ ثُمَّ تُوبُوا إِلَيْهِ يُمَتِّعْكُم مَّتَاعًا
-      حَسَنًا إِلَىٰ أَجَلٍ مُّسَمًّى وَيُؤْتِ كُلَّ ذِي فَضْلٍ فَضْلَهُ
-  - type: delete
-    segment_index: '015.0091'
-  - type: update
-    segment_index: '015.0090'
-    new_end_seconds: 862.2650146484375
-    new_tarteel_transcript:
-    - وَإِنَّ السَّاعَةَ لَآتِيَةٌ فَاصْفَحِ الصَّفْحَ الْجَمِيلَ
-  - type: delete
-    segment_index: '018.0139'
-  - type: update
-    segment_index: '018.0138'
-    new_end_seconds: 1762.239990234375
-    new_tarteel_transcript:
-    - سَأُنَبِّئُكَ بِتَأْوِيلِ مَا لَمْ تَسْتَطِع عَّلَيْهِ صَبْرًا
-  - type: delete
-    segment_index: '020.0108'
-  - type: update
-    segment_index: '020.0107'
-    new_end_seconds: 1001.1500244140625
-    new_tarteel_transcript:
-    - وَإِنِّي لَغَفَّارٌ لِّمَن تَابَ وَآمَنَ وَعَمِلَ صَالِحًا ثُمَّ اهْتَدَىٰ
-  - type: delete
-    segment_index: '017.0049'
-  - type: update
-    segment_index: '017.0048'
-    new_end_seconds: 545.864990234375
-    new_tarteel_transcript:
-    - وَاخْفِضْ لَهُمَا جَنَاحَ الذُّلِّ مِنَ الرَّحْمَةِ وَقُل رَّبِّ ارْحَمْهُمَا
-      كَمَا رَبَّيَانِي صَغِيرًا
-- id: '31.0'
-  operations:
-  - type: update
-    segment_index: '002.0106'
-    new_end_seconds: 1291.850048828125
-  - type: update
-    segment_index: '002.0124'
-    new_end_seconds: 1507.2150390625
-  - type: update
-    segment_index: '002.0209'
-    new_end_seconds: 2477.814892578125
-  - type: update
-    segment_index: '002.0370'
-    new_end_seconds: 4040.32001953125
-  - type: update
-    segment_index: '002.0413'
-    new_end_seconds: 4475.2
-  - type: update
-    segment_index: '002.0616'
-    new_end_seconds: 6760.19990234375
-  - type: update
-    segment_index: '003.0128'
-    new_end_seconds: 1539.769970703125
-  - type: update
-    segment_index: '003.0206'
-    new_end_seconds: 2692.180126953125
-  - type: update
-    segment_index: '003.0216'
-    new_end_seconds: 2813.390087890625
-  - type: update
-    segment_index: '004.0415'
-    new_end_seconds: 5087.63984375
-  - type: update
-    segment_index: '005.0140'
-    new_end_seconds: 1755.414990234375
-  - type: update
-    segment_index: '005.0226'
-    new_end_seconds: 2839.164990234375
-  - type: update
-    segment_index: '005.0302'
-    new_end_seconds: 3900.394970703125
-  - type: update
-    segment_index: '006.0061'
-    new_end_seconds: 671.2450073242187
-  - type: update
-    segment_index: '006.0129'
-    new_end_seconds: 1507.0750244140625
-  - type: update
-    segment_index: '006.0135'
-    new_end_seconds: 1594.374951171875
-  - type: update
-    segment_index: '006.0152'
-    new_end_seconds: 1801.8799560546875
-  - type: update
-    segment_index: '006.0154'
-    new_end_seconds: 1811.4600341796875
-  - type: update
-    segment_index: '006.0263'
-    new_end_seconds: 3049.130078125
-  - type: update
-    segment_index: '006.0365'
-    new_end_seconds: 4231.934765625
-  - type: update
-    segment_index: '007.0009'
-    new_end_seconds: 110.83
-  - type: update
-    segment_index: '007.0077'
-    new_end_seconds: 904.0
-  - type: update
-    segment_index: '007.0197'
-    new_end_seconds: 2285.3400390625
-  - type: update
-    segment_index: '010.0014'
-    new_end_seconds: 137.75
-  - type: update
-    segment_index: '010.0052'
-    new_end_seconds: 575.3499877929687
-  - type: update
-    segment_index: '010.0071'
-    new_end_seconds: 801.2500122070312
-  - type: update
-    segment_index: '010.0076'
-    new_end_seconds: 846.060009765625
-  - type: update
-    segment_index: '010.0083'
-    new_end_seconds: 904.73
-  - type: update
-    segment_index: '010.0084'
-    new_end_seconds: 909.0
-  - type: update
-    segment_index: '010.0120'
-    new_end_seconds: 1276.6349609375
-  - type: update
-    segment_index: '013.0032'
-    new_end_seconds: 318.3350036621094
-  - type: update
-    segment_index: '013.0082'
-    new_end_seconds: 834.94501953125
-  - type: update
-    segment_index: '014.0040'
-    new_end_seconds: 420.63
-  - type: update
-    segment_index: '015.0088'
-    new_end_seconds: 766.81
-  - type: update
-    segment_index: '016.0004'
-    new_end_seconds: 49.61
-  - type: update
-    segment_index: '017.0057'
-    new_end_seconds: 582.28
-  - type: update
-    segment_index: '018.0015'
-    new_end_seconds: 149.0
-  - type: update
-    segment_index: '018.0079'
-    new_end_seconds: 834.355
-  - type: update
-    segment_index: '018.0101'
-    new_end_seconds: 1064.3250244140625
-  - type: update
-    segment_index: '020.0152'
-    new_end_seconds: 1271.35
-  - type: update
-    segment_index: '021.0168'
-    new_end_seconds: 1475.41
-  - type: update
-    segment_index: '023.0077'
-    new_end_seconds: 793.5550048828125
-  - type: update
-    segment_index: '023.0147'
-    new_end_seconds: 1460.0
-  - type: update
-    segment_index: '029.0078'
-    new_end_seconds: 699.3
-  - type: update
-    segment_index: '031.0063'
-    new_end_seconds: 633.0
-  - type: update
-    segment_index: '033.0112'
-    new_end_seconds: 1284.749951171875
-  - type: update
-    segment_index: '034.0049'
-    new_end_seconds: 488.13001708984376
-  - type: update
-    segment_index: '039.0009'
-    new_end_seconds: 103.24499969482422
-  - type: update
-    segment_index: '039.0092'
-    new_end_seconds: 915.8250244140625
-  - type: update
-    segment_index: '040.0038'
-    new_end_seconds: 394.69501953125
-  - type: update
-    segment_index: '040.0138'
-    new_end_seconds: 1694.9500244140625
-  - type: update
-    segment_index: '041.0089'
-    new_end_seconds: 1223.5650146484375
-  - type: update
-    segment_index: '042.0046'
-    new_end_seconds: 465.175
-  - type: update
-    segment_index: '042.0093'
-    new_end_seconds: 959.69501953125
-  - type: update
-    segment_index: '045.0006'
-    new_end_seconds: 67.73500518798828
-  - type: update
-    segment_index: '045.0048'
-    new_end_seconds: 475.5
-  - type: update
-    segment_index: '046.0032'
-    new_end_seconds: 368.62000732421876
-  - type: update
-    segment_index: '046.0060'
-    new_end_seconds: 757.425
-  - type: update
-    segment_index: '048.0057'
-    new_end_seconds: 616.2000244140625
-  - type: update
-    segment_index: '050.0028'
-    new_end_seconds: 212.1
-  - type: update
-    segment_index: '050.0055'
-    new_end_seconds: 436.0
-  - type: update
-    segment_index: '053.0037'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: update
-    segment_index: '078.0040'
-    new_end_seconds: 252.8299987792969
-- id: '3.1'
-  operations:
-  - type: update
-    segment_index: '002.0566'
-    new_tarteel_transcript:
-    - لِمَنِ اتَّقَىٰ
-  - type: update
-    segment_index: '009.0207'
-    new_tarteel_transcript:
-    - ' هِيَ حَسْبُهُمْ'
-  - type: update
-    segment_index: '016.0112'
-    new_tarteel_transcript:
-    - فَتَمَتَّعُوا
-  - type: update
-    segment_index: '019.0136'
-    new_tarteel_transcript:
-    - كَلَّا
-  - type: update
-    segment_index: '026.0065'
-    new_tarteel_transcript:
-    - قَالَ كَلَّا
-  - type: update
-    segment_index: '037.0022'
-    new_tarteel_transcript:
-    - وَقِفُوهُمْ
-  - type: update
-    segment_index: '037.0149'
-    new_tarteel_transcript:
-    - فَكَفَرُوا بِهِ
-  - type: update
-    segment_index: '038.0052'
-    new_tarteel_transcript:
-    - ' نِعْمَ الْعَبْدُ'
-  - type: update
-    segment_index: '038.0088'
-    new_tarteel_transcript:
-    - هَٰذَا
-  - type: update
-    segment_index: '047.0009'
-    new_tarteel_transcript:
-    - ذَٰلِكَ
-  - type: update
-    segment_index: '050.0060'
-    new_tarteel_transcript:
-    - وَاسْتَمِعْ
-  - type: update
-    segment_index: '053.0032'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+    - لِإِيلَافِ قُرَيْشٍ
 - id: '5.0'
   operations:
   - type: update
@@ -4883,50 +4653,50 @@ configs:
 - id: '30.0'
   operations:
   - type: update
-    segment_index: '053.0036'
-    new_tarteel_transcript:
-    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
-  - type: delete
-    segment_index: '017.0196'
-  - type: update
-    segment_index: '017.0195'
-    new_end_seconds: 2201.1298828125
-    new_tarteel_transcript:
-    - وَبِالْحَقِّ أَنْزَلْنَاهُ وَبِالْحَقِّ نَزَلَ
-  - type: delete
-    segment_index: '056.0100'
-  - type: update
-    segment_index: '056.0099'
-    new_end_seconds: 583.114990234375
-    new_tarteel_transcript:
-    - فَسَبِّحْ بِاسْمِ رَبِّكَ الْعَظِيمِ
-  - type: delete
-    segment_index: '012.0039'
-  - type: update
     segment_index: '012.0038'
     new_end_seconds: 467.1650085449219
     new_tarteel_transcript:
     - وَرَاوَدَتْهُ الَّتِي هُوَ فِي بَيْتِهَا عَنْ نَفْسِهِ وَغَلَّقَتِ الْأَبْوَابَ
       وَقَالَتْ هَيْتَ لَكَ
   - type: delete
-    segment_index: '016.0130'
+    segment_index: '012.0039'
   - type: update
     segment_index: '016.0129'
     new_end_seconds: 1201.679931640625
     new_tarteel_transcript:
     - 'ثُمَّ كُلِي مِن كُلِّ الثَّمَرَاتِ فَاسْلُكِي سُبُلَ رَبِّكِ ذُلُلًا '
   - type: delete
-    segment_index: '027.0123'
+    segment_index: '016.0130'
+  - type: update
+    segment_index: '017.0195'
+    new_end_seconds: 2201.1298828125
+    new_tarteel_transcript:
+    - وَبِالْحَقِّ أَنْزَلْنَاهُ وَبِالْحَقِّ نَزَلَ
+  - type: delete
+    segment_index: '017.0196'
   - type: update
     segment_index: '027.0122'
     new_end_seconds: 1322.75
     new_tarteel_transcript:
     - بَلْ هُمْ فِي شَكٍّ مِنْهَا
   - type: delete
-    segment_index: '036.0093'
+    segment_index: '027.0123'
   - type: update
     segment_index: '036.0092'
     new_end_seconds: 821.4949951171875
+  - type: delete
+    segment_index: '036.0093'
+  - type: update
+    segment_index: '053.0036'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: update
+    segment_index: '056.0099'
+    new_end_seconds: 583.114990234375
+    new_tarteel_transcript:
+    - فَسَبِّحْ بِاسْمِ رَبِّكَ الْعَظِيمِ
+  - type: delete
+    segment_index: '056.0100'
 - id: '7.0'
   operations:
   - type: update
@@ -8447,50 +8217,39 @@ configs:
   - type: update
     segment_index: '114.0006'
     new_end_seconds: 31.535000076293944
-- id: '21.0'
-  operations:
-  - type: update
-    segment_index: '037.0189'
-    new_end_seconds: 1221.3
-  - type: update
-    segment_index: '045.0058'
-    new_end_seconds: 581.66
-  - type: update
-    segment_index: '083.0014'
-    new_end_seconds: 84.3
 - id: '29.0'
   operations:
-  - type: delete
-    segment_index: '016.0176'
   - type: update
     segment_index: '016.0175'
     new_end_seconds: 1901.7249755859375
   - type: delete
-    segment_index: '039.0134'
+    segment_index: '016.0176'
   - type: update
     segment_index: '039.0133'
     new_end_seconds: 1421.5250244140625
     new_tarteel_transcript:
     - وَيَوْمَ الْقِيَامَةِ تَرَى الَّذِينَ كَذَبُوا عَلَى اللَّهِ وُجُوهُهُم مُّسْوَدَّةٌ
   - type: delete
-    segment_index: '080.0012'
-  - type: update
-    segment_index: '080.0011'
-    new_end_seconds: 62.20499801635742
-    new_tarteel_transcript:
-    - كَلَّا إِنَّهَا تَذْكِرَةٌ
+    segment_index: '039.0134'
   - type: update
     segment_index: '075.0028'
     new_end_seconds: 143.35
     new_tarteel_transcript:
     - وَقِيلَ مَنْ
   - type: update
-    segment_index: '083.0014'
-    new_end_seconds: 85.18
+    segment_index: '080.0011'
+    new_end_seconds: 62.20499801635742
     new_tarteel_transcript:
-    - كَلَّا بَلْ
+    - كَلَّا إِنَّهَا تَذْكِرَةٌ
+  - type: delete
+    segment_index: '080.0012'
   - type: insert
     segment_index: '083.0014'
     new_start_seconds: 85.18
     new_tarteel_transcript:
     - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
+  - type: update
+    segment_index: '083.0014'
+    new_end_seconds: 85.18
+    new_tarteel_transcript:
+    - كَلَّا بَلْ
