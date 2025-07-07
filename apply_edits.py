@@ -98,7 +98,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    setup_logging()
+    # setup_logging()
 
     parser = argparse.ArgumentParser(
         "Building Recitations Dataset by spliting tracks using وقف and trancripe using Tarteel"
