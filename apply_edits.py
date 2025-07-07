@@ -69,24 +69,14 @@ def main(args):
     )
 
     for moshaf_edit_config in edit_cofig.configs:
-        # executor.update_parameters(
-        #     slurm_job_name=f"Edit_{moshaf_edit_config.id}",
-        #     slurm_additional_parameters={
-        #         # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
-        #     },
-        # )
-        # job = executor.submit(
-        #     apply_moshaf_edits,
-        #     moshaf_edit_config,
-        #     ds_path=out_path / moshaf_edit_config.id / "train",
-        #     moshaf_media_files_path=(
-        #         args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
-        #     ),
-        #     new_audiofile_path=args.new_audiofile_path,
-        #     num_proc=16,
-        # )
-        # print(job.job_id)
-        apply_moshaf_edits(
+        executor.update_parameters(
+            slurm_job_name=f"Edit_{moshaf_edit_config.id}",
+            slurm_additional_parameters={
+                # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
+            },
+        )
+        job = executor.submit(
+            apply_moshaf_edits,
             moshaf_edit_config,
             ds_path=out_path / moshaf_edit_config.id / "train",
             moshaf_media_files_path=(
@@ -95,6 +85,16 @@ def main(args):
             new_audiofile_path=args.new_audiofile_base_path,
             num_proc=16,
         )
+        print(job.job_id)
+        # apply_moshaf_edits(
+        #     moshaf_edit_config,
+        #     ds_path=out_path / moshaf_edit_config.id / "train",
+        #     moshaf_media_files_path=(
+        #         args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+        #     ),
+        #     new_audiofile_path=args.new_audiofile_base_path,
+        #     num_proc=16,
+        # )
 
 
 if __name__ == "__main__":
