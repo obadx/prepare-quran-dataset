@@ -2,10 +2,6 @@ configs:
 - id: '0.0'
   operations:
   - type: update
-    segment_index: '000.0133'
-    new_tarteel_transcript:
-    - هِيَ حَسْبُهُمْ
-  - type: update
     segment_index: '002.0088'
     new_end_seconds: 1100.1000732421876
   - type: update
