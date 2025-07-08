@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 import sys
 from typing import Optional
+import time
 
 import yaml
 from librosa.core import load
@@ -473,6 +474,8 @@ def apply_edits_map(
     new_batch = {k: [] for k in batch}
     if batch["segment_index"][0] in segment_index_to_ops:
         for op in segment_index_to_ops[batch["segment_index"][0]]:
+            logging.debug(f"Working operation: {op}")
+            start_time = time.perf_counter()
             if op.type == "delete":
                 ...
             elif op.type in ["update", "insert"]:
@@ -489,6 +492,9 @@ def apply_edits_map(
                         new_batch[k].append(new_item[k])
                     else:
                         new_batch[k] += batch[k]
+            logging.debug(
+                f"Done Working on operation: {op} in {time.perf_counter() - start_time}"
+            )
 
     else:
         new_batch = batch
