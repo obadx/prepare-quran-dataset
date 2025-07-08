@@ -17,7 +17,7 @@ from prepare_quran_dataset.annotate.edit import (
 # Setup logging configuration
 def setup_logging():
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.StreamHandler(),  # Print to console
@@ -30,7 +30,7 @@ def apply_moshaf_edits(
     ds_path: Path,
     moshaf_media_files_path: Path,
     new_audiofile_path: Path,
-    num_proc=16,
+    num_proc=4,
 ):
     ds_path = Path(ds_path)
     new_audiofile_path = Path(new_audiofile_path)
@@ -75,18 +75,8 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        job = executor.submit(
-            apply_moshaf_edits,
-            moshaf_edit_config,
-            ds_path=out_path / moshaf_edit_config.id / "train",
-            moshaf_media_files_path=(
-                args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
-            ),
-            new_audiofile_path=args.new_audiofile_base_path,
-            num_proc=16,
-        )
-        print(job.job_id)
-        # apply_moshaf_edits(
+        # job = executor.submit(
+        #     apply_moshaf_edits,
         #     moshaf_edit_config,
         #     ds_path=out_path / moshaf_edit_config.id / "train",
         #     moshaf_media_files_path=(
@@ -95,10 +85,21 @@ def main(args):
         #     new_audiofile_path=args.new_audiofile_base_path,
         #     num_proc=16,
         # )
+        # print(job.job_id)
+        apply_moshaf_edits(
+            moshaf_edit_config,
+            ds_path=out_path / moshaf_edit_config.id / "train",
+            moshaf_media_files_path=(
+                args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+            ),
+            new_audiofile_path=args.new_audiofile_base_path,
+            num_proc=4,
+        )
+        break
 
 
 if __name__ == "__main__":
-    # setup_logging()
+    setup_logging()
 
     parser = argparse.ArgumentParser(
         "Building Recitations Dataset by spliting tracks using وقف and trancripe using Tarteel"
