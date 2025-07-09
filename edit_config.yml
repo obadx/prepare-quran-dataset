@@ -372,6 +372,12 @@ configs:
     segment_index: '010.0123'
     new_end_seconds: 1873.875048828125
   - type: update
+    segment_index: '011.0017'
+    new_audio_file: 0.1/011_0017.wav
+    new_tarteel_transcript:
+    - ' وَلَئِن قُلْتَ إِنَّكُم مَّبْعُوثُونَ مِن بَعْدِ الْمَوْتِ لَيَقُولَنَّ الَّذِينَ
+      كَفَرُوا إِنْ هَٰذَا إِلَّا سِحْرٌ مُّبِينٌ'
+  - type: update
     segment_index: '012.0098'
     new_audio_file: 0.1/012_0098.wav
     new_tarteel_transcript:
@@ -432,6 +438,12 @@ configs:
   - type: update
     segment_index: '030.0111'
     new_end_seconds: 1714.4349853515625
+  - type: update
+    segment_index: '031.0062'
+    new_audio_file: 0.1/031_0062.wav
+    new_tarteel_transcript:
+    - أَلَمْ تَرَ أَنَّ الْفُلْكَ تَجْرِي فِي الْبَحْرِ بِنِعْمَتِ اللَّهِ لِيُرِيَكُم
+      مِّنْ آيَاتِهِ
   - type: update
     segment_index: '031.0067'
     new_end_seconds: 1059.76005859375
@@ -522,18 +534,6 @@ configs:
   - type: update
     segment_index: '078.0039'
     new_end_seconds: 355.99501342773436
-  - type: update
-    segment_index: '031.0062'
-    new_audio_file: 0.1/031_0062.wav
-    new_tarteel_transcript:
-    - أَلَمْ تَرَ أَنَّ الْفُلْكَ تَجْرِي فِي الْبَحْرِ بِنِعْمَتِ اللَّهِ لِيُرِيَكُم
-      مِّنْ آيَاتِهِ
-  - type: update
-    segment_index: '011.0017'
-    new_audio_file: 0.1/011_0017.wav
-    new_tarteel_transcript:
-    - ' وَلَئِن قُلْتَ إِنَّكُم مَّبْعُوثُونَ مِن بَعْدِ الْمَوْتِ لَيَقُولَنَّ الَّذِينَ
-      كَفَرُوا إِنْ هَٰذَا إِلَّا سِحْرٌ مُّبِينٌ'
 - id: '0.2'
   operations:
   - type: update
@@ -2313,14 +2313,14 @@ configs:
     - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
   - type: insert
     segment_index: '075.0028'
-    new_start_seconds: 220.4
-    new_tarteel_transcript:
-    - رَاقٍ
-  - type: update
-    segment_index: '075.0028'
     new_end_seconds: 220.3
     new_tarteel_transcript:
     - وَقِيلَ مَنْ
+  - type: update
+    segment_index: '075.0028'
+    new_start_seconds: 220.4
+    new_tarteel_transcript:
+    - رَاقٍ
   - type: update
     segment_index: '077.0014'
     new_tarteel_transcript:
@@ -3813,14 +3813,14 @@ configs:
     new_start_seconds: 32.4
   - type: insert
     segment_index: '106.0001'
-    new_start_seconds: 9.69
-    new_tarteel_transcript:
-    - إِيلَافِهِمْ رِحْلَةَ الشِّتَاءِ وَالصَّيْفِ
-  - type: update
-    segment_index: '106.0001'
     new_end_seconds: 9.69
     new_tarteel_transcript:
     - لِإِيلَافِ قُرَيْشٍ
+  - type: update
+    segment_index: '106.0001'
+    new_start_seconds: 9.69
+    new_tarteel_transcript:
+    - إِيلَافِهِمْ رِحْلَةَ الشِّتَاءِ وَالصَّيْفِ
 - id: '5.0'
   operations:
   - type: update
@@ -3988,29 +3988,21 @@ configs:
       يَنْكِحْنَ أَزْوَاجَهُنَّ إِذَا تَرَاضَوْا بَيْنَهُمْ بِالْمَعْرُوفِ
   - type: insert
     segment_index: '002.0687'
-    new_audio_file: 13.0/002_1.wav
-    new_tarteel_transcript:
-    - أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ
-  - type: update
-    segment_index: '002.0687'
     new_audio_file: 13.0/002_0.wav
     new_tarteel_transcript:
     - ' رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ وَاعْفُ عَنَّا وَاغْفِرْ
       لَنَا وَارْحَمْنَا'
+  - type: update
+    segment_index: '002.0687'
+    new_audio_file: 13.0/002_1.wav
+    new_tarteel_transcript:
+    - أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ
   - type: update
     segment_index: '003.0394'
     new_audio_file: 13.0/003_1.wav
     new_tarteel_transcript:
     - يَا أَيُّهَا الَّذِينَ آمَنُوا اصْبِرُوا وَصَابِرُوا وَرَابِطُوا وَاتَّقُوا
       اللَّهَ لَعَلَّكُمْ تُفْلِحُونَ
-  - type: insert
-    segment_index: '004.0401'
-    new_audio_file: 13.0/004_1.wav
-    new_tarteel_transcript:
-    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
-  - type: update
-    segment_index: '004.0401'
-    new_end_seconds: 5429.9
   - type: update
     segment_index: '005.0010'
     new_tarteel_transcript:
@@ -4215,6 +4207,16 @@ configs:
   - type: update
     segment_index: '083.0015'
     new_start_seconds: 118.81
+  - type: update
+    segment_index: '004.0401'
+    new_audio_file: 13.0/004_1.wav
+    new_tarteel_transcript:
+    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
+  - type: insert
+    segment_index: '004.0401'
+    new_end_seconds: 5429.9
+    new_tarteel_transcript:
+    - يُبَيِّنُ اللَّهُ لَكُمْ أَن تَضِلُّوا
 - id: '19.0'
   operations:
   - type: delete
@@ -4247,14 +4249,14 @@ configs:
     segment_index: '004.0407'
   - type: insert
     segment_index: '004.0501'
-    new_start_seconds: 4779.5
-    new_tarteel_transcript:
-    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
-  - type: update
-    segment_index: '004.0501'
     new_end_seconds: 4779.58
     new_tarteel_transcript:
     - يُبَيِّنُ اللَّهُ لَكُمْ أَنْ تَضِلُّوا
+  - type: update
+    segment_index: '004.0501'
+    new_start_seconds: 4779.5
+    new_tarteel_transcript:
+    - وَاللَّهُ بِكُلِّ شَيْءٍ عَلِيمٌ
   - type: delete
     segment_index: '004.0502'
   - type: delete
@@ -4345,14 +4347,14 @@ configs:
     segment_index: '026.0254'
   - type: insert
     segment_index: '029.0139'
-    new_start_seconds: 1262.54
-    new_tarteel_transcript:
-    - وَإِنَّ اللَّهَ لَمَعَ الْمُحْسِنِينَ
-  - type: update
-    segment_index: '029.0139'
     new_end_seconds: 1262.5
     new_tarteel_transcript:
     - وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا
+  - type: update
+    segment_index: '029.0139'
+    new_start_seconds: 1262.54
+    new_tarteel_transcript:
+    - وَإِنَّ اللَّهَ لَمَعَ الْمُحْسِنِينَ
   - type: delete
     segment_index: '029.0140'
   - type: delete
@@ -8241,11 +8243,11 @@ configs:
     segment_index: '080.0012'
   - type: insert
     segment_index: '083.0014'
-    new_start_seconds: 85.18
-    new_tarteel_transcript:
-    - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
-  - type: update
-    segment_index: '083.0014'
     new_end_seconds: 85.18
     new_tarteel_transcript:
     - كَلَّا بَلْ
+  - type: update
+    segment_index: '083.0014'
+    new_start_seconds: 85.18
+    new_tarteel_transcript:
+    - رَانَ عَلَى قُلُوبِهِمْ مَا كَانُوا يَكْسِبُونَ
