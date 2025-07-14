@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     lens = {}
     for moshaf in moshaf_pool:
-        ds = load_dataset(ds_path, name=f"moshaf_{moshaf.id}", split="train")
+        ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
         trans = ds["tarteel_transcript"]
         sura_list = ds["sura_or_aya_index"]
         lens[moshaf.id] = {}
