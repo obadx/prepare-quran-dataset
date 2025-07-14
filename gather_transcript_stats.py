@@ -33,5 +33,5 @@ if __name__ == "__main__":
                     lens[moshaf.id][sura_idx] = []
                 lens[moshaf.id][sura_idx].append(len(norm_t))
 
-    with open("trans_lens.json", "r") as f:
+    with open("trans_lens.json", "w") as f:
         json.dump(lens, f)
