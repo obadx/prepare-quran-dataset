@@ -562,7 +562,7 @@ def display_small_durations(ds: Dataset, threshold: float):
         )
 
 
-def display_qlqla_kobra(ds: Dataset):
+def display_qlqla_kobra(ds):
     f_ds = ds.filter(
         lambda ex: is_qlqla_kobra(ex["tarteel_transcript"][-1]), num_proc=16
     )
@@ -570,7 +570,7 @@ def display_qlqla_kobra(ds: Dataset):
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
-def display_sakt_end(ds: Dataset):
+def display_sakt_end(ds):
     char = st.selectbox("اختر حرف السكت", list("فحثهشخصسكت"))
     f_ds = ds.filter(
         lambda ex: is_sakt_end_for_char(ex["tarteel_transcript"][-1], char), num_proc=16
@@ -579,7 +579,7 @@ def display_sakt_end(ds: Dataset):
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
-def display_suar_beginning(ds: Dataset):
+def display_suar_beginning(ds):
     f_ds = ds.filter(
         lambda ex: int(ex["segment_index"].split(".")[1]) == 0, num_proc=16
     )
@@ -587,7 +587,7 @@ def display_suar_beginning(ds: Dataset):
         display_audio_file(item, key_prefix="begin", ignore_load_button=True)
 
 
-def display_suar_end(ds: Dataset):
+def display_suar_end(ds):
     seg_to_idx = ds["segment_index"]
     chose_ids = []
     for idx in range(len(seg_to_idx) - 1):
@@ -601,6 +601,14 @@ def display_suar_end(ds: Dataset):
         )
 
 
+def display_empty_trans(ds):
+    f_ds = ds.filter(
+        lambda ex: ex["tarteel_trnscript"][-1] == [""], num_proc=16,
+    )
+    for item in f_ds:
+        display_audio_file(item, key_prefix="begin", ignore_load_button=True)
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
     st.write(f"عدد المقاطع: {len(ds)}")
@@ -611,6 +619,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     qlqal_columns = st.columns(3)
     sakt_columns = st.columns(3)
     sura_stat_columns = st.columns(4)
+    empty_transcript = st.columns(2)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -730,6 +739,16 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.view_suar_end:
             st.subheader("أواخر السور")
             display_suar_end(ds)
+
+    with empty_transcript[1]:
+        if st.button("أظهر النصوع الفارعة"):
+            st.session_state.show_empty_trans = True
+    with empty_transcript[0]:
+        if st.button("اخف النصوع الفارعة"):
+            st.session_state.show_empty_trans = False
+    if 'show_empty_trans' in : st.session_state:
+        if st.session_state.show_empty_trans:
+            display_empty_trans(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
