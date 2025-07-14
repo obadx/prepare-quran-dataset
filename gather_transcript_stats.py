@@ -29,7 +29,7 @@ if __name__ == "__main__":
                     ignore_alef_maksoora=True,
                     ignore_hamazat=True,
                 )
-                if sura_idx not in lens[moshaf.id]:
+                if sura_idx not in lens[moshaf.id].keys():
                     lens[moshaf.id][sura_idx] = []
                 lens[moshaf.id][sura_idx].append(len(norm_t))
 
