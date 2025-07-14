@@ -490,7 +490,7 @@ def update_sura_start_idx():
     )
 
 
-def display_sura(ds: Dataset, sura_idx, moshaf_id):
+def display_sura(ds, sura_idx, moshaf_id):
     """
     Args:
         sura_idx (int): Absolute sura index
@@ -603,7 +603,8 @@ def display_suar_end(ds):
 
 def display_empty_trans(ds):
     f_ds = ds.filter(
-        lambda ex: ex["tarteel_trnscript"][-1] == [""], num_proc=16,
+        lambda ex: ex["tarteel_trnscript"][-1] == [""],
+        num_proc=16,
     )
     for item in f_ds:
         display_audio_file(item, key_prefix="begin", ignore_load_button=True)
@@ -746,7 +747,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     with empty_transcript[0]:
         if st.button("اخف النصوع الفارعة"):
             st.session_state.show_empty_trans = False
-    if 'show_empty_trans' in : st.session_state:
+    if "show_empty_trans" in st.session_state:
         if st.session_state.show_empty_trans:
             display_empty_trans(ds)
 
