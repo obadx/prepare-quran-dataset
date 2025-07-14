@@ -19,6 +19,7 @@ from prepare_quran_dataset.construct.quran_data_utils import (
 )
 from prepare_quran_dataset.annotate.edit import EditConfig, MoshafEditConfig, Operation
 from prepare_quran_dataset.annotate.main import FIRST_CHANNEL_ONLY_MOSHAF
+from quran_transcript import normalize_aya
 
 
 def float_equal_n(a, b, n):
@@ -603,7 +604,7 @@ def display_suar_end(ds):
 
 def display_empty_trans(ds):
     f_ds = ds.filter(
-        lambda ex: ex["tarteel_transcript"][-1] == [""],
+        lambda ex: normalize_aya(ex["tarteel_transcript"][-1]) == [""],
         num_proc=16,
     )
     for item in f_ds:
@@ -742,13 +743,14 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             display_suar_end(ds)
 
     with empty_transcript[1]:
-        if st.button("أظهر النصوص الفارعة"):
+        if st.button("أظهر النصوص الفارعة", use_container_width=True):
             st.session_state.show_empty_trans = True
     with empty_transcript[0]:
-        if st.button("اخف النصوص الفارعة"):
+        if st.button("اخف النصوص الفارعة", use_container_width=True):
             st.session_state.show_empty_trans = False
     if "show_empty_trans" in st.session_state:
         if st.session_state.show_empty_trans:
+            st.subheader("النصوص الفارغة")
             display_empty_trans(ds)
 
     st.subheader("مقاطع السورة")
