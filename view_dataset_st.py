@@ -603,7 +603,7 @@ def display_suar_end(ds):
 
 def display_empty_trans(ds):
     f_ds = ds.filter(
-        lambda ex: ex["tarteel_trnscript"][-1] == [""],
+        lambda ex: ex["tarteel_transcript"][-1] == [""],
         num_proc=16,
     )
     for item in f_ds:
@@ -742,10 +742,10 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             display_suar_end(ds)
 
     with empty_transcript[1]:
-        if st.button("أظهر النصوع الفارعة"):
+        if st.button("أظهر النصوص الفارعة"):
             st.session_state.show_empty_trans = True
     with empty_transcript[0]:
-        if st.button("اخف النصوع الفارعة"):
+        if st.button("اخف النصوص الفارعة"):
             st.session_state.show_empty_trans = False
     if "show_empty_trans" in st.session_state:
         if st.session_state.show_empty_trans:
