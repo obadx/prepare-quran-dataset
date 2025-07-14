@@ -20,7 +20,7 @@ if __name__ == "__main__":
         trans = ds["tarteel_transcript"]
         sura_list = ds["sura_or_aya_index"]
         lens[moshaf.id] = {}
-        for sura_idx, ts in zip(trans, sura_list):
+        for sura_idx, ts in zip(sura_list, trans):
             for t in ts:
                 norm_t = normalize_aya(
                     t,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
                     ignore_alef_maksoora=True,
                     ignore_hamazat=True,
                 )
-                if sura_idx not in lens[moshaf.id].keys():
+                if sura_idx not in lens[moshaf.id]:
                     lens[moshaf.id][sura_idx] = []
                 lens[moshaf.id][sura_idx].append(len(norm_t))
 
