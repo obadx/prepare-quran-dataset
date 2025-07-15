@@ -604,7 +604,7 @@ def display_suar_end(ds):
 
 def display_empty_trans(ds):
     f_ds = ds.filter(
-        lambda ex: normalize_aya(ex["tarteel_transcript"][-1]) == "",
+        lambda ex: len(normalize_aya(ex["tarteel_transcript"][-1])) < 4,
         num_proc=16,
     )
     for item in f_ds:
