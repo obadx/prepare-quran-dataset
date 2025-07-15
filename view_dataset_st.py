@@ -611,6 +611,27 @@ def display_empty_trans(ds):
         display_audio_file(item, key_prefix="begin", ignore_load_button=True)
 
 
+def display_long_trans(ds):
+    length = st.number_input("طول المقطع بالحروف", 100)
+    f_ds = ds.filter(
+        lambda ex: any(
+            len(
+                normalize_aya(
+                    s,
+                    remove_tashkeel=True,
+                    ignore_hamazat=True,
+                    ignore_alef_maksoora=True,
+                )
+            )
+            >= length
+            for s in ex["tarteel_transcript"]
+        ),
+        num_proc=16,
+    )
+    for item in f_ds:
+        display_audio_file(item, key_prefix="begin", ignore_load_button=True)
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(
         str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
@@ -623,7 +644,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     qlqal_columns = st.columns(3)
     sakt_columns = st.columns(3)
     sura_stat_columns = st.columns(4)
-    empty_transcript = st.columns(2)
+    empty_transcript = st.columns(4)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -744,16 +765,26 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             st.subheader("أواخر السور")
             display_suar_end(ds)
 
-    with empty_transcript[1]:
+    with empty_transcript[3]:
         if st.button("أظهر النصوص الفارعة", use_container_width=True):
             st.session_state.show_empty_trans = True
-    with empty_transcript[0]:
+    with empty_transcript[2]:
         if st.button("اخف النصوص الفارعة", use_container_width=True):
             st.session_state.show_empty_trans = False
     if "show_empty_trans" in st.session_state:
         if st.session_state.show_empty_trans:
             st.subheader("النصوص الفارغة")
             display_empty_trans(ds)
+    with empty_transcript[1]:
+        if st.button("أظهر النصوص الطويلة", use_container_width=True):
+            st.session_state.show_long_trans = True
+    with empty_transcript[0]:
+        if st.button("اخف النصوص الطويلة", use_container_width=True):
+            st.session_state.show_long_trans = False
+    if "show_long_trans" in st.session_state:
+        if st.session_state.show_long_trans:
+            st.subheader("النصوص الطويلة")
+            display_long_trans(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
