@@ -612,7 +612,9 @@ def display_empty_trans(ds):
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
-    ds = load_dataset(str(ds_path), name=f"moshaf_{moshaf.id}", split="train")
+    ds = load_dataset(
+        str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
+    )
     st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
