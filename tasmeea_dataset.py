@@ -196,12 +196,12 @@ def process_moshaf(
             if sura_id in current_tasmeea:
                 del current_tasmeea[sura_id]
 
-    # Save results
-    with open(tasmeea_path, "w") as f:
-        json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
+        # Save results
+        with open(tasmeea_path, "w") as f:
+            json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
 
-    with open(errors_path, "w") as f:
-        json.dump(current_errors, f, indent=2, ensure_ascii=False)
+        with open(errors_path, "w") as f:
+            json.dump(current_errors, f, indent=2, ensure_ascii=False)
 
 
 def parse_retry_args(retry_list: list) -> dict:
