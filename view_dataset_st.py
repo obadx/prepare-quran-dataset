@@ -407,7 +407,7 @@ def display_audio_file(
             st.write(f"**{key}:** {item[key]}")
         m_id = item["moshaf_id"]
         if m_id in st.session_state.tasmeea:
-            st.write(st.session_state[m_id][item["segment_index"]])
+            st.write(st.session_state.tasmeea[m_id][item["segment_index"]])
 
         # view operations on this item
         if item["moshaf_id"] in st.session_state.moshaf_to_seg_to_ops:
@@ -825,10 +825,13 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     with tasmeea_columns[3]:
         if st.button("أظهر أخطاء التسميع", use_container_width=True):
             st.session_state.show_tasmeea_errors = True
+    with tasmeea_columns[2]:
         if st.button("اخف أخطاء التسميع", use_container_width=True):
             st.session_state.show_tasmeea_errors = False
+    with tasmeea_columns[1]:
         if st.button("أظهر الآيات الناقصصة", use_container_width=True):
             st.session_state.show_tasmeea_missings = True
+    with tasmeea_columns[0]:
         if st.button("اخف الآيات الناقصصة", use_container_width=True):
             st.session_state.show_tasmeea_missings = False
     if "show_tasmeea_errors" in st.session_state:
