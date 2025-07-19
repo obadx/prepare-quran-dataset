@@ -919,15 +919,19 @@ if __name__ == "__main__":
     )
     if sel_moshaf_id not in st.session_state.tasmeea:
         tasmeea_dir = Path(ds_path) / f"tasmeea/{sel_moshaf_id}"
-        with open(tasmeea_dir / "tasmeea.json", "r", encoding="utf-8") as f:
-            tasmeea = json.load(f)
-            seg_to_tasmeea_data = {}
-        for sura_tasmeea in tasmeea.values():
-            for tasmeea_info in sura_tasmeea:
-                seg_to_tasmeea_data[tasmeea_info["segment_index"]] = tasmeea_info
-        st.session_state.tasmeea[sel_moshaf_id] = seg_to_tasmeea_data
+        tasmeea_file = tasmeea_dir / "tasmeea.json"
+        tasmeea_errors_file = tasmeea_dir / "errors.json"
+        if tasmeea_file.is_file():
+            with open(tasmeea_file, "r", encoding="utf-8") as f:
+                tasmeea = json.load(f)
+                seg_to_tasmeea_data = {}
+            for sura_tasmeea in tasmeea.values():
+                for tasmeea_info in sura_tasmeea:
+                    seg_to_tasmeea_data[tasmeea_info["segment_index"]] = tasmeea_info
+            st.session_state.tasmeea[sel_moshaf_id] = seg_to_tasmeea_data
 
-        with open(tasmeea_dir / "errors.json", "r", encoding="utf-8") as f:
-            st.session_state.tasmeea_errors[sel_moshaf_id] = json.load(f)
+        if tasmeea_errors_file.is_file():
+            with open(tasmeea_errors_file, "r", encoding="utf-8") as f:
+                st.session_state.tasmeea_errors[sel_moshaf_id] = json.load(f)
 
     display_moshaf(ds_path, moshaf_pool[sel_moshaf_id])
