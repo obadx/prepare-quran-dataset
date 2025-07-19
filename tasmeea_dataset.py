@@ -18,7 +18,7 @@ from prepare_quran_dataset.construct.database import MoshafPool, ReciterPool
 # Setup logging
 def setup_logging():
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[logging.StreamHandler()],
     )
