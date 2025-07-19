@@ -2,7 +2,7 @@ import argparse
 import json
 import logging
 from pathlib import Path
-import concurrent.futures
+import multiprocessing
 import os
 
 from datasets import load_dataset
@@ -143,6 +143,11 @@ def process_sura_task(moshaf_id: str, sura_id: str, sura_segments: list):
         return sura_id, {}, str(e)
 
 
+def process_sura_task_wrapper(args):
+    """Wrapper function for multiprocessing that unpacks arguments"""
+    return process_sura_task(*args)
+
+
 def process_moshaf(
     moshaf_id: str,
     tasmeea_dir: Path,
@@ -198,27 +203,28 @@ def process_moshaf(
     current_tasmeea = existing_tasmeea.copy()
     current_errors = existing_errors.copy()
 
-    # Process surahs with process pool
-    with concurrent.futures.ProcessPoolExecutor(
-        max_workers=max_workers,
-        initializer=setup_logging,  # Ensure logging works in subprocesses
-    ) as executor:
-        # Submit all tasks
-        futures = {
-            executor.submit(
-                process_sura_task, moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id]
-            ): sura_id
-            for sura_id in surahs_to_process
-        }
+    # Create task arguments
+    tasks = [
+        (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id])
+        for sura_id in surahs_to_process
+    ]
 
-        # Collect results as they complete
-        for future in concurrent.futures.as_completed(futures):
-            sura_id = futures[future]
-            sura_id, tasmeea, errors = future.result()
+    # Process surahs with process pool
+    with multiprocessing.Pool(
+        processes=max_workers,
+        initializer=setup_logging,
+    ) as pool:
+        # Use imap_unordered for better performance
+        results = pool.imap_unordered(process_sura_task_wrapper, tasks)
+
+        # Process results as they come in
+        for result in results:
+            sura_id, tasmeea, errors = result
 
             current_tasmeea[sura_id] = tasmeea
             current_errors[sura_id] = errors
 
+            # Save after each sura completion
             with open(tasmeea_path, "w") as f:
                 json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
             with open(errors_path, "w") as f:
