@@ -637,8 +637,6 @@ def display_long_trans(ds):
 
 
 def display_tasmeea_errors(ds):
-    segment_ids = ds["segment_index"]
-    seg_to_idx = {seg: idx for idx, seg in enumerate(segment_ids)}
     m_id = ds[0]["moshaf_id"]
 
     error_segs = []
@@ -650,14 +648,29 @@ def display_tasmeea_errors(ds):
             ]
 
     for seg_idx in error_segs:
-        idx = seg_idx[seg_idx]
+        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
         display_audio_file(ds[idx], key_prefix="begin", ignore_load_button=True)
+
+
+def display_tasmeea_missings(ds):
+    m_id = ds[0]["moshaf_id"]
+    for sura_erros in st.session_state.tasmeea_errors[m_id].values():
+        for item in sura_erros["missings"]:
+            st.write(item)
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(
         str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
     )
+    if "moshaf_to_seg_to_idx" not in st.session_state:
+        st.session_state.moshaf_to_seg_to_idx = {}
+
+    if moshaf.id not in st.session_state.moshaf_to_seg_to_idx:
+        segment_ids = ds["segment_index"]
+        seg_to_idx = {seg: idx for idx, seg in enumerate(segment_ids)}
+        st.session_state.moshaf_to_seg_to_idx[moshaf.id] = seg_to_idx
+
     st.write(f"عدد المقاطع: {len(ds)}")
     st.write(moshaf.reciter_arabic_name)
 
@@ -879,7 +892,7 @@ if __name__ == "__main__":
             seg_to_tasmeea_data = {}
         for sura_tasmeea in tasmeea.values():
             for tasmeea_info in sura_tasmeea:
-                seg_to_tasmeea_data[tasmeea["segment_index"]] = tasmeea_info
+                seg_to_tasmeea_data[tasmeea_info["segment_index"]] = tasmeea_info
         st.session_state.tasmeea[sel_moshaf_id] = seg_to_tasmeea_data
 
         with open(tasmeea_dir / "errors.json", "r", encoding="utf-8") as f:
