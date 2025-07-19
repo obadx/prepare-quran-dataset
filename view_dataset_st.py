@@ -652,12 +652,40 @@ def display_tasmeea_errors(ds):
         display_audio_file(ds[idx], key_prefix="begin", ignore_load_button=True)
 
 
+def find_nearses_tasmeea_results(moshaf_id: str, sura_idx: int, aya_idx: int, winodw=1):
+    seg_ids = []
+    start_aya_idx = max(1, aya_idx - winodw)
+    end_aya_idx = aya_idx + winodw
+    if moshaf_id in st.session_state.tasmeea:
+        for tasmeea_info in st.session_state.tasmeea[moshaf_id][sura_idx]:
+            for search_aya_idx in range(start_aya_idx, end_aya_idx + 1):
+                if tasmeea_info["start_span"] is not None:
+                    if (
+                        sura_idx == tasmeea_info["start_span"]["sura_idx"]
+                        and search_aya_idx == tasmeea_info["start_span"]["aya_idx"]
+                    ):
+                        seg_ids.append(tasmeea_info["segment_index"])
+    return seg_ids
+
+
 def display_tasmeea_missings(ds):
     m_id = ds[0]["moshaf_id"]
     for sura_erros in st.session_state.tasmeea_errors[m_id].values():
         if "missings" in sura_erros:
             for item in sura_erros["missings"]:
+                related_seg_ids = find_nearses_tasmeea_results(
+                    moshaf_id=m_id,
+                    sura_idx=item["start_span"]["sura_idx"],
+                    aya_idx=item["start_span"]["aya_idx"],
+                )
                 st.write(item)
+                for seg_idx in related_seg_ids:
+                    idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+                    display_audio_file(
+                        ds[idx], key_prefix="tasmeea_missings", ignore_load_button=True
+                    )
+                st.write("-" * 40)
+                st.write("-" * 40)
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
