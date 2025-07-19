@@ -3,7 +3,6 @@ import json
 import logging
 from pathlib import Path
 import concurrent.futures
-import threading
 import os
 
 from datasets import load_dataset
@@ -131,6 +130,19 @@ def process_sura(
     return tasmeea, errors
 
 
+def process_sura_task(moshaf_id: str, sura_id: str, sura_segments: list):
+    """Process a single sura (top-level function for multiprocessing)"""
+    try:
+        tasmeea, errors = process_sura(moshaf_id, sura_id, sura_segments)
+        if errors:
+            logging.error(f"Errors in moshaf {moshaf_id} sura {sura_id}")
+        return sura_id, tasmeea, errors
+
+    except Exception as e:
+        logging.error(f"Error processing {moshaf_id}/{sura_id}: {str(e)}")
+        return sura_id, {}, str(e)
+
+
 def process_moshaf(
     moshaf_id: str,
     tasmeea_dir: Path,
@@ -139,19 +151,6 @@ def process_moshaf(
     max_workers: int = 16,
 ):
     """Process a full moshaf with optional surah retries"""
-
-    def _process_sura_task(_moshaf_id, _sura_id, _sura_to_seg_to_tarteel):
-        try:
-            tasmeea, errors = process_sura(
-                _moshaf_id, _sura_id, _sura_to_seg_to_tarteel[_sura_id]
-            )
-            if errors:
-                logging.error(f"Errors in moshaf {_moshaf_id} sura {_sura_id}")
-            return _sura_id, tasmeea, errors
-
-        except Exception as e:
-            logging.error(f"Error processing {_moshaf_id}/{_sura_id}: {str(e)}")
-            return _sura_id, {}, str(e)  # Return empty tasmeea and error string
 
     # Determine CPU limits
     max_workers = min(max_workers, os.cpu_count() or 1)
@@ -199,27 +198,27 @@ def process_moshaf(
     current_tasmeea = existing_tasmeea.copy()
     current_errors = existing_errors.copy()
 
-    # Process surahs with thread pool
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    # Process surahs with process pool
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=max_workers,
+        initializer=setup_logging,  # Ensure logging works in subprocesses
+    ) as executor:
         # Submit all tasks
-        futures = [
+        futures = {
             executor.submit(
-                _process_sura_task,
-                _moshaf_id=moshaf_id,
-                _sura_id=sura_id,
-                _sura_to_seg_to_tarteel=sura_to_seg_to_tarteel,
-            )
+                process_sura_task, moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id]
+            ): sura_id
             for sura_id in surahs_to_process
-        ]
+        }
 
         # Collect results as they complete
         for future in concurrent.futures.as_completed(futures):
+            sura_id = futures[future]
             sura_id, tasmeea, errors = future.result()
 
             current_tasmeea[sura_id] = tasmeea
             current_errors[sura_id] = errors
 
-            # Save after each surah completion
             with open(tasmeea_path, "w") as f:
                 json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
             with open(errors_path, "w") as f:
