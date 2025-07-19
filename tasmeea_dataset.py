@@ -2,6 +2,9 @@ import argparse
 import json
 import logging
 from pathlib import Path
+import concurrent.futures
+import threading
+import os
 
 from datasets import load_dataset
 import submitit  # Optional for SLURM support
@@ -129,9 +132,15 @@ def process_sura(
 
 
 def process_moshaf(
-    moshaf_id: str, tasmeea_dir: Path, dataset_dir: Path, retry_surahs: list = None
+    moshaf_id: str,
+    tasmeea_dir: Path,
+    dataset_dir: Path,
+    retry_surahs: list[str] | None = None,
+    max_workers: int = 16,
 ):
     """Process a full moshaf with optional surah retries"""
+
+    max_workers = min(max_workers, os.cpu_count())
 
     all_surahs = [f"{i:03d}" for i in range(1, 115)]  # 001 to 114
     ds = load_dataset(str(dataset_dir), name=f"moshaf_{moshaf_id}", split="train")
@@ -175,33 +184,46 @@ def process_moshaf(
     current_tasmeea = existing_tasmeea.copy()
     current_errors = existing_errors.copy()
 
-    for sura_id in surahs_to_process:
-        if sura_id not in sura_to_seg_to_tarteel:
-            continue
+    # Thread-safe writing mechanism
+    file_lock = threading.Lock()
+
+    def _process_and_save(sura_id):
+        nonlocal current_tasmeea, current_errors
         try:
             tasmeea, errors = process_sura(
                 moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id]
             )
-            current_tasmeea[sura_id] = tasmeea
-            current_errors[sura_id] = errors
+
+            with file_lock:
+                current_tasmeea[sura_id] = tasmeea
+                current_errors[sura_id] = errors
+
+                # Save results after each surah completion
+                with open(tasmeea_path, "w") as f:
+                    json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
+                with open(errors_path, "w") as f:
+                    json.dump(current_errors, f, indent=2, ensure_ascii=False)
 
             if errors:
-                logging.error(f"Errors in moshaf{moshaf_id} in sura: {sura_id}")
+                logging.error(f"Errors in moshaf {moshaf_id} sura {sura_id}")
 
         except Exception as e:
             logging.error(f"Error processing {moshaf_id}/{sura_id}: {str(e)}")
-            current_errors[sura_id] = str(e)
+            with file_lock:
+                current_errors[sura_id] = str(e)
+                if sura_id in current_tasmeea:
+                    del current_tasmeea[sura_id]
 
-            # Remove partial tasmeea if exists
-            if sura_id in current_tasmeea:
-                del current_tasmeea[sura_id]
+                with open(errors_path, "w") as f:
+                    json.dump(current_errors, f, indent=2, ensure_ascii=False)
 
-        # Save results
-        with open(tasmeea_path, "w") as f:
-            json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
-
-        with open(errors_path, "w") as f:
-            json.dump(current_errors, f, indent=2, ensure_ascii=False)
+    # Process surahs with thread pool
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [
+            executor.submit(_process_and_save, sura_id) for sura_id in surahs_to_process
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            future.result()  # Raise exceptions if any occurred
 
 
 def parse_retry_args(retry_list: list) -> dict:
@@ -250,6 +272,7 @@ def main(args):
 
     # Process using SLURM or locally
     if args.slurm:
+        cpus_per_task = args.threads or 16
         # Configure Slurm
         executor = submitit.AutoExecutor(folder="logs")
         executor.update_parameters(
@@ -268,6 +291,7 @@ def main(args):
                 tasmeea_dir=tasmeea_dir,
                 dataset_dir=args.dataset_dir,
                 retry_surahs=surahs,
+                max_workers=16,
             )
             jobs.append(job)
             logging.info(f"Submitted job for moshaf {moshaf_id}: {job.job_id}")
@@ -280,6 +304,7 @@ def main(args):
                 tasmeea_dir=tasmeea_dir,
                 dataset_dir=args.dataset_dir,
                 retry_surahs=surahs,
+                max_workers=args.threads,
             )
 
 
@@ -300,6 +325,12 @@ if __name__ == "__main__":
     # SLURM options
     parser.add_argument(
         "--slurm", action="store_true", help="Use SLURM for distributed processing"
+    )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=32,
+        help="Max threads to use per moshaf (local and SLURM). Default: 32",
     )
 
     args = parser.parse_args()
