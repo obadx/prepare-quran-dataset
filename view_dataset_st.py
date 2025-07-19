@@ -3,6 +3,7 @@ from random import randint
 from dataclasses import dataclass
 import re
 from typing import Literal
+import json
 
 import streamlit as st
 from datasets import load_dataset, Dataset
@@ -404,6 +405,9 @@ def display_audio_file(
         keys = set(item.keys()) - {"audio"}
         for key in keys:
             st.write(f"**{key}:** {item[key]}")
+        m_id = item["moshaf_id"]
+        if m_id in st.session_state.tasmeea:
+            st.write(st.session_state[m_id][item["segment_index"]])
 
         # view operations on this item
         if item["moshaf_id"] in st.session_state.moshaf_to_seg_to_ops:
@@ -632,6 +636,24 @@ def display_long_trans(ds):
         display_audio_file(item, key_prefix="begin", ignore_load_button=True)
 
 
+def display_tasmeea_errors(ds):
+    segment_ids = ds["segment_index"]
+    seg_to_idx = {seg: idx for idx, seg in enumerate(segment_ids)}
+    m_id = ds[0]["moshaf_id"]
+
+    error_segs = []
+    for sura_idx in st.session_state.tasmeea_errors[m_id]:
+        if "nones" in st.session_state.tasmeea_errors[m_id][sura_idx]["nones"]:
+            error_segs += [
+                x["segment_index"]
+                for x in st.session_state.tasmeea_errors[m_id][sura_idx]["nones"]
+            ]
+
+    for seg_idx in error_segs:
+        idx = seg_idx[seg_idx]
+        display_audio_file(ds[idx], key_prefix="begin", ignore_load_button=True)
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(
         str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
@@ -645,6 +667,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     sakt_columns = st.columns(3)
     sura_stat_columns = st.columns(4)
     empty_transcript = st.columns(4)
+    tasmeea_columns = st.columns(4)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -786,6 +809,24 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             st.subheader("النصوص الطويلة")
             display_long_trans(ds)
 
+    with tasmeea_columns[3]:
+        if st.button("أظهر أخطاء التسميع", use_container_width=True):
+            st.session_state.show_tasmeea_errors = True
+        if st.button("اخف أخطاء التسميع", use_container_width=True):
+            st.session_state.show_tasmeea_errors = False
+        if st.button("أظهر الآيات الناقصصة", use_container_width=True):
+            st.session_state.show_tasmeea_missings = True
+        if st.button("اخف الآيات الناقصصة", use_container_width=True):
+            st.session_state.show_tasmeea_missings = False
+    if "show_tasmeea_errors" in st.session_state:
+        if st.session_state.show_tasmeea_errors:
+            st.header("أخطاء التسميع")
+            display_tasmeea_errors(ds)
+    if "show_tasmeea_missings" in st.session_state:
+        if st.session_state.show_tasmeea_missings:
+            st.header("أخطاء الآيات الناقصة")
+            display_tasmeea_missings(ds)
+
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
 
@@ -816,6 +857,13 @@ if __name__ == "__main__":
         st.session_state.update_wave_files_path = Path(update_wave_files_path)
         st.session_state.original_quran_dataset_path = Path(original_quran_dataset_path)
 
+        # for tasmeea
+
+        # dict{moahaf_id: tasmeea}
+        st.session_state.tasmeea = {}
+        # dict{moahaf_id: tasmeea}
+        st.session_state.tasmeea_erros = {}
+
     ds_path = Path(ds_path)
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, ds_path)
@@ -824,4 +872,17 @@ if __name__ == "__main__":
         "اختر مصحفا",
         [m.id for m in moshaf_pool],
     )
+    if sel_moshaf_id not in st.session_state.tasmeea:
+        tasmeea_dir = Path(ds_path) / f"tasmeea/{sel_moshaf_id}"
+        with open(tasmeea_dir / "tasmeea.json", "r", encoding="utf-8") as f:
+            tasmeea = json.load(f)
+            seg_to_tasmeea_data = {}
+        for sura_tasmeea in tasmeea.values():
+            for tasmeea_info in sura_tasmeea:
+                seg_to_tasmeea_data[tasmeea["segment_index"]] = tasmeea_info
+        st.session_state.tasmeea[sel_moshaf_id] = seg_to_tasmeea_data
+
+        with open(tasmeea_dir / "errors.json", "r", encoding="utf-8") as f:
+            st.session_state.tasmeea_errors[sel_moshaf_id] = json.load(f)
+
     display_moshaf(ds_path, moshaf_pool[sel_moshaf_id])
