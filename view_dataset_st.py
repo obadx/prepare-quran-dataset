@@ -875,7 +875,7 @@ if __name__ == "__main__":
         # dict{moahaf_id: tasmeea}
         st.session_state.tasmeea = {}
         # dict{moahaf_id: tasmeea}
-        st.session_state.tasmeea_erros = {}
+        st.session_state.tasmeea_errors = {}
 
     ds_path = Path(ds_path)
     reciter_pool = ReciterPool(ds_path / "reciter_pool.jsonl")
