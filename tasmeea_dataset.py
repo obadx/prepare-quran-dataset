@@ -313,7 +313,6 @@ def main(args):
 
     else:  # Local processing
         for moshaf_id, surahs in process_list:
-            print(moshaf_id, surahs)
             process_moshaf(
                 moshaf_id=moshaf_id,
                 tasmeea_dir=tasmeea_dir,
