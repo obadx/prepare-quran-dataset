@@ -293,14 +293,13 @@ def main(args):
                 tasmeea_dir=tasmeea_dir,
                 dataset_dir=args.dataset_dir,
                 retry_surahs=surahs,
-                max_workers=16,
+                max_workers=args.threads,
             )
             jobs.append(job)
             logging.info(f"Submitted job for moshaf {moshaf_id}: {job.job_id}")
 
     else:  # Local processing
         for moshaf_id, surahs in process_list:
-            print(moshaf_id, surahs)
             process_moshaf(
                 moshaf_id=moshaf_id,
                 tasmeea_dir=tasmeea_dir,
