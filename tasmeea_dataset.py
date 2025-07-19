@@ -140,7 +140,22 @@ def process_moshaf(
 ):
     """Process a full moshaf with optional surah retries"""
 
-    max_workers = min(max_workers, os.cpu_count())
+    def _process_sura_task(_moshaf_id, _sura_id, _sura_to_seg_to_tarteel):
+        try:
+            tasmeea, errors = process_sura(
+                _moshaf_id, _sura_id, _sura_to_seg_to_tarteel[_sura_id]
+            )
+            if errors:
+                logging.error(f"Errors in moshaf {_moshaf_id} sura {_sura_id}")
+            return _sura_id, tasmeea, errors
+
+        except Exception as e:
+            logging.error(f"Error processing {_moshaf_id}/{_sura_id}: {str(e)}")
+            return _sura_id, {}, str(e)  # Return empty tasmeea and error string
+
+    # Determine CPU limits
+    max_workers = min(max_workers, os.cpu_count() or 1)
+    logging.info(f"Processing moshaf {moshaf_id} with {max_workers} threads")
 
     all_surahs = [f"{i:03d}" for i in range(1, 115)]  # 001 to 114
     ds = load_dataset(str(dataset_dir), name=f"moshaf_{moshaf_id}", split="train")
@@ -174,56 +189,45 @@ def process_moshaf(
     # Determine surahs to process
     surahs_to_process = []
     if retry_surahs:
-        surahs_to_process = retry_surahs
+        surahs_to_process = [s for s in retry_surahs if s in sura_to_seg_to_tarteel]
     else:
         for s_id in all_surahs:
-            if s_id not in existing_tasmeea:
+            if s_id not in existing_tasmeea and s_id in sura_to_seg_to_tarteel:
                 surahs_to_process.append(s_id)
 
     # Process each surah
     current_tasmeea = existing_tasmeea.copy()
     current_errors = existing_errors.copy()
 
-    # Thread-safe writing mechanism
-    file_lock = threading.Lock()
-
-    def _process_and_save(sura_id):
-        nonlocal current_tasmeea, current_errors
-        try:
-            tasmeea, errors = process_sura(
-                moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id]
-            )
-
-            with file_lock:
-                current_tasmeea[sura_id] = tasmeea
-                current_errors[sura_id] = errors
-
-                # Save results after each surah completion
-                with open(tasmeea_path, "w") as f:
-                    json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
-                with open(errors_path, "w") as f:
-                    json.dump(current_errors, f, indent=2, ensure_ascii=False)
-
-            if errors:
-                logging.error(f"Errors in moshaf {moshaf_id} sura {sura_id}")
-
-        except Exception as e:
-            logging.error(f"Error processing {moshaf_id}/{sura_id}: {str(e)}")
-            with file_lock:
-                current_errors[sura_id] = str(e)
-                if sura_id in current_tasmeea:
-                    del current_tasmeea[sura_id]
-
-                with open(errors_path, "w") as f:
-                    json.dump(current_errors, f, indent=2, ensure_ascii=False)
-
     # Process surahs with thread pool
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
         futures = [
-            executor.submit(_process_and_save, sura_id) for sura_id in surahs_to_process
+            executor.submit(
+                _process_sura_task,
+                _moshaf_id=moshaf_id,
+                _sura_id=sura_id,
+                _sura_to_seg_to_tarteel=sura_to_seg_to_tarteel,
+            )
+            for sura_id in surahs_to_process
         ]
+
+        # Collect results as they complete
         for future in concurrent.futures.as_completed(futures):
-            future.result()  # Raise exceptions if any occurred
+            sura_id, tasmeea, errors = future.result()
+
+            current_tasmeea[sura_id] = tasmeea
+            current_errors[sura_id] = errors
+
+            # Save after each surah completion
+            with open(tasmeea_path, "w") as f:
+                json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
+            with open(errors_path, "w") as f:
+                json.dump(current_errors, f, indent=2, ensure_ascii=False)
+
+            logging.info(f"Completed sura {sura_id} for moshaf {moshaf_id}")
+
+    logging.info(f"Finished processing moshaf {moshaf_id}")
 
 
 def parse_retry_args(retry_list: list) -> dict:
@@ -272,7 +276,6 @@ def main(args):
 
     # Process using SLURM or locally
     if args.slurm:
-        cpus_per_task = args.threads or 16
         # Configure Slurm
         executor = submitit.AutoExecutor(folder="logs")
         executor.update_parameters(
