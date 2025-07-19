@@ -224,11 +224,10 @@ def process_moshaf(
             current_tasmeea[sura_id] = tasmeea
             current_errors[sura_id] = errors
 
-            # Save after each sura completion
-            with open(tasmeea_path, "w") as f:
-                json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
-            with open(errors_path, "w") as f:
-                json.dump(current_errors, f, indent=2, ensure_ascii=False)
+        with open(tasmeea_path, "w") as f:
+            json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
+        with open(errors_path, "w") as f:
+            json.dump(current_errors, f, indent=2, ensure_ascii=False)
 
             logging.info(f"Completed sura {sura_id} for moshaf {moshaf_id}")
 
