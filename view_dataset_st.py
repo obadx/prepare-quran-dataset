@@ -641,7 +641,7 @@ def display_tasmeea_errors(ds):
 
     error_segs = []
     for sura_idx in st.session_state.tasmeea_errors[m_id]:
-        if "nones" in st.session_state.tasmeea_errors[m_id][sura_idx]["nones"]:
+        if "nones" in st.session_state.tasmeea_errors[m_id][sura_idx]:
             error_segs += [
                 x["segment_index"]
                 for x in st.session_state.tasmeea_errors[m_id][sura_idx]["nones"]
@@ -655,8 +655,9 @@ def display_tasmeea_errors(ds):
 def display_tasmeea_missings(ds):
     m_id = ds[0]["moshaf_id"]
     for sura_erros in st.session_state.tasmeea_errors[m_id].values():
-        for item in sura_erros["missings"]:
-            st.write(item)
+        if "missings" in sura_erros:
+            for item in sura_erros["missings"]:
+                st.write(item)
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
