@@ -287,13 +287,20 @@ def main(args):
 
         jobs = []
         for moshaf_id, surahs in process_list:
+            executor.update_parameters(
+                slurm_job_name=f"T_{moshaf_id}",
+                slurm_additional_parameters={
+                    # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
+                },
+            )
+
             job = executor.submit(
                 process_moshaf,
                 moshaf_id=moshaf_id,
                 tasmeea_dir=tasmeea_dir,
                 dataset_dir=args.dataset_dir,
                 retry_surahs=surahs,
-                max_workers=16,
+                max_workers=args.threads,
             )
             jobs.append(job)
             logging.info(f"Submitted job for moshaf {moshaf_id}: {job.job_id}")
