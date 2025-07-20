@@ -541,7 +541,7 @@ def display_sura(ds, sura_idx, moshaf_id):
 
     # Moving pages
     with pages_columns[1]:
-        if len(f_ds) > (start_idx + count_per_page):
+        if len(sura_ids) > (start_idx + count_per_page):
             if st.button("الصفحة التالية", use_container_width=True):
                 st.session_state.sura_view_info["start_idx"] += count_per_page
     with pages_columns[0]:
