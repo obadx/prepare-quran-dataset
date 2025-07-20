@@ -188,7 +188,7 @@ def process_moshaf(
     dataset_dir: Path,
     retry_surahs: list[str] | None = None,
     max_workers: int = 16,
-    timeout_sec=900,
+    timeout_sec=600,
 ):
     """Process a full moshaf with optional surah retries using true parallelism"""
     # Determine CPU limits
@@ -254,10 +254,16 @@ def process_moshaf(
             resuls.append(result)
 
         for result in resuls:
-            sura_id, success = result.get(timeout=timeout_sec)
-            logging.info(
-                f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
-            )
+            try:
+                sura_id, success = result.get(timeout=timeout_sec)
+                logging.info(
+                    f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
+                )
+            except Exception as e:
+                logging.info(
+                    f"Error while sura_id: `{sura_id}` with for moshaf: {moshaf_id}"
+                )
+                raise e
 
     # Merge individual files into final output
     logging.info("Merging results...")
