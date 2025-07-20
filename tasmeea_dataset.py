@@ -2,7 +2,7 @@ import argparse
 import json
 import logging
 from pathlib import Path
-import multiprocessing
+from multiprocessing import Pool
 import os
 
 from datasets import load_dataset
@@ -159,11 +159,6 @@ def process_sura_task(
         return sura_id, False
 
 
-def process_sura_task_wrapper(args):
-    """Wrapper function for multiprocessing"""
-    return process_sura_task(*args)
-
-
 def merge_surah_files(surahs_dir: Path, tasmeea_path: Path, errors_path: Path):
     """Merge individual sura files into final output files"""
     tasmeea = {}
@@ -246,50 +241,21 @@ def process_moshaf(
     total_count = len(tasks)
 
     # Use context manager for pool to ensure proper cleanup
-    with multiprocessing.Pool(
+    with Pool(
         processes=max_workers,
         initializer=setup_logging,
     ) as pool:
-        try:
-            # Use imap_unordered with timeout
-            results = pool.imap_unordered(process_sura_task_wrapper, tasks)
-
-            # Process results with timeout handling
-            while True:
-                try:
-                    # Get results with timeout
-                    result = results.next(timeout=timeout_sec)
-                    sura_id, success = result
-                    if success:
-                        success_count += 1
-                    logging.info(
-                        f"Completed sura {sura_id} for moshaf {moshaf_id} - {success_count}/{total_count} successful"
-                    )
-
-                    # Check if all tasks are done
-                    total_count = len(tasks)
-                    if (
-                        success_count + (total_count - len(list(results._items)))
-                        >= total_count
-                    ):
-                        break
-
-                except StopIteration:
-                    # All results processed
-                    break
-                except multiprocessing.TimeoutError:
-                    logging.warning("Timeout waiting for task result, continuing...")
-                except Exception as e:
-                    logging.error(f"Error getting result: {str(e)}")
-
-        except KeyboardInterrupt:
-            logging.warning("Interrupted, terminating pool...")
-            pool.terminate()
-            raise
-        finally:
-            # Ensure pool is properly closed
-            pool.close()
-            pool.join()
+        for sura_id in surahs_to_process:
+            try:
+                result = pool.apply_async(
+                    process_sura_task,
+                    (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id], surahs_dir),
+                )
+                result.get(timeout=timeout_sec)
+            except TimeoutError:
+                logging.error(
+                    f"Error while getting results from moshaf: {moshaf_id}, and sura: {sura_id}"
+                )
 
     # Merge individual files into final output
     logging.info("Merging results...")
