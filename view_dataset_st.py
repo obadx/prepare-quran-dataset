@@ -916,7 +916,7 @@ if __name__ == "__main__":
         # for tasmeea
 
         # dict{moahaf_id: tasmeea}
-        st.session_state.moshaf_sura_to_tasmeea = {}
+        st.session_state.moshaf_to_sura_to_tasmeea = {}
         st.session_state.moshaf_to_seg_to_tasmeea = {}
         # dict{moahaf_id: tasmeea}
         st.session_state.tasmeea_errors = {}
