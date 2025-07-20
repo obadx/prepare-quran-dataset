@@ -406,9 +406,13 @@ def display_audio_file(
         for key in keys:
             st.write(f"**{key}:** {item[key]}")
         m_id = item["moshaf_id"]
-        if m_id in st.session_state.tasmeea:
-            if item["segment_index"] in st.session_state.tasmeea[m_id]:
-                st.write(st.session_state.tasmeea[m_id][item["segment_index"]])
+        if m_id in st.session_state.moshaf_to_seg_to_tasmeea:
+            if item["segment_index"] in st.session_state.moshaf_to_seg_to_tasmeea[m_id]:
+                st.write(
+                    st.session_state.moshaf_to_seg_to_tasmeea[m_id][
+                        item["segment_index"]
+                    ]
+                )
 
         # view operations on this item
         if item["moshaf_id"] in st.session_state.moshaf_to_seg_to_ops:
@@ -657,12 +661,14 @@ def display_tasmeea_errors(ds):
         display_audio_file(ds[idx], key_prefix="begin", ignore_load_button=True)
 
 
-def find_nearses_tasmeea_results(moshaf_id: str, sura_idx: int, aya_idx: int, winodw=1):
+def find_nearest_tasmeea_results(moshaf_id: str, sura_idx: int, aya_idx: int, winodw=1):
     seg_ids = []
     start_aya_idx = max(1, aya_idx - winodw)
     end_aya_idx = aya_idx + winodw
-    if moshaf_id in st.session_state.tasmeea:
-        for tasmeea_info in st.session_state.tasmeea[moshaf_id][sura_idx]:
+    if moshaf_id in st.session_state.moshaf_to_sura_to_tasmeea:
+        for tasmeea_info in st.session_state.moshaf_to_sura_to_tasmeea[moshaf_id][
+            sura_idx
+        ]:
             for search_aya_idx in range(start_aya_idx, end_aya_idx + 1):
                 if tasmeea_info["start_span"] is not None:
                     if (
@@ -678,7 +684,7 @@ def display_tasmeea_missings(ds):
     for sura_erros in st.session_state.tasmeea_errors[m_id].values():
         if "missings" in sura_erros:
             for item in sura_erros["missings"]:
-                related_seg_ids = find_nearses_tasmeea_results(
+                related_seg_ids = find_nearest_tasmeea_results(
                     moshaf_id=m_id,
                     sura_idx=item["start_span"]["sura_idx"],
                     aya_idx=item["start_span"]["aya_idx"],
@@ -910,7 +916,8 @@ if __name__ == "__main__":
         # for tasmeea
 
         # dict{moahaf_id: tasmeea}
-        st.session_state.tasmeea = {}
+        st.session_state.moshaf_sura_to_tasmeea = {}
+        st.session_state.moshaf_to_seg_to_tasmeea = {}
         # dict{moahaf_id: tasmeea}
         st.session_state.tasmeea_errors = {}
 
@@ -929,11 +936,16 @@ if __name__ == "__main__":
         if tasmeea_file.is_file():
             with open(tasmeea_file, "r", encoding="utf-8") as f:
                 tasmeea = json.load(f)
-                seg_to_tasmeea_data = {}
+            st.session_state.moshaf_to_sura_to_tasmeea[sel_moshaf_id] = {
+                int(k): v for k, v in tasmeea.items()
+            }
+            seg_to_tasmeea_data = {}
             for sura_tasmeea in tasmeea.values():
                 for tasmeea_info in sura_tasmeea:
                     seg_to_tasmeea_data[tasmeea_info["segment_index"]] = tasmeea_info
-            st.session_state.tasmeea[sel_moshaf_id] = seg_to_tasmeea_data
+            st.session_state.moshaf_to_seg_to_tasmeea[sel_moshaf_id] = (
+                seg_to_tasmeea_data
+            )
 
         if tasmeea_errors_file.is_file():
             with open(tasmeea_errors_file, "r", encoding="utf-8") as f:
