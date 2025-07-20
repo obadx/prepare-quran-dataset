@@ -241,17 +241,24 @@ def process_moshaf(
     total_count = len(tasks)
 
     # Use context manager for pool to ensure proper cleanup
+    resuls = []
     with Pool(
         processes=max_workers,
         initializer=setup_logging,
     ) as pool:
         for sura_id in surahs_to_process:
+            result = pool.apply_async(
+                process_sura_task,
+                (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id], surahs_dir),
+            )
+            resuls.append(result)
+
+        for result in resuls:
             try:
-                result = pool.apply_async(
-                    process_sura_task,
-                    (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id], surahs_dir),
+                sura_id, success = result.get(timeout=timeout_sec)
+                logging.info(
+                    f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
                 )
-                result.get(timeout=timeout_sec)
             except TimeoutError:
                 logging.error(
                     f"Error while getting results from moshaf: {moshaf_id}, and sura: {sura_id}"
