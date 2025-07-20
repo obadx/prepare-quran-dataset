@@ -264,10 +264,11 @@ def process_moshaf(
                     f"Error while getting results from moshaf: {moshaf_id}, and sura: {sura_id}"
                 )
 
-    # Merge individual files into final output
-    logging.info("Merging results...")
-    merge_surah_files(surahs_dir, tasmeea_path, errors_path)
-    logging.info(f"Merged results for moshaf {moshaf_id}")
+    if surahs_to_process:
+        # Merge individual files into final output
+        logging.info("Merging results...")
+        merge_surah_files(surahs_dir, tasmeea_path, errors_path)
+        logging.info(f"Merged results for moshaf {moshaf_id}")
 
     logging.info(
         f"Finished processing moshaf {moshaf_id} - {success_count}/{total_count} surahs succeeded"
