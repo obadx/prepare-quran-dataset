@@ -669,6 +669,7 @@ def find_nearest_tasmeea_results(moshaf_id: str, sura_idx: int, aya_idx: int, wi
         for tasmeea_info in st.session_state.moshaf_to_sura_to_tasmeea[moshaf_id][
             sura_idx
         ]:
+            st.write(type(tasmeea_info))
             st.write(tasmeea_info)
             for search_aya_idx in range(start_aya_idx, end_aya_idx + 1):
                 if tasmeea_info["start_span"] is not None:
