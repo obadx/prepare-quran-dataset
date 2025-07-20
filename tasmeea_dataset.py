@@ -33,7 +33,7 @@ GLOBAL_TASMEEA_PRAMS = {
     "include_istiaatha": True,
     "include_bismillah": True,
     "include_sadaka": True,
-    "multi_part_truncation_words": 3,
+    "multi_part_truncation_words": 2,
     "remove_spaces": True,
     "ignore_hamazat": True,
     "ignore_alef_maksoora": True,
@@ -188,7 +188,7 @@ def process_moshaf(
     dataset_dir: Path,
     retry_surahs: list[str] | None = None,
     max_workers: int = 16,
-    timeout_sec=400,
+    timeout_sec=900,
 ):
     """Process a full moshaf with optional surah retries using true parallelism"""
     # Determine CPU limits
@@ -254,21 +254,15 @@ def process_moshaf(
             resuls.append(result)
 
         for result in resuls:
-            try:
-                sura_id, success = result.get(timeout=timeout_sec)
-                logging.info(
-                    f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
-                )
-            except TimeoutError:
-                logging.error(
-                    f"Error while getting results from moshaf: {moshaf_id}, and sura: {sura_id}"
-                )
+            sura_id, success = result.get(timeout=timeout_sec)
+            logging.info(
+                f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
+            )
 
-    if surahs_to_process:
-        # Merge individual files into final output
-        logging.info("Merging results...")
-        merge_surah_files(surahs_dir, tasmeea_path, errors_path)
-        logging.info(f"Merged results for moshaf {moshaf_id}")
+    # Merge individual files into final output
+    logging.info("Merging results...")
+    merge_surah_files(surahs_dir, tasmeea_path, errors_path)
+    logging.info(f"Merged results for moshaf {moshaf_id}")
 
     logging.info(
         f"Finished processing moshaf {moshaf_id} - {success_count}/{total_count} surahs succeeded"
