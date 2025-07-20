@@ -260,7 +260,7 @@ def process_moshaf(
                     f"Finishing sura: {sura_id} with {'sucess' if success else 'Failed'} for moshaf: {moshaf_id}"
                 )
             except Exception as e:
-                logging.info(
+                logging.error(
                     f"Error while sura_id: `{sura_id}` with for moshaf: {moshaf_id}"
                 )
                 raise e
