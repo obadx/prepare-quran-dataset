@@ -529,9 +529,13 @@ def display_sura(ds, sura_idx, moshaf_id):
             key="sura_start_idx_number_input",
         )
 
-    f_ds = ds.filter(lambda ex: int(ex["sura_or_aya_index"]) == sura_idx, num_proc=16)
-    for idx in range(start_idx, min(start_idx + count_per_page, len(f_ds))):
-        display_audio_file(f_ds[idx], ignore_load_button=True)
+    sura_ids = []
+    for seg in st.session_state.moshaf_to_seg_to_idx[moshaf_id]:
+        if int(seg.split(".")[0]) == sura_idx:
+            sura_ids.append(st.session_state.moshaf_to_seg_to_idx[moshaf_id][seg])
+    for idx in range(start_idx, min(start_idx + count_per_page, len(sura_ids))):
+        ds_idx = sura_ids[idx]
+        display_audio_file(ds[ds_idx], ignore_load_button=True)
 
     pages_columns = st.columns(2)
 
