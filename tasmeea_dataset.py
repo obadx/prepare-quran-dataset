@@ -43,9 +43,9 @@ GLOBAL_TASMEEA_PRAMS = {
 }
 
 SURA_PRAMS = {
-    "055": {
-        "overlap_words": 1,
-    }
+    # "055": {
+    #     "overlap_words": 1,
+    # }
 }
 
 MOSHAF_PRAMS = {
@@ -130,22 +130,61 @@ def process_sura(
     return tasmeea, errors
 
 
-def process_sura_task(moshaf_id: str, sura_id: str, sura_segments: list):
-    """Process a single sura (top-level function for multiprocessing)"""
+def process_sura_task(
+    moshaf_id: str, sura_id: str, sura_segments: list, surahs_dir: Path
+):
+    """Process a single sura and save results to individual file"""
     try:
         tasmeea, errors = process_sura(moshaf_id, sura_id, sura_segments)
         if errors:
             logging.error(f"Errors in moshaf {moshaf_id} sura {sura_id}")
-        return sura_id, tasmeea, errors
+
+        # Save results to individual sura file
+        sura_file = surahs_dir / f"{sura_id}.json"
+        with open(sura_file, "w") as f:
+            json.dump(
+                {"tasmeea": tasmeea, "errors": errors}, f, indent=2, ensure_ascii=False
+            )
+
+        return sura_id, True  # Return success status
 
     except Exception as e:
         logging.error(f"Error processing {moshaf_id}/{sura_id}: {str(e)}")
-        return sura_id, {}, str(e)
+        # Save error information
+        sura_file = surahs_dir / f"{sura_id}.json"
+        with open(sura_file, "w") as f:
+            json.dump(
+                {"tasmeea": [], "errors": str(e)}, f, indent=2, ensure_ascii=False
+            )
+        return sura_id, False
 
 
 def process_sura_task_wrapper(args):
-    """Wrapper function for multiprocessing that unpacks arguments"""
+    """Wrapper function for multiprocessing"""
     return process_sura_task(*args)
+
+
+def merge_surah_files(surahs_dir: Path, tasmeea_path: Path, errors_path: Path):
+    """Merge individual sura files into final output files"""
+    tasmeea = {}
+    errors = {}
+
+    for sura_file in surahs_dir.glob("*.json"):
+        sura_id = sura_file.stem
+        try:
+            with open(sura_file, "r") as f:
+                data = json.load(f)
+                tasmeea[sura_id] = data["tasmeea"]
+                errors[sura_id] = data["errors"]
+        except Exception as e:
+            logging.error(f"Error loading {sura_file}: {str(e)}")
+            errors[sura_id] = f"Merge error: {str(e)}"
+
+    # Save merged results
+    with open(tasmeea_path, "w") as f:
+        json.dump(tasmeea, f, indent=2, ensure_ascii=False)
+    with open(errors_path, "w") as f:
+        json.dump(errors, f, indent=2, ensure_ascii=False)
 
 
 def process_moshaf(
@@ -155,11 +194,10 @@ def process_moshaf(
     retry_surahs: list[str] | None = None,
     max_workers: int = 16,
 ):
-    """Process a full moshaf with optional surah retries"""
-
+    """Process a full moshaf with optional surah retries using true parallelism"""
     # Determine CPU limits
     max_workers = min(max_workers, os.cpu_count() or 1)
-    logging.info(f"Processing moshaf {moshaf_id} with {max_workers} threads")
+    logging.info(f"Processing moshaf {moshaf_id} with {max_workers} processes")
 
     all_surahs = [f"{i:03d}" for i in range(1, 115)]  # 001 to 114
     ds = load_dataset(str(dataset_dir), name=f"moshaf_{moshaf_id}", split="train")
@@ -177,18 +215,12 @@ def process_moshaf(
     moshaf_out_dir = tasmeea_dir / moshaf_id
     moshaf_out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Directory for individual sura files
+    surahs_dir = moshaf_out_dir / "surahs"
+    surahs_dir.mkdir(exist_ok=True)
+
     tasmeea_path = moshaf_out_dir / "tasmeea.json"
     errors_path = moshaf_out_dir / "errors.json"
-
-    # Load existing data if available
-    existing_tasmeea = {}
-    existing_errors = {}
-    if tasmeea_path.exists():
-        with open(tasmeea_path, "r") as f:
-            existing_tasmeea = json.load(f)
-    if errors_path.exists():
-        with open(errors_path, "r") as f:
-            existing_errors = json.load(f)
 
     # Determine surahs to process
     surahs_to_process = []
@@ -196,16 +228,15 @@ def process_moshaf(
         surahs_to_process = [s for s in retry_surahs if s in sura_to_seg_to_tarteel]
     else:
         for s_id in all_surahs:
-            if s_id not in existing_tasmeea and s_id in sura_to_seg_to_tarteel:
-                surahs_to_process.append(s_id)
+            if s_id in sura_to_seg_to_tarteel:
+                # Skip if already processed
+                sura_file = surahs_dir / f"{s_id}.json"
+                if not sura_file.exists():
+                    surahs_to_process.append(s_id)
 
-    # Process each surah
-    current_tasmeea = existing_tasmeea.copy()
-    current_errors = existing_errors.copy()
-
-    # Create task arguments
+    # Create task arguments (include surahs_dir path)
     tasks = [
-        (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id])
+        (moshaf_id, sura_id, sura_to_seg_to_tarteel[sura_id], surahs_dir)
         for sura_id in surahs_to_process
     ]
 
@@ -217,21 +248,25 @@ def process_moshaf(
         # Use imap_unordered for better performance
         results = pool.imap_unordered(process_sura_task_wrapper, tasks)
 
+        # Track progress
+        success_count = 0
+        total_count = len(tasks)
+
         # Process results as they come in
-        for result in results:
-            sura_id, tasmeea, errors = result
+        for sura_id, success in results:
+            if success:
+                success_count += 1
+            logging.info(
+                f"Completed sura {sura_id} for moshaf {moshaf_id} - {success_count}/{total_count} successful"
+            )
 
-            current_tasmeea[sura_id] = tasmeea
-            current_errors[sura_id] = errors
+    # Merge individual files into final output
+    merge_surah_files(surahs_dir, tasmeea_path, errors_path)
+    logging.info(f"Merged results for moshaf {moshaf_id}")
 
-        with open(tasmeea_path, "w") as f:
-            json.dump(current_tasmeea, f, indent=2, ensure_ascii=False)
-        with open(errors_path, "w") as f:
-            json.dump(current_errors, f, indent=2, ensure_ascii=False)
-
-            logging.info(f"Completed sura {sura_id} for moshaf {moshaf_id}")
-
-    logging.info(f"Finished processing moshaf {moshaf_id}")
+    logging.info(
+        f"Finished processing moshaf {moshaf_id} - {success_count}/{total_count} surahs succeeded"
+    )
 
 
 def parse_retry_args(retry_list: list) -> dict:
