@@ -407,7 +407,8 @@ def display_audio_file(
             st.write(f"**{key}:** {item[key]}")
         m_id = item["moshaf_id"]
         if m_id in st.session_state.tasmeea:
-            st.write(st.session_state.tasmeea[m_id][item["segment_index"]])
+            if item["segment_index"] in st.session_state.tasmeea[m_id]:
+                st.write(st.session_state.tasmeea[m_id][item["segment_index"]])
 
         # view operations on this item
         if item["moshaf_id"] in st.session_state.moshaf_to_seg_to_ops:
