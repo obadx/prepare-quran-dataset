@@ -929,7 +929,7 @@ if __name__ == "__main__":
         "اختر مصحفا",
         [m.id for m in moshaf_pool],
     )
-    if sel_moshaf_id not in st.session_state.tasmeea:
+    if sel_moshaf_id not in st.session_state.moshaf_to_seg_to_tasmeea:
         tasmeea_dir = Path(ds_path) / f"tasmeea/{sel_moshaf_id}"
         tasmeea_file = tasmeea_dir / "tasmeea.json"
         tasmeea_errors_file = tasmeea_dir / "errors.json"
