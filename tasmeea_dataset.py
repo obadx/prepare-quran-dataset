@@ -193,6 +193,7 @@ def process_moshaf(
     dataset_dir: Path,
     retry_surahs: list[str] | None = None,
     max_workers: int = 16,
+    timeout_sec=400,
 ):
     """Process a full moshaf with optional surah retries using true parallelism"""
     # Determine CPU limits
@@ -240,27 +241,58 @@ def process_moshaf(
         for sura_id in surahs_to_process
     ]
 
-    # Process surahs with process pool
+    # Track progress
+    success_count = 0
+    total_count = len(tasks)
+
+    # Use context manager for pool to ensure proper cleanup
     with multiprocessing.Pool(
         processes=max_workers,
         initializer=setup_logging,
     ) as pool:
-        # Use imap_unordered for better performance
-        results = pool.imap_unordered(process_sura_task_wrapper, tasks)
+        try:
+            # Use imap_unordered with timeout
+            results = pool.imap_unordered(process_sura_task_wrapper, tasks)
 
-        # Track progress
-        success_count = 0
-        total_count = len(tasks)
+            # Process results with timeout handling
+            while True:
+                try:
+                    # Get results with timeout
+                    result = results.next(timeout=timeout_sec)
+                    sura_id, success = result
+                    if success:
+                        success_count += 1
+                    logging.info(
+                        f"Completed sura {sura_id} for moshaf {moshaf_id} - {success_count}/{total_count} successful"
+                    )
 
-        # Process results as they come in
-        for sura_id, success in results:
-            if success:
-                success_count += 1
-            logging.info(
-                f"Completed sura {sura_id} for moshaf {moshaf_id} - {success_count}/{total_count} successful"
-            )
+                    # Check if all tasks are done
+                    total_count = len(tasks)
+                    if (
+                        success_count + (total_count - len(list(results._items)))
+                        >= total_count
+                    ):
+                        break
+
+                except StopIteration:
+                    # All results processed
+                    break
+                except multiprocessing.TimeoutError:
+                    logging.warning("Timeout waiting for task result, continuing...")
+                except Exception as e:
+                    logging.error(f"Error getting result: {str(e)}")
+
+        except KeyboardInterrupt:
+            logging.warning("Interrupted, terminating pool...")
+            pool.terminate()
+            raise
+        finally:
+            # Ensure pool is properly closed
+            pool.close()
+            pool.join()
 
     # Merge individual files into final output
+    logging.info("Merging results...")
     merge_surah_files(surahs_dir, tasmeea_path, errors_path)
     logging.info(f"Merged results for moshaf {moshaf_id}")
 
