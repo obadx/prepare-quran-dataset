@@ -1,0 +1,149 @@
+configs:
+- id: '2.0'
+  operations:
+  - type: insert
+    segment_index: '043.0092'
+    new_end_seconds: 2081.4
+    new_tarteel_transcript:
+    - وَتِلْكَ الْجَنَّةُ الَّتِي أُورِثْتُمُوهَا بِمَا كُنتُمْ تَعْمَلُونَ
+  - type: update
+    segment_index: '043.0092'
+    new_start_seconds: 2081.4
+    new_tarteel_transcript:
+    - لَكُمْ فِيهَا فَاكِهَةٌ كَثِيرَةٌ مِّنْهَا تَأْكُلُونَ
+- id: '27.0'
+  operations:
+  - type: delete
+    segment_index: '003.0048'
+  - type: delete
+    segment_index: '003.0049'
+  - type: delete
+    segment_index: '003.0050'
+  - type: delete
+    segment_index: '003.0051'
+  - type: delete
+    segment_index: '003.0052'
+  - type: delete
+    segment_index: '003.0053'
+  - type: delete
+    segment_index: '003.0054'
+  - type: delete
+    segment_index: '003.0055'
+  - type: delete
+    segment_index: '003.0056'
+  - type: delete
+    segment_index: '003.0057'
+  - type: delete
+    segment_index: '003.0058'
+  - type: delete
+    segment_index: '003.0059'
+  - type: delete
+    segment_index: '003.0060'
+  - type: delete
+    segment_index: '003.0061'
+  - type: delete
+    segment_index: '003.0062'
+  - type: delete
+    segment_index: '003.0063'
+  - type: delete
+    segment_index: '004.0089'
+  - type: delete
+    segment_index: '004.0090'
+  - type: delete
+    segment_index: '004.0091'
+  - type: delete
+    segment_index: '004.0092'
+  - type: delete
+    segment_index: '004.0093'
+  - type: delete
+    segment_index: '004.0094'
+  - type: delete
+    segment_index: '005.0247'
+  - type: delete
+    segment_index: '005.0248'
+  - type: delete
+    segment_index: '005.0249'
+  - type: delete
+    segment_index: '005.0250'
+  - type: delete
+    segment_index: '005.0251'
+  - type: delete
+    segment_index: '005.0252'
+  - type: delete
+    segment_index: '005.0253'
+  - type: delete
+    segment_index: '005.0254'
+  - type: delete
+    segment_index: '006.0265'
+  - type: delete
+    segment_index: '006.0266'
+  - type: delete
+    segment_index: '006.0267'
+  - type: delete
+    segment_index: '006.0268'
+  - type: delete
+    segment_index: '028.0096'
+  - type: delete
+    segment_index: '028.0097'
+  - type: delete
+    segment_index: '031.0037'
+  - type: delete
+    segment_index: '031.0038'
+  - type: delete
+    segment_index: '031.0039'
+  - type: delete
+    segment_index: '031.0040'
+  - type: delete
+    segment_index: '031.0041'
+  - type: delete
+    segment_index: '031.0042'
+  - type: delete
+    segment_index: '031.0043'
+  - type: delete
+    segment_index: '031.0044'
+  - type: delete
+    segment_index: '031.0045'
+  - type: delete
+    segment_index: '031.0046'
+  - type: delete
+    segment_index: '031.0047'
+  - type: delete
+    segment_index: '031.0048'
+  - type: delete
+    segment_index: '031.0049'
+  - type: delete
+    segment_index: '031.0050'
+  - type: delete
+    segment_index: '031.0051'
+  - type: delete
+    segment_index: '033.0070'
+  - type: delete
+    segment_index: '034.0081'
+  - type: delete
+    segment_index: '034.0082'
+- id: '11.0'
+  operations:
+  - type: update
+    segment_index: '024.0119'
+    new_tarteel_transcript:
+    - وَمَا عَلَى الرَّسُولِ إِلَّا الْبَلَاغُ الْمُبِينُ
+- id: '19.0'
+  operations:
+  - type: delete
+    segment_index: '005.0363'
+  - type: delete
+    segment_index: '005.0364'
+  - type: delete
+    segment_index: '005.0365'
+  - type: delete
+    segment_index: '005.0366'
+  - type: delete
+    segment_index: '010.0070'
+  - type: delete
+    segment_index: '010.0071'
+  - type: delete
+    segment_index: '010.0072'
+  - type: delete
+    segment_index: '010.0073'
+  - type: delete
+    segment_index: '010.0074'
