@@ -1,0 +1,58 @@
+configs:
+- id: '0.0'
+  operations:
+  - type: update
+    segment_index: '001.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '004.0035'
+    new_tarteel_transcript:
+    - فَإِن كَانَ لَكُمْ وَلَدٌ فَلَهُنَّ الثُّمُنُ مِمَّا تَرَكْتُم
+  - type: update
+    segment_index: '006.0268'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0013'
+    new_tarteel_transcript:
+    - وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ
+  - type: update
+    segment_index: '013.0002'
+    new_tarteel_transcript:
+    - المر
+  - type: update
+    segment_index: '014.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '024.0049'
+    new_tarteel_transcript:
+    - أَوْ آبَاءِ بُعُولَتِهِنَّ أَوْ أَبْنَائِهِنَّ أَوْ أَبْنَاءِ بُعُولَتِهِنَّ
+      أَوْ إِخْوَانِهِنَّ أَوْ بَنِي إِخْوَانِهِنَّ أَوْ بَنِي أَخَوَاتِهِنَّ أَوْ
+      نِسَائِهِنَّ أَوْ مَا مَلَكَتْ أَيْمَانُهُنَّ
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '029.0005'
+    new_audio_file: 0.0/029_0005.wav
+    new_tarteel_transcript:
+    - سَاءَ مَا يَحْكُمُونَ
+  - type: update
+    segment_index: '048.0051'
+    new_tarteel_transcript:
+    - مُّحَمَّدٌ رَّسُولُ اللَّهِ
+  - type: update
+    segment_index: '050.0001'
+    new_tarteel_transcript:
+    - ق
+  - type: delete
+    segment_index: '022.0055'
+  - type: update
+    segment_index: '022.0054'
+    new_end_seconds: 823.345
+    new_tarteel_transcript:
+    - لَن يَنَالَ اللَّهَ لُحُومُهَا وَلَا دِمَاؤُهَا وَلَٰكِن يَنَالُهُ التَّقْوَىٰ
+      مِنكُمْ
