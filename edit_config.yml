@@ -847,3 +847,81 @@ configs:
     new_tarteel_transcript:
     - وَلَقَدْ أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ فَلَبِثَ فِيهِمْ أَلْفَ سَنَةٍ إِلَّا
       خَمْسِينَ عَامًا فَأَخَذَهُمُ الطُّوفَانُ وَهُمْ ظَالِمُونَ
+- id: '3.0'
+  operations:
+  - type: update
+    segment_index: '002.0473'
+    new_tarteel_transcript:
+    - وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنَّ
+  - type: update
+    segment_index: '003.0131'
+    new_tarteel_transcript:
+    - فَقُلْ تَعَالَوْا نَدْعُ أَبْنَاءَنَا وَأَبْنَاءَكُمْ وَنِسَاءَنَا وَنِسَاءَكُمْ
+      وَأَنفُسَنَا
+  - type: update
+    segment_index: '004.0024'
+    new_tarteel_transcript:
+    - لِلذَّكَرِ مِثْلُ حَظِّ الْأُنثَيَيْنِ
+  - type: update
+    segment_index: '004.0037'
+    new_tarteel_transcript:
+    - ' وَلَهُنَّ الرُّبُعُ مِمَّا تَرَكْتُمْ إِن لَّمْ يَكُن لَّكُمْ وَلَدٌ'
+  - type: update
+    segment_index: '004.0038'
+    new_tarteel_transcript:
+    - ' فَإِن كَانَ لَكُمْ وَلَدٌ فَلَهُنَّ الثُّمُنُ مِمَّا تَرَكْتُم'
+  - type: update
+    segment_index: '004.0432'
+    new_tarteel_transcript:
+    - فَإِن كَانَتَا اثْنَتَيْنِ فَلَهُمَا الثُّلُثَانِ مِمَّا تَرَكَ
+  - type: update
+    segment_index: '006.0304'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0014'
+    new_tarteel_transcript:
+    - وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ
+  - type: update
+    segment_index: '010.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '012.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '013.0001'
+    new_tarteel_transcript:
+    - المر
+  - type: update
+    segment_index: '016.0026'
+    new_tarteel_transcript:
+    - وَعَلَامَاتٍ
+  - type: update
+    segment_index: '024.0136'
+    new_tarteel_transcript:
+    - ' ثَلَاثُ عَوْرَاتٍ لَّكُمْ'
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '042.0032'
+    new_tarteel_transcript:
+    - فَلِذَٰلِكَ فَادْعُ
+  - type: update
+    segment_index: '048.0065'
+    new_tarteel_transcript:
+    - مُّحَمَّدٌ رَّسُولُ اللَّهِ
+  - type: update
+    segment_index: '073.0032'
+    new_tarteel_transcript:
+    - وَاسْتَغْفِرُوا اللَّهَ
+  - type: delete
+    segment_index: '009.0037'
+  - type: update
+    segment_index: '009.0036'
+    new_end_seconds: 361.65
+    new_tarteel_transcript:
+    - ' أُولَٰئِكَ حَبِطَتْ أَعْمَالُهُمْ وَفِي النَّارِ هُمْ خَالِدُونَ'
