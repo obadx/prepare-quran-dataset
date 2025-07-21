@@ -925,3 +925,125 @@ configs:
     new_end_seconds: 361.65
     new_tarteel_transcript:
     - ' أُولَٰئِكَ حَبِطَتْ أَعْمَالُهُمْ وَفِي النَّارِ هُمْ خَالِدُونَ'
+- id: '4.0'
+  operations:
+  - type: update
+    segment_index: '002.0522'
+    new_tarteel_transcript:
+    - وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنّ
+  - type: update
+    segment_index: '002.0548'
+    new_tarteel_transcript:
+    - ' وَلِلرِّجَالِ عَلَيْهِنَّ دَرَجَةٌ'
+  - type: update
+    segment_index: '002.0639'
+    new_tarteel_transcript:
+    - ' لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ'
+  - type: update
+    segment_index: '002.0677'
+    new_tarteel_transcript:
+    - ' وَاللَّهُ غَنِيٌّ حَلِيمٌ'
+  - type: update
+    segment_index: '004.0028'
+    new_tarteel_transcript:
+    - فَإِن كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ
+  - type: update
+    segment_index: '004.0452'
+    new_tarteel_transcript:
+    - فَإِن كَانَتَا اثْنَتَيْنِ فَلَهُمَا الثُّلُثَانِ مِمَّا تَرَكَ
+  - type: update
+    segment_index: '005.0081'
+    new_tarteel_transcript:
+    - وَإِنَّا لَن نَّدْخُلَهَا حَتَّىٰ يَخْرُجُوا مِنْهَا فَإِن يَخْرُجُوا مِنْهَا
+      فَإِنَّا دَاخِلُونَ
+  - type: update
+    segment_index: '006.0346'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '006.0356'
+    new_tarteel_transcript:
+    - ' ذَٰلِكَ جَزَيْنَاهُم بِبَغْيِهِمْ'
+  - type: update
+    segment_index: '008.0015'
+    new_tarteel_transcript:
+    - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '010.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '013.0011'
+    new_tarteel_transcript:
+    - ' يُغْشِي اللَّيْلَ النَّهَارَ'
+  - type: update
+    segment_index: '013.0033'
+    new_tarteel_transcript:
+    - ' وَمَا لَهُم مِّن دُونِهِ مِن وَالٍ'
+  - type: update
+    segment_index: '024.0138'
+    new_tarteel_transcript:
+    - ' ثَلَاثُ عَوْرَاتٍ لَّكُمْ'
+  - type: update
+    segment_index: '024.0149'
+    new_tarteel_transcript:
+    - لَّيْسَ عَلَى الْأَعْمَىٰ حَرَجٌ وَلَا عَلَى الْأَعْرَجِ حَرَجٌ وَلَا عَلَى
+      الْمَرِيضِ حَرَجٌ وَلَا عَلَىٰ أَنفُسِكُمْ أَن تَأْكُلُوا مِن بُيُوتِكُمْ
+  - type: update
+    segment_index: '026.0019'
+    new_tarteel_transcript:
+    - ' إِنَّا مَعَكُم مُّسْتَمِعُونَ'
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '033.0074'
+    new_tarteel_transcript:
+    - إِنَّ الْمُسْلِمِينَ وَالْمُسْلِمَاتِ وَالْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ وَالْقَانِتِينَ
+      وَالْقَانِتَاتِ وَالصَّادِقِينَ وَالصَّادِقَاتِ وَالصَّابِرِينَ وَالصَّابِرَاتِ
+  - type: update
+    segment_index: '037.0002'
+    new_tarteel_transcript:
+    - فَالزَّاجِرَاتِ زَجْرًا
+  - type: update
+    segment_index: '037.0013'
+    new_tarteel_transcript:
+    - بَلْ عَجِبْتَ وَيَسْخَرُونَ
+  - type: update
+    segment_index: '038.0098'
+    new_tarteel_transcript:
+    - قُلْ إِنَّمَا أَنَا مُنذِرٌ
+  - type: update
+    segment_index: '041.0075'
+    new_tarteel_transcript:
+    - أَأَعْجَمِيٌّ وَعَرَبِيٌّ
+  - type: update
+    segment_index: '048.0068'
+    new_tarteel_transcript:
+    - مُّحَمَّدٌ رَّسُولُ اللَّهِ
+  - type: update
+    segment_index: '055.0030'
+    new_tarteel_transcript:
+    - كُلَّ يَوْمٍ هُوَ فِي شَأْنٍ
+  - type: delete
+    segment_index: '047.0059'
+  - type: update
+    segment_index: '047.0058'
+    new_end_seconds: 703.9
+    new_tarteel_transcript:
+    - إِنَّ الَّذِينَ كَفَرُوا وَصَدُّوا عَن سَبِيلِ اللَّهِ وَشَاقُّوا الرَّسُولَ
+      مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ
+  - type: delete
+    segment_index: '047.0061'
+  - type: update
+    segment_index: '047.0060'
+    new_end_seconds: 724.96
+    new_tarteel_transcript:
+    - وَشَاقُّوا الرَّسُولَ مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ لَن يَضُرُّوا
+      اللَّهَ شَيْئًا وَسَيُحْبِطُ أَعْمَالَهُمْ
+  - type: update
+    segment_index: '004.0005'
+    new_audio_file: 4.0/004_0005.wav
+    new_tarteel_transcript:
+    - ' وَلَا تَتَبَدَّلُوا الْخَبِيثَ بِالطَّيِّبِ'
