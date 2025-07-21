@@ -273,3 +273,88 @@ configs:
     segment_index: '042.0021'
   - type: delete
     segment_index: '042.0020'
+- id: '0.3'
+  operations:
+  - type: update
+    segment_index: '002.0693'
+    new_tarteel_transcript:
+    - ' لِمَنْ أَرَادَ أَن يُتِمَّ الرَّضَاعَةَ'
+  - type: update
+    segment_index: '002.0730'
+    new_tarteel_transcript:
+    - حَقًّا عَلَى الْمُتَّقِينَ
+  - type: update
+    segment_index: '004.0036'
+    new_tarteel_transcript:
+    - فَإِن كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ
+  - type: update
+    segment_index: '004.0052'
+    new_tarteel_transcript:
+    - وَلَهُ أَخٌ أَوْ أُخْتٌ فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
+  - type: update
+    segment_index: '006.0408'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0021'
+    new_tarteel_transcript:
+    - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '011.0096'
+    new_tarteel_transcript:
+    - حَتَّىٰ إِذَا جَاءَ أَمْرُنَا وَفَارَ التَّنُّورُ قُلْنَا احْمِلْ
+  - type: update
+    segment_index: '024.0077'
+    new_tarteel_transcript:
+    - أَوْ آبَاءِ بُعُولَتِهِنَّ أَوْ أَبْنَائِهِنَّ أَوْ أَبْنَاءِ بُعُولَتِهِنَّ
+      أَوْ إِخْوَانِهِنَّ
+  - type: update
+    segment_index: '024.0170'
+    new_tarteel_transcript:
+    - ' ثَلَاثُ عَوْرَاتٍ لَّكُمْ'
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '040.0021'
+    new_tarteel_transcript:
+    - ' وَمَن تَقِ السَّيِّئَاتِ يَوْمَئِذٍ فَقَدْ رَحِمْتَهُ'
+  - type: update
+    segment_index: '053.0040'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: update
+    segment_index: '057.0053'
+    new_tarteel_transcript:
+    - وَتَفَاخُرٌ بَيْنَكُمْ وَتَكَاثُرٌ فِي الْأَمْوَالِ وَالْأَوْلَادِ
+  - type: update
+    segment_index: '066.0024'
+    new_tarteel_transcript:
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا عَسَىٰ
+  - type: update
+    segment_index: '073.0023'
+    new_tarteel_transcript:
+    - إِنَّ رَبَّكَ يَعْلَمُ أَنَّكَ تَقُومُ أَدْنَىٰ مِن ثُلُثَيِ اللَّيْلِ وَنِصْفَهُ
+  - type: delete
+    segment_index: '009.0070'
+  - type: update
+    segment_index: '009.0069'
+    new_end_seconds: 1119.96
+    new_tarteel_transcript:
+    - وَيَوْمَ حُنَيْنٍ إِذْ أَعْجَبَتْكُمْ كَثْرَتُكُمْ فَلَمْ تُغْنِ عَنكُمْ شَيْئًا
+      وَضَاقَتْ
+  - type: delete
+    segment_index: '016.0075'
+  - type: update
+    segment_index: '016.0074'
+    new_end_seconds: 1103.88
+    new_tarteel_transcript:
+    - ' فَمِنْهُم مَّنْ هَدَى اللَّهُ وَمِنْهُم مَّنْ حَقَّتْ عَلَيْهِ الضَّلَالَةُ'
+  - type: delete
+    segment_index: '039.0061'
+  - type: update
+    segment_index: '039.0060'
+    new_end_seconds: 790.76
+    new_tarteel_transcript:
+    - لَٰكِنِ الَّذِينَ اتَّقَوْا رَبَّهُمْ لَهُمْ غُرَفٌ مِّن فَوْقِهَا غُرَفٌ مَّبْنِيَّةٌ
