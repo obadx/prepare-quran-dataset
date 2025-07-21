@@ -163,3 +163,113 @@ configs:
     new_tarteel_transcript:
     - ' وَمِنَ النَّاسِ مَن يُجَادِلُ فِي اللَّهِ بِغَيْرِ عِلْمٍ وَلَا هُدًى وَلَا
       كِتَابٍ مُّنِيرٍ'
+- id: '0.2'
+  operations:
+  - type: update
+    segment_index: '002.0225'
+    new_tarteel_transcript:
+    - ' فَاعْفُوا وَاصْفَحُوا حَتَّىٰ يَأْتِيَ اللَّهُ بِأَمْرِهِ'
+  - type: update
+    segment_index: '002.0400'
+    new_tarteel_transcript:
+    - ' ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ'
+  - type: update
+    segment_index: '003.0138'
+    new_tarteel_transcript:
+    - هَا أَنتُمْ هَٰؤُلَاءِ حَاجَجْتُمْ فِيمَا لَكُم بِهِ عِلْمٌ فَلِمَ تُحَاجُّونَ
+      فِيمَا لَيْسَ لَكُم بِهِ عِلْمٌ
+  - type: update
+    segment_index: '004.0036'
+    new_tarteel_transcript:
+    - ' وَلَهُنَّ الرُّبُعُ مِمَّا تَرَكْتُمْ إِن لَّمْ يَكُن لَّكُمْ وَلَدٌ'
+  - type: update
+    segment_index: '004.0352'
+    new_tarteel_transcript:
+    - وَقَدْ نَزَّلَ عَلَيْكُمْ فِي الْكِتَابِ أَنْ إِذَا سَمِعْتُمْ آيَاتِ اللَّهِ
+      يُكْفَرُ بِهَا وَيُسْتَهْزَأُ بِهَا فَلَا تَقْعُدُوا مَعَهُمْ حَتَّىٰ يَخُوضُوا
+      فِي حَدِيثٍ غَيْرِهِ
+  - type: update
+    segment_index: '006.0234'
+    new_tarteel_transcript:
+    - وَمَا لَكُمْ أَلَّا تَأْكُلُوا مِمَّا ذُكِرَ اسْمُ اللَّهِ عَلَيْهِ وَقَدْ فَصَّلَ
+      لَكُم مَّا حَرَّمَ عَلَيْكُمْ إِلَّا مَا اضْطُرِرْتُمْ إِلَيْهِ
+  - type: update
+    segment_index: '006.0292'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0015'
+    new_tarteel_transcript:
+    - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '008.0043'
+    new_tarteel_transcript:
+    - وَاذْكُرُوا إِذْ أَنتُمْ قَلِيلٌ مُّسْتَضْعَفُونَ فِي الْأَرْضِ تَخَافُونَ أَن
+      يَتَخَطَّفَكُمُ النَّاسُ فَآوَاكُمْ وَأَيَّدَكُم بِنَصْرِهِ
+  - type: update
+    segment_index: '015.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '018.0122'
+    new_tarteel_transcript:
+    - وَكَانَ أَبُوهُمَا صَالِحًا فَأَرَادَ رَبُّكَ أَن يَبْلُغَا أَشُدَّهُمَا وَيَسْتَخْرِجَا
+      كَنزَهُمَا رَحْمَةً مِّن رَّبِّكَ
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '028.0096'
+    new_tarteel_transcript:
+    - قَالَ الَّذِينَ حَقَّ عَلَيْهِمُ الْقَوْلُ رَبَّنَا هَٰؤُلَاءِ الَّذِينَ أَغْوَيْنَا
+      أَغْوَيْنَاهُمْ كَمَا غَوَيْنَا تَبَرَّأْنَا إِلَيْكَ
+  - type: update
+    segment_index: '033.0069'
+    new_tarteel_transcript:
+    - وَالصَّابِرِينَ وَالصَّابِرَاتِ وَالْخَاشِعِينَ وَالْخَاشِعَاتِ وَالْمُتَصَدِّقِينَ
+      وَالْمُتَصَدِّقَاتِ وَالصَّائِمِين
+  - type: update
+    segment_index: '033.0121'
+    new_tarteel_transcript:
+    - وَاتَّقِينَ اللَّهَ
+  - type: update
+    segment_index: '039.0050'
+    new_tarteel_transcript:
+    - أَفَمَن شَرَحَ اللَّهُ صَدْرَهُ لِلْإِسْلَامِ فَهُوَ عَلَىٰ نُورٍ مِّن رَّبِّهِ
+      فَوَيْلٌ لِّلْقَاسِيَةِ قُلُوبُهُم مِّن ذِكْرِ اللَّهِ
+  - type: update
+    segment_index: '040.0013'
+    new_tarteel_transcript:
+    - وَمَن تَقِ السَّيِّئَاتِ يَوْمَئِذٍ فَقَدْ رَحِمْتَهُ
+  - type: update
+    segment_index: '040.0107'
+    new_tarteel_transcript:
+    - هُوَ الَّذِي خَلَقَكُم مِّن تُرَابٍ ثُمَّ مِن نُّطْفَةٍ ثُمَّ مِنْ عَلَقَةٍ
+      ثُمَّ يُخْرِجُكُمْ طِفْلًا ثُمَّ لِتَبْلُغُوا أَشُدَّكُمْ
+  - type: update
+    segment_index: '048.0066'
+    new_tarteel_transcript:
+    - ' وَمَثَلُهُمْ فِي الْإِنجِيلِ كَزَرْعٍ أَخْرَجَ شَطْأَهُ فَآزَرَهُ فَاسْتَغْلَظَ
+      فَاسْتَوَىٰ عَلَىٰ سُوقِهِ يُعْجِبُ الزُّرَّاعَ لِيَغِيظَ بِهِمُ الْكُفَّارَ'
+  - type: update
+    segment_index: '053.0035'
+    new_tarteel_transcript:
+    - الَّذِينَ يَجْتَنِبُونَ كَبَائِرَ الْإِثْمِ وَالْفَوَاحِشَ إِلَّا اللَّمَمَ
+  - type: update
+    segment_index: '066.0011'
+    new_tarteel_transcript:
+    - مُسْلِمَاتٍ مُّؤْمِنَاتٍ قَانِتَاتٍ تَائِبَاتٍ عَابِدَاتٍ سَائِحَاتٍ ثَيِّبَاتٍ
+      وَأَبْكَارًا
+  - type: update
+    segment_index: '095.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: delete
+    segment_index: '002.0114'
+  - type: delete
+    segment_index: '011.0045'
+  - type: delete
+    segment_index: '042.0021'
+  - type: delete
+    segment_index: '042.0020'
