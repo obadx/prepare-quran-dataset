@@ -656,7 +656,7 @@ def display_tasmeea_errors(ds):
                 for x in st.session_state.tasmeea_errors[m_id][sura_idx]["nones"]
             ]
 
-    for seg_idx in error_segs:
+    for seg_idx in sorted(error_segs):
         idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
         display_audio_file(ds[idx], key_prefix="begin", ignore_load_button=True)
 
