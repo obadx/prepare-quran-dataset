@@ -1572,3 +1572,106 @@ configs:
     new_end_seconds: 3521.825
     new_tarteel_transcript:
     - فَإِذَا عَزَمْتَ فَتَوَكَّلْ عَلَى اللَّهِ
+- id: '8.0'
+  operations:
+  - type: update
+    segment_index: '002.0392'
+    new_tarteel_transcript:
+    - ' ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ'
+  - type: update
+    segment_index: '002.0496'
+    new_tarteel_transcript:
+    - وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنَّ
+  - type: update
+    segment_index: '002.0608'
+    new_tarteel_transcript:
+    - وَلَوْ شَاءَ اللَّهُ مَا اقْتَتَلُوا وَلَٰكِنَّ اللَّهَ يَفْعَلُ مَا يُرِيدُ
+      ‎
+  - type: update
+    segment_index: '003.0131'
+    new_tarteel_transcript:
+    - فَقُلْ تَعَالَوْا نَدْعُ أَبْنَاءَنَا وَأَبْنَاءَكُمْ وَنِسَاءَنَا وَنِسَاءَكُمْ
+      وَأَنفُسَنَا
+  - type: update
+    segment_index: '005.0055'
+    new_tarteel_transcript:
+    - فَاعْفُ عَنْهُمْ وَاصْفَحْ
+  - type: update
+    segment_index: '005.0080'
+    new_tarteel_transcript:
+    - وَإِنَّا لَن نَّدْخُلَهَا حَتَّىٰ يَخْرُجُوا مِنْهَا فَإِن يَخْرُجُوا مِنْهَا
+      فَإِنَّا دَاخِلُونَ
+  - type: update
+    segment_index: '005.0278'
+    new_tarteel_transcript:
+    - فَجَزَاءٌ مِّثْلُ مَا قَتَلَ مِنَ النَّعَمِ يَحْكُمُ بِهِ ذَوَا عَدْلٍ مِّنكُمْ
+      هَدْيًا بَالِغَ الْكَعْبَةِ
+  - type: update
+    segment_index: '006.0340'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0014'
+    new_tarteel_transcript:
+    - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '010.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '011.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '011.0214'
+    new_tarteel_transcript:
+    - عَطَاءً غَيْرَ مَجْذُوذٍ
+  - type: update
+    segment_index: '012.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '013.0001'
+    new_tarteel_transcript:
+    - المر
+  - type: update
+    segment_index: '014.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '015.0001'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '016.0027'
+    new_tarteel_transcript:
+    - وَعَلَامَاتٍ
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '033.0072'
+    new_tarteel_transcript:
+    - إِنَّ الْمُسْلِمِينَ وَالْمُسْلِمَاتِ وَالْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ وَالْقَانِتِينَ
+      وَالْقَانِتَاتِ وَالصَّادِقِينَ وَالصَّادِقَاتِ وَالصَّابِرِينَ وَالصَّابِرَاتِ
+      وَالْخَاشِعِينَ
+  - type: update
+    segment_index: '090.0010'
+    new_tarteel_transcript:
+    - وَهَدَيْنَاهُ النَّجْدَيْنِ
+  - type: delete
+    segment_index: '007.0360'
+  - type: update
+    segment_index: '007.0359'
+    new_end_seconds: 4068.585
+    new_tarteel_transcript:
+    - سَاءَ مَثَلًا الْقَوْمُ الَّذِينَ كَذَّبُوا بِآيَاتِنَا وَأَنفُسَهُمْ كَانُوا
+      يَظْلِمُونَ
+  - type: delete
+    segment_index: '078.0037'
+  - type: update
+    segment_index: '078.0036'
+    new_end_seconds: 205.41
+    new_tarteel_transcript:
+    - جَزَاءً مِّن رَّبِّكَ عَطَاءً حِسَابًا
