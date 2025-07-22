@@ -1877,3 +1877,137 @@ configs:
     new_tarteel_transcript:
     - قُل لِّلْمُخَلَّفِينَ مِنَ الْأَعْرَابِ سَتُدْعَوْنَ إِلَىٰ قَوْمٍ أُولِي بَأْسٍ
       شَدِيدٍ تُقَاتِلُونَهُمْ أَوْ يُسْلِمُونَ
+- id: '11.0'
+  operations:
+  - type: update
+    segment_index: '002.0413'
+    new_tarteel_transcript:
+    - تِلْكَ حُدُودُ اللَّهِ فَلَا تَقْرَبُوهَا
+  - type: update
+    segment_index: '002.0512'
+    new_tarteel_transcript:
+    - وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنَّ
+  - type: update
+    segment_index: '004.0028'
+    new_tarteel_transcript:
+    - ' لِلذَّكَرِ مِثْلُ حَظِّ الْأُنثَيَيْنِ'
+  - type: update
+    segment_index: '004.0029'
+    new_tarteel_transcript:
+    - ' فَإِن كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ'
+  - type: update
+    segment_index: '004.0217'
+    new_tarteel_transcript:
+    - ' وَحَرِّضِ الْمُؤْمِنِينَ'
+  - type: update
+    segment_index: '005.0193'
+    new_tarteel_transcript:
+    - ' وَإِن لَّمْ تَفْعَلْ فَمَا بَلَّغْتَ رِسَالَتَهُ'
+  - type: update
+    segment_index: '007.0319'
+    new_tarteel_transcript:
+    - مَنْ يَهْدِ اللَّهُ فَهُوَ الْمُهْتَدِي
+  - type: update
+    segment_index: '008.0015'
+    new_tarteel_transcript:
+    - وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ
+  - type: update
+    segment_index: '009.0212'
+    new_tarteel_transcript:
+    - إِنَّ اللَّهَ غَفُورٌ رَحِيمٌ
+  - type: update
+    segment_index: '010.0174'
+    new_tarteel_transcript:
+    - إِنَّ اللَّهَ لَا يُصْلِحُ عَمَلَ الْمُفْسِدِينَ
+  - type: update
+    segment_index: '011.0209'
+    new_tarteel_transcript:
+    - فَمِنْهُمْ شَقِيٌّ وَسَعِيدٌ
+  - type: update
+    segment_index: '013.0001'
+    new_tarteel_transcript:
+    - المر
+  - type: update
+    segment_index: '013.0030'
+    new_tarteel_transcript:
+    - وَمَا لَهُم مِّن دُونِهِ مِن وَالٍ
+  - type: update
+    segment_index: '014.0048'
+    new_tarteel_transcript:
+    - مَّا أَنَا بِمُصْرِخِكُمْ وَمَا أَنتُم بِمُصْرِخِيَّ
+  - type: update
+    segment_index: '021.0148'
+    new_tarteel_transcript:
+    - إِنَّا كُنَّا فَاعِلِينَ
+  - type: update
+    segment_index: '023.0027'
+    new_tarteel_transcript:
+    - ' أَفَلَا تَتَّقُونَ'
+  - type: update
+    segment_index: '023.0069'
+    new_tarteel_transcript:
+    - ' بَل لَّا يَشْعُرُونَ'
+  - type: update
+    segment_index: '023.0103'
+    new_tarteel_transcript:
+    - سَيَقُولُونَ لِلَّهِ
+  - type: update
+    segment_index: '024.0056'
+    new_tarteel_transcript:
+    - ' وَلَا يُبْدِينَ زِينَتَهُنَّ إِلَّا لِبُعُولَتِهِنَّ أَوْ آبَائِهِنَّ أَوْ
+      آبَاءِ بُعُولَتِهِنَّ أَوْ أَبْنَائِهِنَّ أَوْ أَبْنَاءِ بُعُولَتِهِنَّ'
+  - type: update
+    segment_index: '024.0057'
+    new_tarteel_transcript:
+    - أَوْ أَبْنَائِهِنَّ أَوْ أَبْنَاءِ بُعُولَتِهِنَّ أَوْ إِخْوَانِهِنَّ أَوْ بَنِي
+      إِخْوَانِهِنَّ أَوْ بَنِي أَخَوَاتِهِنَّ أَوْ نِسَائِهِنَّ أَوْ مَا مَلَكَتْ
+      أَيْمَانُهُنَّ
+  - type: update
+    segment_index: '024.0067'
+    new_tarteel_transcript:
+    - ' وَلَا تُكْرِهُوا فَتَيَاتِكُمْ عَلَى الْبِغَاءِ إِنْ أَرَدْنَ تَحَصُّنًا لِّتَبْتَغُوا
+      عَرَضَ الْحَيَاةِ الدُّنْيَا'
+  - type: update
+    segment_index: '024.0129'
+    new_tarteel_transcript:
+    - ثَلَاثُ عَوْرَاتٍ لَّكُمْ
+  - type: update
+    segment_index: '028.0116'
+    new_tarteel_transcript:
+    - سُبْحَانَ اللَّهِ وَتَعَالَى عَمَّا يُشْرِكُونَ
+  - type: update
+    segment_index: '033.0016'
+    new_tarteel_transcript:
+    - ' وَأَزْوَاجُهُ أُمَّهَاتُهُمْ'
+  - type: update
+    segment_index: '048.0062'
+    new_tarteel_transcript:
+    - مُّحَمَّدٌ رَّسُولُ اللَّهِ
+  - type: update
+    segment_index: '052.0039'
+    new_tarteel_transcript:
+    - بَل لَّا يُؤْمِنُونَ
+  - type: update
+    segment_index: '080.0010'
+    new_tarteel_transcript:
+    - فَأَنْتَ عَنْهُ تَلَهَّى
+  - type: update
+    segment_index: '080.0018'
+    new_tarteel_transcript:
+    - مِنْ أَيِّ شَيْءٍ خَلَقَهُ
+  - type: update
+    segment_index: '092.0014'
+    new_tarteel_transcript:
+    - فَأَنْذَرْتُكُمْ نَارًا تَلَظَّى
+  - type: update
+    segment_index: '101.0007'
+    new_tarteel_transcript:
+    - فَهُوَ فِي عِيشَةٍ رَاضِيَةٍ
+  - type: update
+    segment_index: '101.0009'
+    new_tarteel_transcript:
+    - فَأُمُّهُ هَاوِيَةٌ
+  - type: update
+    segment_index: '104.0006'
+    new_tarteel_transcript:
+    - نَارُ اللَّهِ الْمُوقَدَةُ
