@@ -455,6 +455,16 @@ configs:
     segment_index: '002.0559'
     new_tarteel_transcript:
     - وَالْكَافِرُونَ هُمُ الظَّالِمُونَ
+  - type: delete
+    segment_index: '002.0659'
+  - type: delete
+    segment_index: '002.0660'
+  - type: delete
+    segment_index: '002.0661'
+  - type: delete
+    segment_index: '002.0662'
+  - type: delete
+    segment_index: '002.0663'
   - type: update
     segment_index: '002.0665'
     new_tarteel_transcript:
@@ -470,6 +480,8 @@ configs:
     new_tarteel_transcript:
     - إِذْ تَقُولُ لِلْمُؤْمِنِينَ أَلَن يَكْفِيَكُمْ أَن يُمِدَّكُمْ رَبُّكُم بِثَلَاثَةِ
       آلَافٍ مِّنَ الْمَلَائِكَةِ مُنزَلِينَ
+  - type: delete
+    segment_index: '003.0278'
   - type: update
     segment_index: '004.0035'
     new_tarteel_transcript:
@@ -530,6 +542,13 @@ configs:
     segment_index: '008.0015'
     new_tarteel_transcript:
     - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '009.0099'
+    new_end_seconds: 2463.625
+    new_tarteel_transcript:
+    - وَاللَّهُ عَلِيمٌ بِالْمُتَّقِينَ
+  - type: delete
+    segment_index: '009.0100'
   - type: update
     segment_index: '009.0192'
     new_tarteel_transcript:
@@ -609,6 +628,14 @@ configs:
     - تَدُورُ أَعْيُنُهُمْ كَالَّذِي يُغْشَىٰ عَلَيْهِ مِنَ الْمَوْتِ فَإِذَا ذَهَبَ
       الْخَوْفُ سَلَقُوكُم بِأَلْسِنَةٍ حِدَادٍ أَشِحَّةً عَلَى الْخَيْرِ
   - type: update
+    segment_index: '033.0087'
+    new_end_seconds: 2262.695
+    new_tarteel_transcript:
+    - وَلَا تُطِعِ الْكَافِرِينَ وَالْمُنَافِقِينَ وَدَعْ أَذَاهُمْ وَتَوَكَّلْ عَلَى
+      اللَّهِ
+  - type: delete
+    segment_index: '033.0088'
+  - type: update
     segment_index: '034.0044'
     new_tarteel_transcript:
     - وَمَا أَرْسَلْنَاكَ إِلَّا كَافَّةً لِّلنَّاسِ بَشِيرًا وَنَذِيرًا وَلَٰكِنَّ
@@ -672,35 +699,16 @@ configs:
     segment_index: '085.0000'
     new_tarteel_transcript:
     - أعوذ بالله من الشيطان الرجيم
-  - type: delete
-    segment_index: '002.0659'
-  - type: delete
-    segment_index: '002.0660'
-  - type: delete
-    segment_index: '002.0661'
-  - type: delete
-    segment_index: '002.0662'
-  - type: delete
-    segment_index: '002.0663'
-  - type: delete
-    segment_index: '003.0278'
-  - type: delete
-    segment_index: '009.0100'
-  - type: update
-    segment_index: '009.0099'
-    new_end_seconds: 2463.625
-    new_tarteel_transcript:
-    - وَاللَّهُ عَلِيمٌ بِالْمُتَّقِينَ
-  - type: delete
-    segment_index: '033.0088'
-  - type: update
-    segment_index: '033.0087'
-    new_end_seconds: 2262.695
-    new_tarteel_transcript:
-    - وَلَا تُطِعِ الْكَافِرِينَ وَالْمُنَافِقِينَ وَدَعْ أَذَاهُمْ وَتَوَكَّلْ عَلَى
-      اللَّهِ
 - id: '2.1'
   operations:
+  - type: update
+    segment_index: '002.0126'
+    new_end_seconds: 1805.6
+    new_tarteel_transcript:
+    - قَالُوا أَتُحَدِّثُونَهُم بِمَا فَتَحَ اللَّهُ عَلَيْكُمْ لِيُحَاجُّوكُم بِهِ
+      عِندَ رَبِّكُمْ
+  - type: delete
+    segment_index: '002.0127'
   - type: update
     segment_index: '002.0252'
     new_tarteel_transcript:
@@ -712,6 +720,13 @@ configs:
     new_tarteel_transcript:
     - ' وَلَوْ شَاءَ اللَّهُ مَا اقْتَتَلُوا وَلَٰكِنَّ اللَّهَ يَفْعَلُ مَا يُرِيدُ'
   - type: update
+    segment_index: '003.0267'
+    new_end_seconds: 3682.81
+    new_tarteel_transcript:
+    - وَمَا مُحَمَّدٌ إِلَّا رَسُولٌ قَدْ خَلَتْ مِن قَبْلِهِ الرُّسُلُ
+  - type: delete
+    segment_index: '003.0268'
+  - type: update
     segment_index: '004.0037'
     new_tarteel_transcript:
     - فَإِن كَانَ لَكُمْ وَلَدٌ فَلَهُنَّ الثُّمُنُ مِمَّا تَرَكْتُم
@@ -719,6 +734,36 @@ configs:
     segment_index: '006.0305'
     new_tarteel_transcript:
     - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '006.0324'
+    new_end_seconds: 4339.52
+    new_tarteel_transcript:
+    - وَلَا تَتَّبِعْ تَتَّبِعْ أَهْوَاءَ الَّذِينَ كَذَّبُوا بِآيَاتِنَا وَالَّذِينَ
+      لَا يُؤْمِنُونَ بِالْآخِرَةِ وَهُم بِرَبِّهِمْ يَعْدِلُونَ
+  - type: delete
+    segment_index: '006.0325'
+  - type: update
+    segment_index: '007.0049'
+    new_end_seconds: 682.72
+    new_tarteel_transcript:
+    - إِنَّهُ لَا يُحِبُّ الْمُسْرِفِينَ
+  - type: delete
+    segment_index: '007.0050'
+  - type: update
+    segment_index: '007.0068'
+    new_end_seconds: 965.2
+    new_tarteel_transcript:
+    - ' قَالَ لِكُلٍّ ضِعْفٌ وَلَٰكِن لَّا تَعْلَمُونَ'
+  - type: delete
+    segment_index: '007.0069'
+  - type: update
+    segment_index: '007.0138'
+    new_end_seconds: 2023.78
+    new_tarteel_transcript:
+    - ' فَذَرُوهَا تَأْكُلْ فِي أَرْضِ اللَّهِ وَلَا تَمَسُّوهَا بِسُوءٍ فَيَأْخُذَكُمْ
+      عَذَابٌ أَلِيمٌ'
+  - type: delete
+    segment_index: '007.0139'
   - type: update
     segment_index: '007.0327'
     new_tarteel_transcript:
@@ -755,6 +800,14 @@ configs:
     segment_index: '027.0001'
     new_tarteel_transcript:
     - طس
+  - type: update
+    segment_index: '029.0025'
+    new_end_seconds: 304.075
+    new_tarteel_transcript:
+    - وَلَقَدْ أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ فَلَبِثَ فِيهِمْ أَلْفَ سَنَةٍ إِلَّا
+      خَمْسِينَ عَامًا فَأَخَذَهُمُ الطُّوفَانُ وَهُمْ ظَالِمُونَ
+  - type: delete
+    segment_index: '029.0026'
   - type: update
     segment_index: '033.0039'
     new_tarteel_transcript:
@@ -794,59 +847,6 @@ configs:
     segment_index: '104.0007'
     new_tarteel_transcript:
     - 'نَارُ اللَّهِ الْمُوقَدَةُ '
-  - type: delete
-    segment_index: '002.0127'
-  - type: update
-    segment_index: '002.0126'
-    new_end_seconds: 1805.6
-    new_tarteel_transcript:
-    - قَالُوا أَتُحَدِّثُونَهُم بِمَا فَتَحَ اللَّهُ عَلَيْكُمْ لِيُحَاجُّوكُم بِهِ
-      عِندَ رَبِّكُمْ
-  - type: delete
-    segment_index: '003.0268'
-  - type: update
-    segment_index: '003.0267'
-    new_end_seconds: 3682.81
-    new_tarteel_transcript:
-    - وَمَا مُحَمَّدٌ إِلَّا رَسُولٌ قَدْ خَلَتْ مِن قَبْلِهِ الرُّسُلُ
-  - type: delete
-    segment_index: '006.0325'
-  - type: update
-    segment_index: '006.0324'
-    new_end_seconds: 4339.52
-    new_tarteel_transcript:
-    - وَلَا تَتَّبِعْ تَتَّبِعْ أَهْوَاءَ الَّذِينَ كَذَّبُوا بِآيَاتِنَا وَالَّذِينَ
-      لَا يُؤْمِنُونَ بِالْآخِرَةِ وَهُم بِرَبِّهِمْ يَعْدِلُونَ
-  - type: delete
-    segment_index: '007.0050'
-  - type: update
-    segment_index: '007.0049'
-    new_end_seconds: 682.72
-    new_tarteel_transcript:
-    - إِنَّهُ لَا يُحِبُّ الْمُسْرِفِينَ
-  - type: delete
-    segment_index: '007.0069'
-  - type: update
-    segment_index: '007.0068'
-    new_end_seconds: 965.2
-    new_tarteel_transcript:
-    - ' قَالَ لِكُلٍّ ضِعْفٌ وَلَٰكِن لَّا تَعْلَمُونَ'
-  - type: delete
-    segment_index: '007.0139'
-  - type: update
-    segment_index: '007.0138'
-    new_end_seconds: 2023.78
-    new_tarteel_transcript:
-    - ' فَذَرُوهَا تَأْكُلْ فِي أَرْضِ اللَّهِ وَلَا تَمَسُّوهَا بِسُوءٍ فَيَأْخُذَكُمْ
-      عَذَابٌ أَلِيمٌ'
-  - type: delete
-    segment_index: '029.0026'
-  - type: update
-    segment_index: '029.0025'
-    new_end_seconds: 304.075
-    new_tarteel_transcript:
-    - وَلَقَدْ أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ فَلَبِثَ فِيهِمْ أَلْفَ سَنَةٍ إِلَّا
-      خَمْسِينَ عَامًا فَأَخَذَهُمُ الطُّوفَانُ وَهُمْ ظَالِمُونَ
 - id: '3.0'
   operations:
   - type: update
@@ -883,6 +883,13 @@ configs:
     new_tarteel_transcript:
     - وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ
   - type: update
+    segment_index: '009.0036'
+    new_end_seconds: 361.65
+    new_tarteel_transcript:
+    - ' أُولَٰئِكَ حَبِطَتْ أَعْمَالُهُمْ وَفِي النَّارِ هُمْ خَالِدُونَ'
+  - type: delete
+    segment_index: '009.0037'
+  - type: update
     segment_index: '010.0001'
     new_tarteel_transcript:
     - الر
@@ -918,13 +925,6 @@ configs:
     segment_index: '073.0032'
     new_tarteel_transcript:
     - وَاسْتَغْفِرُوا اللَّهَ
-  - type: delete
-    segment_index: '009.0037'
-  - type: update
-    segment_index: '009.0036'
-    new_end_seconds: 361.65
-    new_tarteel_transcript:
-    - ' أُولَٰئِكَ حَبِطَتْ أَعْمَالُهُمْ وَفِي النَّارِ هُمْ خَالِدُونَ'
 - id: '4.0'
   operations:
   - type: update
@@ -943,6 +943,11 @@ configs:
     segment_index: '002.0677'
     new_tarteel_transcript:
     - ' وَاللَّهُ غَنِيٌّ حَلِيمٌ'
+  - type: update
+    segment_index: '004.0005'
+    new_audio_file: 4.0/004_0005.wav
+    new_tarteel_transcript:
+    - ' وَلَا تَتَبَدَّلُوا الْخَبِيثَ بِالطَّيِّبِ'
   - type: update
     segment_index: '004.0028'
     new_tarteel_transcript:
@@ -1019,6 +1024,22 @@ configs:
     new_tarteel_transcript:
     - أَأَعْجَمِيٌّ وَعَرَبِيٌّ
   - type: update
+    segment_index: '047.0058'
+    new_end_seconds: 703.9
+    new_tarteel_transcript:
+    - إِنَّ الَّذِينَ كَفَرُوا وَصَدُّوا عَن سَبِيلِ اللَّهِ وَشَاقُّوا الرَّسُولَ
+      مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ
+  - type: delete
+    segment_index: '047.0059'
+  - type: update
+    segment_index: '047.0060'
+    new_end_seconds: 724.96
+    new_tarteel_transcript:
+    - وَشَاقُّوا الرَّسُولَ مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ لَن يَضُرُّوا
+      اللَّهَ شَيْئًا وَسَيُحْبِطُ أَعْمَالَهُمْ
+  - type: delete
+    segment_index: '047.0061'
+  - type: update
     segment_index: '048.0068'
     new_tarteel_transcript:
     - مُّحَمَّدٌ رَّسُولُ اللَّهِ
@@ -1026,27 +1047,6 @@ configs:
     segment_index: '055.0030'
     new_tarteel_transcript:
     - كُلَّ يَوْمٍ هُوَ فِي شَأْنٍ
-  - type: delete
-    segment_index: '047.0059'
-  - type: update
-    segment_index: '047.0058'
-    new_end_seconds: 703.9
-    new_tarteel_transcript:
-    - إِنَّ الَّذِينَ كَفَرُوا وَصَدُّوا عَن سَبِيلِ اللَّهِ وَشَاقُّوا الرَّسُولَ
-      مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ
-  - type: delete
-    segment_index: '047.0061'
-  - type: update
-    segment_index: '047.0060'
-    new_end_seconds: 724.96
-    new_tarteel_transcript:
-    - وَشَاقُّوا الرَّسُولَ مِن بَعْدِ مَا تَبَيَّنَ لَهُمُ الْهُدَىٰ لَن يَضُرُّوا
-      اللَّهَ شَيْئًا وَسَيُحْبِطُ أَعْمَالَهُمْ
-  - type: update
-    segment_index: '004.0005'
-    new_audio_file: 4.0/004_0005.wav
-    new_tarteel_transcript:
-    - ' وَلَا تَتَبَدَّلُوا الْخَبِيثَ بِالطَّيِّبِ'
 - id: '5.0'
   operations:
   - type: update
@@ -1136,6 +1136,26 @@ configs:
     new_tarteel_transcript:
     - ' أَإِلَٰهٌ مَّعَ اللَّهِ'
   - type: update
+    segment_index: '038.0049'
+    new_audio_file: 5.0/038_0049.wav
+    new_tarteel_transcript:
+    - ذَٰلِكَ ظَنُّ الَّذِينَ كَفَرُوا
+  - type: update
+    segment_index: '038.0054'
+    new_audio_file: 5.0/038_0054.wav
+    new_tarteel_transcript:
+    - وَوَهَبْنَا لِدَاوُودَ سُلَيْمَانَ
+  - type: insert
+    segment_index: '038.0090'
+    new_audio_file: 5.0/038_0090.wav
+    new_tarteel_transcript:
+    - هَذَا
+  - type: update
+    segment_index: '038.0090'
+    new_audio_file: 5.0/038_0091.wav
+    new_tarteel_transcript:
+    - وَإِنَّ لِلطَّاغِينَ لَشَرَّ مَآبٍ
+  - type: update
     segment_index: '040.0019'
     new_tarteel_transcript:
     - ' وَمَن تَقِ السَّيِّئَاتِ يَوْمَئِذٍ فَقَدْ رَحِمْتَهُ'
@@ -1151,6 +1171,11 @@ configs:
     segment_index: '056.0033'
     new_tarteel_transcript:
     - لَّا مَقْطُوعَةٍ وَلَا مَمْنُوعَةٍ
+  - type: update
+    segment_index: '061.0027'
+    new_end_seconds: 283.0
+  - type: delete
+    segment_index: '061.0028'
   - type: update
     segment_index: '064.0039'
     new_tarteel_transcript:
@@ -1176,28 +1201,223 @@ configs:
     segment_index: '087.0009'
     new_tarteel_transcript:
     - وَنُيَسِّرُكَ لِلْيُسْرَىٰ
+- id: '6.0'
+  operations:
+  - type: update
+    segment_index: '002.0618'
+    new_tarteel_transcript:
+    - وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنَّ
+  - type: update
+    segment_index: '004.0032'
+    new_tarteel_transcript:
+    - فَإِن كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ
+  - type: update
+    segment_index: '004.0499'
+    new_tarteel_transcript:
+    - إِنَّمَا اللَّهُ إِلَٰهٌ وَاحِدٌ
+  - type: update
+    segment_index: '004.0516'
+    new_tarteel_transcript:
+    - فَإِن كَانَتَا اثْنَتَيْنِ فَلَهُمَا الثُّلُثَانِ مِمَّا تَرَكَ
+  - type: update
+    segment_index: '005.0050'
+    new_tarteel_transcript:
+    - ' اعْدِلُوا هُوَ أَقْرَبُ لِلتَّقْوَىٰ'
+  - type: update
+    segment_index: '006.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '006.0394'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '008.0021'
+    new_tarteel_transcript:
+    - وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ
+  - type: update
+    segment_index: '009.0116'
+    new_tarteel_transcript:
+    - اثَّاقَلْتُمْ إِلَى الْأَرْضِ
+  - type: update
+    segment_index: '010.0002'
+    new_tarteel_transcript:
+    - الر
+  - type: update
+    segment_index: '018.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '024.0088'
+    new_tarteel_transcript:
+    - ' وَلَا تُكْرِهُوا فَتَيَاتِكُمْ عَلَى الْبِغَاءِ إِنْ أَرَدْنَ تَحَصُّنًا لِّتَبْتَغُوا
+      عَرَضَ الْحَيَاةِ الدُّنْيَا'
+  - type: update
+    segment_index: '024.0166'
+    new_tarteel_transcript:
+    - ثَلَاثُ عَوْرَاتٍ لَّكُمْ
+  - type: update
+    segment_index: '027.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '031.0024'
+    new_tarteel_transcript:
+    - ' إِنَّ الشِّرْكَ لَظُلْمٌ عَظِيمٌ'
+  - type: update
+    segment_index: '034.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '038.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '040.0021'
+    new_tarteel_transcript:
+    - ' وَمَن تَقِ السَّيِّئَاتِ يَوْمَئِذٍ فَقَدْ رَحِمْتَهُ'
+  - type: update
+    segment_index: '040.0038'
+    new_tarteel_transcript:
+    - ' لَا ظُلْمَ الْيَوْمَ'
+  - type: update
+    segment_index: '042.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '044.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '060.0006'
+    new_tarteel_transcript:
+    - ' تُسِرُّونَ إِلَيْهِم بِالْمَوَدَّةِ وَأَنَا أَعْلَمُ بِمَا أَخْفَيْتُمْ وَمَا
+      أَعْلَنتُمْ'
+  - type: update
+    segment_index: '072.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '073.0026'
+    new_tarteel_transcript:
+    - إِنَّ رَبَّكَ يَعْلَمُ أَنَّكَ تَقُومُ أَدْنَىٰ مِن ثُلُثَيِ اللَّيْلِ وَنِصْفَهُ
+      وَثُلُثَهُ
+  - type: update
+    segment_index: '073.0036'
+    new_tarteel_transcript:
+    - وَاسْتَغْفِرُوا اللَّهَ
+  - type: update
+    segment_index: '076.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '080.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '080.0022'
+    new_tarteel_transcript:
+    - ثُمَّ أَمَاتَهُ فَأَقْبَرَهُ
+  - type: update
+    segment_index: '088.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '090.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '098.0002'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
   - type: delete
-    segment_index: '061.0028'
+    segment_index: '002.0823'
   - type: update
-    segment_index: '061.0027'
-    new_end_seconds: 283.0
+    segment_index: '002.0822'
+    new_end_seconds: 10760.21
   - type: update
-    segment_index: '038.0049'
-    new_audio_file: 5.0/038_0049.wav
+    segment_index: '006.0391'
+    new_start_seconds: 4908.0
     new_tarteel_transcript:
-    - ذَٰلِكَ ظَنُّ الَّذِينَ كَفَرُوا
+    - مِّنَ الضَّأْنِ اثْنَيْنِ وَمِنَ الْمَعْزِ اثْنَيْنِ
+  - type: delete
+    segment_index: '004.0292'
   - type: update
-    segment_index: '038.0054'
-    new_audio_file: 5.0/038_0054.wav
+    segment_index: '004.0291'
+    new_audio_file: 6.0/004_0291.wav
     new_tarteel_transcript:
-    - وَوَهَبْنَا لِدَاوُودَ سُلَيْمَانَ
-  - type: insert
-    segment_index: '038.0090'
-    new_audio_file: 5.0/038_0090.wav
-    new_tarteel_transcript:
-    - هَذَا
+    - لَّا يَسْتَوِي الْقَاعِدُونَ مِنَ الْمُؤْمِنِينَ غَيْرُ أُولِي الضَّرَرِ وَالْمُجَاهِدُونَ
   - type: update
-    segment_index: '038.0090'
-    new_audio_file: 5.0/038_0091.wav
+    segment_index: '004.0293'
+    new_audio_file: 6.0/004_0293.wav
+  - type: update
+    segment_index: '004.0294'
+    new_audio_file: 6.0/004_0294.wav
+  - type: update
+    segment_index: '004.0295'
+    new_audio_file: 6.0/004_0295.wav
+  - type: update
+    segment_index: '004.0296'
+    new_audio_file: 6.0/004_0296.wav
+  - type: update
+    segment_index: '004.0297'
+    new_audio_file: 6.0/004_0297.wav
+  - type: update
+    segment_index: '004.0298'
+    new_audio_file: 6.0/004_0298.wav
+  - type: update
+    segment_index: '004.0299'
+    new_audio_file: 6.0/004_0299.wav
+  - type: update
+    segment_index: '004.0300'
+    new_audio_file: 6.0/004_0300.wav
+  - type: update
+    segment_index: '004.0301'
+    new_audio_file: 6.0/004_0301.wav
+  - type: update
+    segment_index: '004.0302'
+    new_audio_file: 6.0/004_0302.wav
+  - type: update
+    segment_index: '004.0303'
+    new_audio_file: 6.0/004_0303.wav
+  - type: update
+    segment_index: '004.0304'
+    new_audio_file: 6.0/004_0304.wav
+  - type: update
+    segment_index: '004.0305'
+    new_audio_file: 6.0/004_0305.wav
+  - type: update
+    segment_index: '004.0306'
+    new_audio_file: 6.0/004_0306.wav
+  - type: update
+    segment_index: '004.0307'
+    new_audio_file: 6.0/004_0307.wav
+  - type: update
+    segment_index: '004.0308'
+    new_audio_file: 6.0/004_0308.wav
+  - type: update
+    segment_index: '004.0309'
+    new_audio_file: 6.0/004_0309.wav
+  - type: update
+    segment_index: '004.0310'
+    new_audio_file: 6.0/004_0310.wav
+  - type: update
+    segment_index: '004.0311'
+    new_audio_file: 6.0/004_0311.wav
+  - type: update
+    segment_index: '004.0312'
+    new_audio_file: 6.0/004_0312.wav
+  - type: update
+    segment_index: '004.0313'
+    new_audio_file: 6.0/004_0313.wav
+  - type: delete
+    segment_index: '008.0188'
+  - type: update
+    segment_index: '008.0187'
+    new_end_seconds: 2582.6
     new_tarteel_transcript:
-    - وَإِنَّ لِلطَّاغِينَ لَشَرَّ مَآبٍ
+    - وَالَّذِينَ كَفَرُوا بَعْضُهُمْ أَوْلِيَاءُ بَعْضٍ
