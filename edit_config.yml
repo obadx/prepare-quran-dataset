@@ -2011,3 +2011,57 @@ configs:
     segment_index: '104.0006'
     new_tarteel_transcript:
     - نَارُ اللَّهِ الْمُوقَدَةُ
+- id: '12.0'
+  operations:
+  - type: update
+    segment_index: '002.0529'
+    new_tarteel_transcript:
+    - وَأَن تَعْفُوا أَقْرَبُ لِلتَّقْوَىٰ
+  - type: update
+    segment_index: '002.0573'
+    new_tarteel_transcript:
+    - وَلَوْ شَاءَ اللَّهُ مَا اقْتَتَلُوا وَلَٰكِنَّ اللَّهَ يَفْعَلُ مَا يُرِيدُ
+  - type: update
+    segment_index: '004.0410'
+    new_tarteel_transcript:
+    - فَإِن كَانَتَا اثْنَتَيْنِ فَلَهُمَا الثُّلُثَانِ مِمَّا تَرَكَ
+  - type: update
+    segment_index: '006.0309'
+    new_tarteel_transcript:
+    - وَمِنَ الْإِبِلِ اثْنَيْنِ وَمِنَ الْبَقَرِ اثْنَيْنِ
+  - type: update
+    segment_index: '008.0015'
+    new_tarteel_transcript:
+    - ' وَمَا النَّصْرُ إِلَّا مِنْ عِندِ اللَّهِ'
+  - type: update
+    segment_index: '013.0025'
+    new_tarteel_transcript:
+    - وَمَا لَهُم مِّن دُونِهِ مِن وَالٍ
+  - type: update
+    segment_index: '024.0134'
+    new_tarteel_transcript:
+    - ' ثَلَاثُ عَوْرَاتٍ لَّكُمْ'
+  - type: update
+    segment_index: '024.0145'
+    new_tarteel_transcript:
+    - لَّيْسَ عَلَى الْأَعْمَىٰ حَرَجٌ وَلَا عَلَى الْأَعْرَجِ حَرَجٌ وَلَا عَلَى
+      الْمَرِيضِ حَرَجٌ وَلَا عَلَىٰ أَنفُسِكُمْ أَن تَأْكُلُوا مِن بُيُوتِكُمْ
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '055.0030'
+    new_tarteel_transcript:
+    - ' كُلَّ يَوْمٍ هُوَ فِي شَأْنٍ'
+  - type: update
+    segment_index: '060.0027'
+    new_tarteel_transcript:
+    - ' وَآتُوهُم مَّا أَنفَقُوا'
+  - type: delete
+    segment_index: '007.0237'
+  - type: update
+    segment_index: '007.0236'
+    new_end_seconds: 3244.2
+    new_tarteel_transcript:
+    - ' فَلَمَّا تَجَلَّىٰ رَبُّهُ لِلْجَبَلِ جَعَلَهُ دَكًّا وَخَرَّ مُوسَىٰ صَعِقًا'
