@@ -531,7 +531,7 @@ def apply_ds_shard_edits(
         apply_edits_map,
         batched=True,
         batch_size=1,
-        num_proc=num_proc,
+        # num_proc=num_proc,
         fn_kwargs={
             "segment_index_to_ops": segment_index_to_ops,
             "new_audiofile_path": new_audiofile_path,
