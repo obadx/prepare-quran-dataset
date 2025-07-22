@@ -75,27 +75,28 @@ def main(args):
                 # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
             },
         )
-        # job = executor.submit(
-        #     apply_moshaf_edits,
-        #     moshaf_edit_config,
-        #     ds_path=out_path / moshaf_edit_config.id / "train",
-        #     moshaf_media_files_path=(
-        #         args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
-        #     ),
-        #     new_audiofile_path=args.new_audiofile_base_path,
-        #     num_proc=16,
-        # )
-        # print(job.job_id)
-        apply_moshaf_edits(
-            moshaf_edit_config,
-            ds_path=out_path / moshaf_edit_config.id / "train",
-            moshaf_media_files_path=(
-                args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
-            ),
-            new_audiofile_path=args.new_audiofile_base_path,
-            num_proc=4,
-        )
-        break
+        if args.slurm:
+            job = executor.submit(
+                apply_moshaf_edits,
+                moshaf_edit_config,
+                ds_path=out_path / moshaf_edit_config.id / "train",
+                moshaf_media_files_path=(
+                    args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+                ),
+                new_audiofile_path=args.new_audiofile_base_path,
+                num_proc=16,
+            )
+            print(job.job_id)
+        else:
+            apply_moshaf_edits(
+                moshaf_edit_config,
+                ds_path=out_path / moshaf_edit_config.id / "train",
+                moshaf_media_files_path=(
+                    args.original_dataset_dir / f"dataset/{moshaf_edit_config.id}"
+                ),
+                new_audiofile_path=args.new_audiofile_base_path,
+                num_proc=4,
+            )
 
 
 if __name__ == "__main__":
@@ -146,6 +147,10 @@ if __name__ == "__main__":
         type=Path,
         required=True,
     )
+    parser.add_argument(
+        "--slurm", action="store_true", help="Use SLURM for distributed processing"
+    )
+
 
     args = parser.parse_args()
 
