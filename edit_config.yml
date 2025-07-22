@@ -2422,3 +2422,82 @@ configs:
     new_end_seconds: 522.8
     new_tarteel_transcript:
     - فِي مَقْعَدِ صِدْقٍ عِندَ مَلِيكٍ مُّقْتَدِرٍ
+- id: '24.0'
+  operations:
+  - type: update
+    segment_index: '001.0000'
+    new_tarteel_transcript:
+    - أعوذ بالله من الشيطان الرجيم
+  - type: update
+    segment_index: '002.0097'
+    new_tarteel_transcript:
+    - اهْبِطُوا مِصْرًا فَإِنَّ لَكُم مَّا سَأَلْتُمْ
+  - type: update
+    segment_index: '002.0475'
+    new_tarteel_transcript:
+    - ' وَلَا تَنكِحُوا الْمُشْرِكَاتِ حَتَّىٰ يُؤْمِنَّ'
+  - type: update
+    segment_index: '002.0501'
+    new_tarteel_transcript:
+    - الطَّلَاقُ مَرَّتَانِ فَإِمْسَاكٌ بِمَعْرُوفٍ أَوْ تَسْرِيحٌ بِإِحْسَانٍ
+  - type: update
+    segment_index: '002.0582'
+    new_tarteel_transcript:
+    - وَلَوْ شَاءَ اللَّهُ مَا اقْتَتَلُوا وَلَٰكِنَّ اللَّهَ يَفْعَلُ مَا يُرِيدُ
+  - type: update
+    segment_index: '013.0001'
+    new_tarteel_transcript:
+    - المر
+  - type: update
+    segment_index: '013.0028'
+    new_tarteel_transcript:
+    - وَمَا لَهُم مِّن دُونِهِ مِن وَالٍ
+  - type: update
+    segment_index: '014.0047'
+    new_tarteel_transcript:
+    - ' فَلَا تَلُومُونِي وَلُومُوا أَنفُسَكُم'
+  - type: update
+    segment_index: '016.0006'
+    new_tarteel_transcript:
+    - تَعَالَى عَمَّا يُشْرِكُونَ
+  - type: update
+    segment_index: '016.0027'
+    new_tarteel_transcript:
+    - وَعَلَامَاتٍ
+  - type: update
+    segment_index: '024.0125'
+    new_tarteel_transcript:
+    - ' ثَلَاثُ عَوْرَاتٍ لَّكُمْ'
+  - type: update
+    segment_index: '027.0001'
+    new_tarteel_transcript:
+    - طس
+  - type: update
+    segment_index: '037.0143'
+    new_tarteel_transcript:
+    - أَفَلَا تَعْقِلُونَ
+  - type: update
+    segment_index: '040.0014'
+    new_tarteel_transcript:
+    - وَمَن تَقِ السَّيِّئَاتِ يَوْمَئِذٍ فَقَدْ رَحِمْتَهُ
+  - type: update
+    segment_index: '043.0004'
+    new_end_seconds: 33.8
+    new_tarteel_transcript:
+    - وَإِنَّهُ فِي أُمِّ الْكِتَابِ لَدَيْنَا لَعَلِيٌّ حَكِيمٌ
+  - type: update
+    segment_index: '048.0058'
+    new_tarteel_transcript:
+    - مُّحَمَّدٌ رَّسُولُ اللَّهِ
+  - type: update
+    segment_index: '055.0030'
+    new_tarteel_transcript:
+    - ' كُلَّ يَوْمٍ هُوَ فِي شَأْنٍ'
+  - type: update
+    segment_index: '094.0006'
+    new_tarteel_transcript:
+    - إِنَّ مَعَ الْعُسْرِ يُسْرًا
+  - type: update
+    segment_index: '114.0003'
+    new_tarteel_transcript:
+    - إِلَهِ النَّاسِ
