@@ -131,3 +131,13 @@ configs:
     new_end_seconds: 4796.4
     new_tarteel_transcript:
     - بَلَىٰ
+- id: '1.0'
+  operations:
+  - type: update
+    segment_index: '101.0001'
+    new_tarteel_transcript:
+    - الْقَارِعَةُ
+  - type: update
+    segment_index: '004.0026'
+    new_tarteel_transcript:
+    - ' وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ'
