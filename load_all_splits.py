@@ -32,7 +32,7 @@ if __name__ == "__main__":
         )
         job = executor.submit(
             lambda: load_dataset(
-                str(ds_path), name=f"moshaf_{moshaf.id}", split="train"
+                str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=16,
             )
         )
         print(job.job_id)
