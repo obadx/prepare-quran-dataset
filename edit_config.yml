@@ -184,3 +184,60 @@ configs:
     new_tarteel_transcript:
     - ' وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
       فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ'
+- id: '3.0'
+  operations:
+  - type: update
+    segment_index: '024.0147'
+    new_tarteel_transcript:
+    - لَّيْسَ عَلَى الْأَعْمَىٰ حَرَجٌ وَلَا عَلَى الْأَعْرَجِ حَرَجٌ وَلَا عَلَى
+      الْمَرِيضِ حَرَجٌ وَلَا عَلَىٰ أَنفُسِكُمْ
+  - type: update
+    segment_index: '033.0122'
+    new_tarteel_transcript:
+    - وَلَا إِخْوَانِهِنَّ وَلَا أَبْنَاءِ إِخْوَانِهِنَّ وَلَا أَبْنَاءِ أَخَوَاتِهِنَّ
+      وَلَا نِسَائِهِنَّ وَلَا مَا مَلَكَتْ أَيْمَانُهُنَّ
+  - type: insert
+    segment_index: '036.0098'
+    new_start_seconds: 801.48
+    new_end_seconds: 803.3
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '044.0059'
+    new_start_seconds: 374.4
+    new_end_seconds: 375.9
+    new_tarteel_transcript:
+    - ذُقْ
+  - type: insert
+    segment_index: '016.0046'
+    new_start_seconds: 381.82
+    new_end_seconds: 383.8
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '069.0001'
+    new_tarteel_transcript:
+    - الْحَاقَّةُ
+  - type: insert
+    segment_index: '003.0160'
+    new_start_seconds: 1698.9
+    new_end_seconds: 1700.78
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '004.0040'
+    new_tarteel_transcript:
+    - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
+  - type: insert
+    segment_index: '002.0151'
+    new_start_seconds: 1787.92
+    new_end_seconds: 1790.0
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '002.0222'
+    new_start_seconds: 2618.0
+    new_end_seconds: 2619.89
+    new_tarteel_transcript:
+    - بَلَىٰ
