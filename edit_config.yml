@@ -141,3 +141,24 @@ configs:
     segment_index: '004.0026'
     new_tarteel_transcript:
     - ' وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ'
+- id: '2.0'
+  operations:
+  - type: update
+    segment_index: '006.0177'
+    new_tarteel_transcript:
+    - فَالِقُ الْإِصْبَاحِ وَجَعَلَ اللَّيْلَ سَكَنًا وَالشَّمْسَ وَالْقَمَرَ حُسْبَانًا
+  - type: update
+    segment_index: '004.0023'
+    new_tarteel_transcript:
+    - ' فَإِن كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ وَإِن
+      كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ'
+  - type: update
+    segment_index: '004.0037'
+    new_tarteel_transcript:
+    - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
+  - type: update
+    segment_index: '002.0553'
+    new_end_seconds: 13047.0
+    new_tarteel_transcript:
+    - تِلْكَ الرُّسُلُ فَضَّلْنَا بَعْضَهُمْ عَلَىٰ بَعْضٍ
