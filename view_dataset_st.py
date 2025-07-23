@@ -684,7 +684,7 @@ def display_tasmeea_missings(ds):
     m_id = ds[0]["moshaf_id"]
     for sura_erros in st.session_state.tasmeea_errors[m_id].values():
         if "missings" in sura_erros:
-            for idx, item in enumerate(sura_erros["missings"]):
+            for item_idx, item in enumerate(sura_erros["missings"]):
                 related_seg_ids = find_nearest_tasmeea_results(
                     moshaf_id=m_id,
                     sura_idx=item["start_span"]["sura_idx"],
@@ -695,7 +695,7 @@ def display_tasmeea_missings(ds):
                     idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
                     display_audio_file(
                         ds[idx],
-                        key_prefix=f"tasmeea_missings_{idx}",
+                        key_prefix=f"tasmeea_missings_{item_idx}",
                         ignore_load_button=True,
                     )
                 st.write("-" * 40)
