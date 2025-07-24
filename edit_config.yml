@@ -488,3 +488,48 @@ configs:
     new_tarteel_transcript:
     - ' فَإِن كَانَ الَّذِي عَلَيْهِ الْحَقُّ سَفِيهًا أَوْ ضَعِيفًا أَوْ لَا يَسْتَطِيعُ
       أَن يُمِلَّ هُوَ فَلْيُمْلِلْ وَلِيُّهُ بِالْعَدْلِ'
+- id: '11.0'
+  operations:
+  - type: update
+    segment_index: '023.0049'
+    new_tarteel_transcript:
+    - فَأَخَذَتْهُمُ الصَّيْحَةُ بِالْحَقِّ فَجَعَلْنَاهُمْ غُثَاءً
+  - type: update
+    segment_index: '022.0124'
+    new_tarteel_transcript:
+    - ' إِنَّ ذَٰلِكَ عَلَى اللَّهِ يَسِيرٌ'
+  - type: update
+    segment_index: '024.0140'
+    new_tarteel_transcript:
+    - لَّيْسَ عَلَى الْأَعْمَىٰ حَرَجٌ وَلَا عَلَى الْأَعْرَجِ حَرَجٌ وَلَا عَلَى
+      الْمَرِيضِ حَرَجٌ وَلَا عَلَىٰ أَنفُسِكُمْ أَن تَأْكُلُوا مِن بُيُوتِكُمْ أَوْ
+      بُيُوتِ آبَائِكُمْ
+  - type: update
+    segment_index: '036.0001'
+    new_tarteel_transcript:
+    - يس وَالْقُرْآنِ الْحَكِيمِ
+  - type: update
+    segment_index: '026.0174'
+    new_tarteel_transcript:
+    - إِنَّ فِي ذَٰلِكَ لَآيَةً وَمَا كَانَ أَكْثَرُهُم مُّؤْمِنِينَ
+  - type: update
+    segment_index: '042.0001'
+    new_tarteel_transcript:
+    - حم عسق
+  - type: insert
+    segment_index: '003.0157'
+    new_start_seconds: 1481.0
+    new_end_seconds: 1482.5
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '003.0252'
+    new_start_seconds: 2444.5
+    new_end_seconds: 2446.2
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '004.0044'
+    new_tarteel_transcript:
+    - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
