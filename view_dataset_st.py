@@ -682,29 +682,37 @@ def find_nearest_tasmeea_results(moshaf_id: str, sura_idx: int, aya_idx: int, wi
 
 def display_tasmeea_missings(ds):
     m_id = ds[0]["moshaf_id"]
-    for s_idx, sura_erros in enumerate(st.session_state.tasmeea_errors[m_id].values()):
+
+    missings = []
+    for sura_idx, sura_erros in st.session_state.tasmeea_errors[m_id].items():
         if "missings" in sura_erros:
             for item_idx, item in enumerate(sura_erros["missings"]):
-                if st.button(
-                    "أظهر الخطأ التالي",
-                    key=f"misssing_error_show_{s_idx}_{item_idx}",
-                    use_container_width=True,
-                ):
-                    related_seg_ids = find_nearest_tasmeea_results(
-                        moshaf_id=m_id,
-                        sura_idx=item["start_span"]["sura_idx"],
-                        aya_idx=item["start_span"]["aya_idx"],
-                    )
-                    st.write(item)
-                    for seg_idx in related_seg_ids:
-                        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
-                        display_audio_file(
-                            ds[idx],
-                            key_prefix=f"tasmeea_missings_{item_idx}",
-                            ignore_load_button=True,
-                        )
-                st.write("-" * 40)
-                st.write("-" * 40)
+                related_seg_ids = find_nearest_tasmeea_results(
+                    moshaf_id=m_id,
+                    sura_idx=item["start_span"]["sura_idx"],
+                    aya_idx=item["start_span"]["aya_idx"],
+                )
+                missings.append((sura_idx, item_idx))
+
+    st.write(f"عدد الأخطاء: {len(missings)}")
+    missing_idx = st.number_input(
+        "اختر رقم الخطأ", min_value=0, max_value=len(missings) - 1
+    )
+    sura_idx, idx_in_sura = missings[missing_idx]
+    item = st.session_state.tasmeea_errors[m_id][sura_idx][idx_in_sura]
+    related_seg_ids = find_nearest_tasmeea_results(
+        moshaf_id=m_id,
+        sura_idx=item["start_span"]["sura_idx"],
+        aya_idx=item["start_span"]["aya_idx"],
+    )
+    st.write(item)
+    for seg_idx in related_seg_ids:
+        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+        display_audio_file(
+            ds[idx],
+            key_prefix=f"tasmeea_missings",
+            ignore_load_button=True,
+        )
 
 
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
