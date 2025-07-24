@@ -756,7 +756,7 @@ configs:
     segment_index: '046.0001'
     new_end_seconds: 6.3
     new_tarteel_transcript:
-    - mحم
+    - حم
   - type: update
     segment_index: '046.0001'
     new_start_seconds: 6.3
