@@ -694,12 +694,12 @@ def display_tasmeea_missings(ds):
                 )
                 missings.append((sura_idx, item_idx))
 
-    st.write(f"عدد الأخطاء: {len(missings)}")
+    st.write(f"عدد الأجزاء الناقصة: {len(missings)}")
     missing_idx = st.number_input(
         "اختر رقم الخطأ", min_value=0, max_value=len(missings) - 1
     )
     sura_idx, idx_in_sura = missings[missing_idx]
-    item = st.session_state.tasmeea_errors[m_id][sura_idx][idx_in_sura]
+    item = st.session_state.tasmeea_errors[m_id][sura_idx]["missings"][idx_in_sura]
     related_seg_ids = find_nearest_tasmeea_results(
         moshaf_id=m_id,
         sura_idx=item["start_span"]["sura_idx"],
