@@ -21,6 +21,12 @@ configs:
       أَوْ بُيُوتِ عَمَّاتِكُمْ أَوْ بُيُوتِ أَخْوَالِكُمْ أَوْ بُيُوتِ خَالَاتِكُمْ
 - id: '0.1'
   operations:
+  - type: insert
+    segment_index: '002.0150'
+    new_start_seconds: 2555.4
+    new_end_seconds: 2558.23
+    new_tarteel_transcript:
+    - بَلَىٰ
   - type: update
     segment_index: '004.0025'
     new_tarteel_transcript:
@@ -59,52 +65,18 @@ configs:
     new_end_seconds: 136.4
     new_tarteel_transcript:
     - بَلَىٰ
-  - type: insert
-    segment_index: '002.0150'
-    new_start_seconds: 2555.4
-    new_end_seconds: 2558.23
-    new_tarteel_transcript:
-    - بَلَىٰ
 - id: '0.3'
   operations:
   - type: insert
-    segment_index: '036.0110'
-    new_start_seconds: 1544.95
-    new_end_seconds: 1548.6
+    segment_index: '002.0198'
+    new_start_seconds: 2929.4
+    new_end_seconds: 2932.0
     new_tarteel_transcript:
     - بَلَىٰ
   - type: insert
-    segment_index: '044.0063'
-    new_start_seconds: 623.21
-    new_end_seconds: 626.21
-    new_tarteel_transcript:
-    - ذُقْ
-  - type: update
-    segment_index: '042.0001'
-    new_tarteel_transcript:
-    - حم عسق
-  - type: insert
-    segment_index: '046.0085'
-    new_start_seconds: 1192.74
-    new_end_seconds: 1196.5
-    new_tarteel_transcript:
-    - بَلَىٰ
-  - type: insert
-    segment_index: '016.0053'
-    new_start_seconds: 778.3
-    new_end_seconds: 781.5
-    new_tarteel_transcript:
-    - بَلَىٰ
-  - type: insert
-    segment_index: '047.0009'
-    new_start_seconds: 144.3
-    new_end_seconds: 148.5
-    new_tarteel_transcript:
-    - ذَٰلِكَ
-  - type: insert
-    segment_index: '084.0015'
-    new_start_seconds: 151.07
-    new_end_seconds: 155.0
+    segment_index: '002.0295'
+    new_start_seconds: 4466.3
+    new_end_seconds: 4796.4
     new_tarteel_transcript:
     - بَلَىٰ
   - type: insert
@@ -120,33 +92,62 @@ configs:
     new_tarteel_transcript:
     - بَلَىٰ
   - type: insert
-    segment_index: '002.0198'
-    new_start_seconds: 2929.4
-    new_end_seconds: 2932.0
+    segment_index: '016.0053'
+    new_start_seconds: 778.3
+    new_end_seconds: 781.5
     new_tarteel_transcript:
     - بَلَىٰ
   - type: insert
-    segment_index: '002.0295'
-    new_start_seconds: 4466.3
-    new_end_seconds: 4796.4
+    segment_index: '036.0110'
+    new_start_seconds: 1544.95
+    new_end_seconds: 1548.6
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '042.0001'
+    new_tarteel_transcript:
+    - حم عسق
+  - type: insert
+    segment_index: '044.0063'
+    new_start_seconds: 623.21
+    new_end_seconds: 626.21
+    new_tarteel_transcript:
+    - ذُقْ
+  - type: insert
+    segment_index: '046.0085'
+    new_start_seconds: 1192.74
+    new_end_seconds: 1196.5
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '047.0009'
+    new_start_seconds: 144.3
+    new_end_seconds: 148.5
+    new_tarteel_transcript:
+    - ذَٰلِكَ
+  - type: insert
+    segment_index: '084.0015'
+    new_start_seconds: 151.07
+    new_end_seconds: 155.0
     new_tarteel_transcript:
     - بَلَىٰ
 - id: '1.0'
   operations:
   - type: update
-    segment_index: '101.0001'
-    new_tarteel_transcript:
-    - الْقَارِعَةُ
-  - type: update
     segment_index: '004.0026'
     new_tarteel_transcript:
     - ' وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ'
+  - type: update
+    segment_index: '101.0001'
+    new_tarteel_transcript:
+    - الْقَارِعَةُ
 - id: '2.0'
   operations:
   - type: update
-    segment_index: '006.0177'
+    segment_index: '002.0553'
+    new_end_seconds: 13047.0
     new_tarteel_transcript:
-    - فَالِقُ الْإِصْبَاحِ وَجَعَلَ اللَّيْلَ سَكَنًا وَالشَّمْسَ وَالْقَمَرَ حُسْبَانًا
+    - تِلْكَ الرُّسُلُ فَضَّلْنَا بَعْضَهُمْ عَلَىٰ بَعْضٍ
   - type: update
     segment_index: '004.0023'
     new_tarteel_transcript:
@@ -158,12 +159,20 @@ configs:
     - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
       فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
   - type: update
-    segment_index: '002.0553'
-    new_end_seconds: 13047.0
+    segment_index: '006.0177'
     new_tarteel_transcript:
-    - تِلْكَ الرُّسُلُ فَضَّلْنَا بَعْضَهُمْ عَلَىٰ بَعْضٍ
+    - فَالِقُ الْإِصْبَاحِ وَجَعَلَ اللَّيْلَ سَكَنًا وَالشَّمْسَ وَالْقَمَرَ حُسْبَانًا
 - id: '2.1'
   operations:
+  - type: update
+    segment_index: '004.0025'
+    new_tarteel_transcript:
+    - وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ
+  - type: update
+    segment_index: '004.0039'
+    new_tarteel_transcript:
+    - ' وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ'
   - type: update
     segment_index: '024.0142'
     new_tarteel_transcript:
@@ -175,17 +184,37 @@ configs:
     new_tarteel_transcript:
     - وَلَا إِخْوَانِهِنَّ وَلَا أَبْنَاءِ إِخْوَانِهِنَّ وَلَا أَبْنَاءِ أَخَوَاتِهِنَّ
       وَلَا نِسَائِهِنَّ
-  - type: update
-    segment_index: '004.0025'
-    new_tarteel_transcript:
-    - وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ
-  - type: update
-    segment_index: '004.0039'
-    new_tarteel_transcript:
-    - ' وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
-      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ'
 - id: '3.0'
   operations:
+  - type: insert
+    segment_index: '002.0151'
+    new_start_seconds: 1787.92
+    new_end_seconds: 1790.0
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '002.0222'
+    new_start_seconds: 2618.0
+    new_end_seconds: 2619.89
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '003.0160'
+    new_start_seconds: 1698.9
+    new_end_seconds: 1700.78
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: update
+    segment_index: '004.0040'
+    new_tarteel_transcript:
+    - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
+  - type: insert
+    segment_index: '016.0046'
+    new_start_seconds: 381.82
+    new_end_seconds: 383.8
+    new_tarteel_transcript:
+    - بَلَىٰ
   - type: update
     segment_index: '024.0147'
     new_tarteel_transcript:
@@ -208,36 +237,78 @@ configs:
     new_end_seconds: 375.9
     new_tarteel_transcript:
     - ذُقْ
-  - type: insert
-    segment_index: '016.0046'
-    new_start_seconds: 381.82
-    new_end_seconds: 383.8
-    new_tarteel_transcript:
-    - بَلَىٰ
   - type: update
     segment_index: '069.0001'
     new_tarteel_transcript:
     - الْحَاقَّةُ
+- id: '4.0'
+  operations:
+  - type: update
+    segment_index: '003.0432'
+    new_audio_file: 4.0/003_1.wav
+    new_tarteel_transcript:
+    - يَا أَيُّهَا الَّذِينَ آمَنُوا اصْبِرُوا وَصَابِرُوا وَرَابِطُوا وَاتَّقُوا
+      اللَّهَ لَعَلَّكُمْ تُفْلِحُونَ
+  - type: update
+    segment_index: '004.0403'
+    new_tarteel_transcript:
+    - ' مَا لَهُم بِهِ مِنْ عِلْمٍ إِلَّا اتِّبَاعَ الظَّنِّ'
+  - type: update
+    segment_index: '005.0221'
+    new_tarteel_transcript:
+    - مَّا الْمَسِيحُ ابْنُ مَرْيَمَ إِلَّا رَسُولٌ قَدْ خَلَتْ مِن قَبْلِهِ الرُّسُلُ
+      وَأُمُّهُ صِدِّيقَةٌ كَانَا يَأْكُلَانِ الطَّعَامَ
+  - type: update
+    segment_index: '033.0128'
+    new_tarteel_transcript:
+    - وَلَا إِخْوَانِهِنَّ وَلَا أَبْنَاءِ إِخْوَانِهِنَّ وَلَا أَبْنَاءِ أَخَوَاتِهِنَّ
+      وَلَا نِسَائِهِنَّ وَلَا مَا مَلَكَتْ أَيْمَانُهُنَّ
+- id: '5.0'
+  operations:
   - type: insert
-    segment_index: '003.0160'
-    new_start_seconds: 1698.9
-    new_end_seconds: 1700.78
+    segment_index: '036.0104'
+    new_start_seconds: 918.0
+    new_end_seconds: 919.8
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '016.0051'
+    new_start_seconds: 446.0
+    new_end_seconds: 447.5
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '046.0072'
+    new_start_seconds: 783.8
+    new_end_seconds: 785.3
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '043.0112'
+    new_start_seconds: 1038.5
+    new_end_seconds: 1040.25
     new_tarteel_transcript:
     - بَلَىٰ
   - type: update
-    segment_index: '004.0040'
+    segment_index: '059.0003'
     new_tarteel_transcript:
-    - وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
-      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ
+    - هُوَ الَّذِي أَخْرَجَ الَّذِينَ كَفَرُوا مِنْ أَهْلِ الْكِتَابِ مِن دِيَارِهِمْ
+      لِأَوَّلِ الْحَشْرِ
   - type: insert
-    segment_index: '002.0151'
-    new_start_seconds: 1787.92
-    new_end_seconds: 1790.0
+    segment_index: '084.0015'
+    new_start_seconds: 76.0
+    new_end_seconds: 77.5
     new_tarteel_transcript:
     - بَلَىٰ
   - type: insert
-    segment_index: '002.0222'
-    new_start_seconds: 2618.0
-    new_end_seconds: 2619.89
+    segment_index: '002.0161'
+    new_start_seconds: 1627.2
+    new_end_seconds: 1629.1
+    new_tarteel_transcript:
+    - بَلَىٰ
+  - type: insert
+    segment_index: '002.0244'
+    new_start_seconds: 2492.0
+    new_end_seconds: 2494.0
     new_tarteel_transcript:
     - بَلَىٰ
