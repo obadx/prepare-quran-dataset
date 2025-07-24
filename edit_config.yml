@@ -312,3 +312,36 @@ configs:
     new_end_seconds: 2494.0
     new_tarteel_transcript:
     - بَلَىٰ
+- id: '6.0'
+  operations:
+  - type: delete
+    segment_index: '098.0002'
+  - type: delete
+    segment_index: '098.0003'
+  - type: update
+    segment_index: '024.0077'
+    new_tarteel_transcript:
+    - أَوْ إِخْوَانِهِنَّ أَوْ بَنِي إِخْوَانِهِنَّ أَوْ بَنِي أَخَوَاتِهِنَّ أَوْ
+      نِسَائِهِنَّ
+  - type: update
+    segment_index: '008.0183'
+    new_tarteel_transcript:
+    - وَالَّذِينَ آوَوا وَّنَصَرُوا أُولَٰئِكَ بَعْضُهُمْ أَوْلِيَاءُ بَعْضٍ
+  - type: update
+    segment_index: '042.0002'
+    new_tarteel_transcript:
+    - حم عسق
+  - type: update
+    segment_index: '048.0045'
+    new_tarteel_transcript:
+    - 'لَّيْسَ عَلَى الْأَعْمَىٰ حَرَجٌ وَلَا عَلَى الْأَعْرَجِ حَرَجٌ وَلَا عَلَى
+      الْمَرِيضِ حَرَجٌ '
+  - type: update
+    segment_index: '004.0033'
+    new_tarteel_transcript:
+    - ' وَإِن كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ'
+  - type: update
+    segment_index: '004.0047'
+    new_tarteel_transcript:
+    - ' وَإِن كَانَ رَجُلٌ يُورَثُ كَلَالَةً أَوِ امْرَأَةٌ وَلَهُ أَخٌ أَوْ أُخْتٌ
+      فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُ'
