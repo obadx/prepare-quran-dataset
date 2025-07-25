@@ -919,6 +919,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     with sakt_columns[1]:
         if st.button("أظهر الهمس", use_container_width=True):
             st.session_state.show_hams = True
+    with sakt_columns[0]:
         if st.button("أخف الهمس", use_container_width=True):
             st.session_state.show_hams = False
     if "show_hams" in st.session_state:
