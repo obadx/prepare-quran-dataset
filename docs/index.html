@@ -749,7 +749,7 @@
                 <div class="stat-card">
                     <i class="fas fa-cogs"></i>
                     <h3>98%</h3>
-                    <p id="stat1">خط مميكمن لفحص البيانات و تحقيقها</p>
+                    <p id="stat1">طريقة مميكمنة لفحص البيانات و تحقيقها</p>
                 </div>
                 
                 <!-- Stat 2 -->
@@ -867,11 +867,6 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3 id="footer-title1">المعلم القرآني</h3>
-                    <p id="footer-desc">المساعد الذكي لاكتشاف وتصحيح أخطاء النطق في تلاوة القرآن الكريم باستخدام تقنيات التعلم العميق المتقدمة.</p>
-                </div>
-                
-                <div class="footer-column">
                     <h3 id="footer-title2">روابط سريعة</h3>
                     <ul>
                         <li><a href="#" id="footer-link1">الرئيسية</a></li>
@@ -902,6 +897,7 @@
             </div>
             
             <div class="copyright" id="copyright">
+                &copy; 2023 المعلم القرآني. جميع الحقوق محفوظة.
             </div>
         </div>
     </footer>
@@ -996,8 +992,6 @@
                     document.getElementById('link-title3').textContent = 'Quran Phonetic Transcript';
                     document.getElementById('link-title4').textContent = 'Pronunciation DL Model';
                     
-                    document.getElementById('footer-title1').textContent = 'Al-Muallim Al-Qurani';
-                    document.getElementById('footer-desc').textContent = 'Intelligent assistant for detecting and correcting pronunciation errors in Quranic recitation using advanced deep learning techniques.';
                     document.getElementById('footer-title2').textContent = 'Quick Links';
                     document.getElementById('footer-title3').textContent = 'Repositories';
                     document.getElementById('footer-title4').textContent = 'Contact Us';
@@ -1013,10 +1007,12 @@
                     document.getElementById('repo-link2').textContent = 'Segmenter';
                     document.getElementById('repo-link3').textContent = 'Phonetic Transcript';
                     
-                    
                     // Update contact text
                     document.getElementById('contact-github').textContent = 'GitHub';
                     document.getElementById('contact-hf').textContent = 'Hugging Face';
+                    
+                    // Update copyright
+                    document.getElementById('copyright').textContent = '© 2023 Al-Muallim Al-Qurani. All Rights Reserved.';
                 } else {
                     // Switch to Arabic
                     body.setAttribute('lang', 'ar');
@@ -1044,7 +1040,7 @@
                     document.getElementById('problem-text2').textContent = 'في هذا العمل، نسد هذه الفجوات من خلال تقديم حلول متكاملة تعتمد على أحدث تقنيات الذكاء الاصطناعي والتعلم العميق لتوفير نظام متكامل لاكتشاف وتصحيح أخطاء النطق في التلاوة القرآنية.';
                     
                     document.getElementById('pipeline-title').textContent = 'خطوات العمل المقترحة';
-                    document.getElementById('pipeline-description').textContent = 'قمنا بتطوير خط أنابيب آلي بنسبة 98% لإنتاج مجموعات بيانات قرآنية عالية الجودة تشمل جمع التلاوات وتصفيتها، والتجزئة عند نقاط الوقف، ونسخ المقاطع، والتحقق من النصوص.';
+                    document.getElementById('pipeline-description').textContent = 'قمنا بتطوير طريقة مميكنة بنسبة 98% لإنتاج مجموعات بيانات قرآنية عالية الجودة تشمل جمع التلاوات وتصفيتها، والتجزئة عند نقاط الوقف، ونسخ المقاطع، والتحقق من النصوص.';
                     
                     document.getElementById('step-title1').textContent = 'جمع وتصفية التلاوات';
                     document.getElementById('step-text1').textContent = 'جمع آلاف التلاوات من قراء متعددين وتصفيتها للحصول على عينات عالية الجودة';
@@ -1062,7 +1058,7 @@
                     document.getElementById('step-text5').textContent = 'استخدام نماذج التعلم العميق لاكتشاف أخطاء النطق وتصحيحها باستخدام نسختنا الصوتية القرآنية';
                     
                     document.getElementById('contributions-title').textContent = 'مساهماتنا الرئيسية';
-                    document.getElementById('stat1').textContent = 'خط أنابيب آلي لإنتاج البيانات';
+                    document.getElementById('stat1').textContent = 'طريقة مميكنة لجمع وتحقيق التلاوات';
                     document.getElementById('stat2').textContent = 'ساعة من التلاوات المعلمة';
                     document.getElementById('stat3').textContent = 'عبارة تم تحليلها وتقييمها';
                     
@@ -1076,8 +1072,6 @@
                     document.getElementById('link-title3').textContent = 'النسخ الصوتي للقرآن';
                     document.getElementById('link-title4').textContent = 'نموذج النطق بالتعلم العميق';
                     
-                    document.getElementById('footer-title1').textContent = 'المعلم القرآني';
-                    document.getElementById('footer-desc').textContent = 'المساعد الذكي لاكتشاف وتصحيح أخطاء النطق في تلاوة القرآن الكريم باستخدام تقنيات التعلم العميق المتقدمة.';
                     document.getElementById('footer-title2').textContent = 'روابط سريعة';
                     document.getElementById('footer-title3').textContent = 'المستودعات';
                     document.getElementById('footer-title4').textContent = 'تواصل معنا';
@@ -1093,10 +1087,12 @@
                     document.getElementById('repo-link2').textContent = 'المقسم';
                     document.getElementById('repo-link3').textContent = 'النسخ الصوتي';
                     
-                    
                     // Restore contact text
                     document.getElementById('contact-github').textContent = 'GitHub';
                     document.getElementById('contact-hf').textContent = 'Hugging Face';
+                    
+                    // Restore copyright
+                    document.getElementById('copyright').textContent = '&copy; 2023 المعلم القرآني. جميع الحقوق محفوظة.';
                 }
             });
 
@@ -1122,6 +1118,9 @@
                     header.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
                 }
             });
+            
+            // Set copyright year
+            document.getElementById('copyright').innerHTML = '&copy; ' + new Date().getFullYear() + ' المعلم القرآني. جميع الحقوق محفوظة.';
         });
     </script>
 </body>
