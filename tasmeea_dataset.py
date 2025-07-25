@@ -196,7 +196,9 @@ def process_moshaf(
     logging.info(f"Processing moshaf {moshaf_id} with {max_workers} processes")
 
     all_surahs = [f"{i:03d}" for i in range(1, 115)]  # 001 to 114
-    ds = load_dataset(str(dataset_dir), name=f"moshaf_{moshaf_id}", split="train")
+    ds = load_dataset(
+        str(dataset_dir), name=f"moshaf_{moshaf_id}", split="train", num_proc=32
+    )
     segment_ids = ds["segment_index"]
     tarteel_transcripts = ds["tarteel_transcript"]
     sura_to_seg_to_tarteel = {}
