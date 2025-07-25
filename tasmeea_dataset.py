@@ -27,8 +27,8 @@ def setup_logging():
 
 
 GLOBAL_TASMEEA_PRAMS = {
-    "overlap_words": 25,
-    "window_words": 50,
+    "overlap_words": 27,
+    "window_words": 54,
     "acceptance_ratio": 0.85,
     "include_istiaatha": True,
     "include_bismillah": True,
