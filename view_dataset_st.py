@@ -715,6 +715,22 @@ def display_tasmeea_missings(ds):
         )
 
 
+def display_hams(ds):
+    m_id = ds[0]["moshaf_id"]
+    hams_positions = [(18, 1), (18, 2), (36, 52), (75, 27), (83, 14)]
+    seg_ids = []
+    for sura_idx, aya_idx in hams_positions:
+        seg_ids += find_nearest_tasmeea_results(m_id, sura_idx, aya_idx, winodw=0)
+
+    for seg_idx in seg_ids:
+        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+        display_audio_file(
+            ds[idx],
+            key_prefix=f"hams_",
+            ignore_load_button=True,
+        )
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(
         str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
@@ -737,6 +753,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     sura_stat_columns = st.columns(4)
     empty_transcript = st.columns(4)
     tasmeea_columns = st.columns(4)
+    sakt_columns = st.columns(2)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -898,6 +915,16 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.show_tasmeea_missings:
             st.header("أخطاء الآيات الناقصة")
             display_tasmeea_missings(ds)
+
+    with sakt_columns[1]:
+        if st.button("أظهر الهمس", use_container_width=True):
+            st.session_state.show_hams = True
+        if st.button("أخف الهمس", use_container_width=True):
+            st.session_state.show_hams = False
+    if "show_hams" in st.session_state:
+        if st.session_state.show_hams:
+            st.subheader("الموضع المحتلمة للهمس")
+            display_hams(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
