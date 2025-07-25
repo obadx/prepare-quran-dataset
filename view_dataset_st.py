@@ -110,20 +110,20 @@ def is_qlqla_kobra(text) -> bool:
     return False
 
 
-def is_sakt_end(text) -> bool:
-    """Whethr the aya has سكت متطرف or not"""
+def is_hams_end(text) -> bool:
+    """Whethr the aya has همس متطرف or not"""
 
-    sakt = "فحثهشخصسكت"
+    hams = "فحثهشخصسكت"
     shadda = "ّ"
     haraka = "ًٌٍَُِْ"
     text = re.sub(r"\s+", "", text)  # remvoe spaces
-    if re.search(f"[{sakt}]{shadda}?[{haraka}]$", text):
+    if re.search(f"[{hams}]{shadda}?[{haraka}]$", text):
         return True
     return False
 
 
-def is_sakt_end_for_char(text, char="ت") -> bool:
-    """Whethr the aya has سكت متطرف or not"""
+def is_hams_end_for_char(text, char="ت") -> bool:
+    """Whethr the aya has همس متطرف or not"""
 
     shadda = "ّ"
     haraka = "ًٌٍَُِْ"
@@ -309,16 +309,16 @@ def abort_opearation_with_confirmation(item: dict, op: Operation):
             st.rerun()
 
 
-@st.dialog("ظبط زمن السكت المتطرف")
-def adjust_sakt_end_duration(ds: Dataset):
-    with st.form("sakt_form"):
-        sakt_pad_ms = st.number_input("مدة الزيادة ms", value=0)
+@st.dialog("ظبط زمن الهمس المتطرف")
+def adjust_hams_end_duration(ds: Dataset):
+    with st.form("hams_form"):
+        hams_pad_ms = st.number_input("مدة الزيادة ms", value=0)
 
         if st.form_submit_button("موافق"):
-            if sakt_pad_ms:
+            if hams_pad_ms:
                 with st.spinner("الضبط حارٍٍ"):
                     filter_ds = ds.filter(
-                        lambda ex: is_sakt_end(ex["tarteel_transcript"][-1]),
+                        lambda ex: is_hams_end(ex["tarteel_transcript"][-1]),
                         num_proc=16,
                     )
 
@@ -331,11 +331,11 @@ def adjust_sakt_end_duration(ds: Dataset):
                                     type="update",
                                     segment_index=item["segment_index"],
                                     new_end_seconds=item["timestamp_seconds"][1]
-                                    + sakt_pad_ms / 1000,
+                                    + hams_pad_ms / 1000,
                                 )
                             )
                         save_moshaf_operation(moshaf_id, new_operations)
-                        popup_message("تم طبط زمن السكت المتطرف بنجاح", "success")
+                        popup_message("تم طبط زمن الهمس المتطرف بنجاح", "success")
                         st.rerun()
                     else:
                         popup_message("الزمن لا بد أن يكون أكبر من الصفر !", "error")
@@ -584,10 +584,10 @@ def display_qlqla_kobra(ds):
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
 
 
-def display_sakt_end(ds):
-    char = st.selectbox("اختر حرف السكت", list("فحثهشخصسكت"))
+def display_hams_end(ds):
+    char = st.selectbox("اختر حرف الهمس", list("فحثهشخصسكت"))
     f_ds = ds.filter(
-        lambda ex: is_sakt_end_for_char(ex["tarteel_transcript"][-1], char), num_proc=16
+        lambda ex: is_hams_end_for_char(ex["tarteel_transcript"][-1], char), num_proc=16
     )
     for item in f_ds:
         display_audio_file(item, key_prefix="small", ignore_load_button=True)
@@ -733,7 +733,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     col1, col2, col3, col4 = st.columns(4)
     stat_coumns = st.columns(4)
     qlqal_columns = st.columns(3)
-    sakt_columns = st.columns(3)
+    hams_columns = st.columns(3)
     sura_stat_columns = st.columns(4)
     empty_transcript = st.columns(4)
     tasmeea_columns = st.columns(4)
@@ -820,20 +820,20 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             st.subheader("القلقة الكبرى")
             display_qlqla_kobra(ds)
 
-    with sakt_columns[2]:
-        if st.button("اظهر السكت المتطرف", use_container_width=True):
-            st.session_state.display_sakt = True
-    with sakt_columns[0]:
-        if st.button("اخف السكت المتطرف", use_container_width=True):
-            st.session_state.display_sakt = False
-    with sakt_columns[1]:
-        if st.button("اضبط زمن السكت المتطرف", use_container_width=True):
-            adjust_sakt_end_duration(ds)
+    with hams_columns[2]:
+        if st.button("اظهر الهمس المتطرف", use_container_width=True):
+            st.session_state.display_hams = True
+    with hams_columns[0]:
+        if st.button("اخف الهمس المتطرف", use_container_width=True):
+            st.session_state.display_hams = False
+    with hams_columns[1]:
+        if st.button("اضبط زمن الهمس المتطرف", use_container_width=True):
+            adjust_hams_end_duration(ds)
 
-    if "display_sakt" in st.session_state:
-        if st.session_state.display_sakt:
-            st.subheader("السكت المتطرف")
-            display_sakt_end(ds)
+    if "display_hams" in st.session_state:
+        if st.session_state.display_hams:
+            st.subheader("الهمس المتطرف")
+            display_hams_end(ds)
 
     with sura_stat_columns[3]:
         if st.button("أظهر أوائل السور", use_container_width=True):
