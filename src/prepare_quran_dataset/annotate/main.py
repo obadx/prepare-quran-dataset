@@ -59,7 +59,7 @@ OUT_FEATURES = Features(
         "sample_rate": Value(dtype="int32"),
         "duration_seconds": Value(dtype="float32"),
         "timestamp_seconds": Sequence(feature=Value(dtype="float32")),
-        "imalaey": Value(dtype="string", id=None),
+        "imlaey": Value(dtype="string", id=None),
         "uthmani": Value(dtype="string", id=None),
         "has_quran": Value(dtype="bool", id=None),
         "has_istiaatha": Value(dtype="bool", id=None),
