@@ -43,7 +43,7 @@ def add_quran_columns(moshaf_id: str, dataset_dir: Path):
 
     ds = ds.map(
         lambda ex: {
-            "imlaey": seg_idx_to_tasmeea_info[ex["segment_index"]]["imlaey"],
+            "imlaey": seg_idx_to_tasmeea_info[ex["segment_index"]]["imalaey"],
             "uthmani": seg_idx_to_tasmeea_info[ex["segment_index"]]["uthmani"],
             "has_quran": seg_idx_to_tasmeea_info[ex["segment_index"]]["has_quran"],
             "has_istiaatha": seg_idx_to_tasmeea_info[ex["segment_index"]][
