@@ -695,24 +695,27 @@ def display_tasmeea_missings(ds):
                 missings.append((sura_idx, item_idx))
 
     st.write(f"عدد الأجزاء الناقصة: {len(missings)}")
-    missing_idx = st.number_input(
-        "اختر رقم الخطأ", min_value=0, max_value=len(missings) - 1
-    )
-    sura_idx, idx_in_sura = missings[missing_idx]
-    item = st.session_state.tasmeea_errors[m_id][sura_idx]["missings"][idx_in_sura]
-    related_seg_ids = find_nearest_tasmeea_results(
-        moshaf_id=m_id,
-        sura_idx=item["start_span"]["sura_idx"],
-        aya_idx=item["start_span"]["aya_idx"],
-    )
-    st.write(item)
-    for seg_idx in related_seg_ids:
-        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
-        display_audio_file(
-            ds[idx],
-            key_prefix=f"tasmeea_missings",
-            ignore_load_button=True,
+    if len(missings) == 0:
+        st.success("لا يوجد آيات ناقصة")
+    else:
+        missing_idx = st.number_input(
+            "اختر رقم الخطأ", min_value=0, max_value=len(missings) - 1
         )
+        sura_idx, idx_in_sura = missings[missing_idx]
+        item = st.session_state.tasmeea_errors[m_id][sura_idx]["missings"][idx_in_sura]
+        related_seg_ids = find_nearest_tasmeea_results(
+            moshaf_id=m_id,
+            sura_idx=item["start_span"]["sura_idx"],
+            aya_idx=item["start_span"]["aya_idx"],
+        )
+        st.write(item)
+        for seg_idx in related_seg_ids:
+            idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+            display_audio_file(
+                ds[idx],
+                key_prefix=f"tasmeea_missings",
+                ignore_load_button=True,
+            )
 
 
 def display_hams(ds):
@@ -917,14 +920,14 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
             display_tasmeea_missings(ds)
 
     with sakt_columns[1]:
-        if st.button("أظهر الهمس", use_container_width=True):
-            st.session_state.show_hams = True
+        if st.button("أظهر السكت", use_container_width=True):
+            st.session_state.show_sakt = True
     with sakt_columns[0]:
-        if st.button("أخف الهمس", use_container_width=True):
-            st.session_state.show_hams = False
-    if "show_hams" in st.session_state:
-        if st.session_state.show_hams:
-            st.subheader("الموضع المحتلمة للهمس")
+        if st.button("أخف السكت", use_container_width=True):
+            st.session_state.show_sakt = False
+    if "show_sakt" in st.session_state:
+        if st.session_state.show_sakt:
+            st.subheader("الموضع المحتلمة السكت")
             display_hams(ds)
 
     st.subheader("مقاطع السورة")
