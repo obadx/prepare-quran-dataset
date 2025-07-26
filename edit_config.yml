@@ -839,10 +839,6 @@ configs:
     new_tarteel_transcript:
     - يُوصِيكُمُ اللَّهُ فِي أَوْلَادِكُمْ لِلذَّكَرِ مِثْلُ حَظِّ الْأُنثَيَيْنِ
   - type: update
-    segment_index: '005.0035'
-    new_tarteel_transcript:
-    - ' فَاعْفُ عَنْهُمْ وَاصْفَحْ'
-  - type: update
     segment_index: '005.0191'
     new_tarteel_transcript:
     - وَأَطِيعُوا اللَّهَ وَأَطِيعُوا الرَّسُولَ وَاحْذَرُوا
@@ -948,6 +944,16 @@ configs:
     new_start_seconds: 209.51
     new_tarteel_transcript:
     - وَلَا تَجْعَلُوا مَعَ اللَّهِ إِلَٰهًا آخَرَ إِنِّي لَكُم مِّنْهُ نَذِيرٌ مُّبِينٌ
+  - type: insert
+    segment_index: '075.0027'
+    new_end_seconds: 79.79
+    new_tarteel_transcript:
+    - وَقِيلَ مَنْ رَاقٍ
+  - type: update
+    segment_index: '075.0027'
+    new_start_seconds: 79.79
+    new_tarteel_transcript:
+    - وَظَنَّ أَنَّهُ الْفِرَاقُ
   - type: update
     segment_index: '076.0003'
     new_tarteel_transcript:
@@ -963,15 +969,15 @@ configs:
     new_tarteel_transcript:
     - إِنَّ مَعَ الْعُسْرِ يُسْرًا
   - type: insert
-    segment_index: '075.0027'
-    new_end_seconds: 79.79
+    segment_index: '005.0035'
+    new_end_seconds: 355.6
     new_tarteel_transcript:
-    - وَقِيلَ مَنْ رَاقٍ
+    - ' فَاعْفُ عَنْهُمْ وَاصْفَح'
   - type: update
-    segment_index: '075.0027'
-    new_start_seconds: 79.79
+    segment_index: '005.0035'
+    new_start_seconds: 355.61
     new_tarteel_transcript:
-    - وَظَنَّ أَنَّهُ الْفِرَاقُ
+    - ' إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ'
 - id: '26.0'
   operations:
   - type: update
@@ -998,20 +1004,20 @@ configs:
     segment_index: '073.0029'
     new_tarteel_transcript:
     - ' فَاقْرَءُوا مَا تَيَسَّرَ مِنْهُ'
+  - type: update
+    segment_index: '075.0028'
+    new_end_seconds: 165.56
+    new_tarteel_transcript:
+    - وَقِيلَ مَنْ رَاقٍ
   - type: delete
-    segment_index: '083.0016'
+    segment_index: '075.0029'
   - type: update
     segment_index: '083.0015'
     new_end_seconds: 101.47
     new_tarteel_transcript:
     - كَلَّا بَلْ رَانَ عَلَىٰ قُلُوبِهِم مَّا كَانُوا يَكْسِبُونَ
   - type: delete
-    segment_index: '075.0029'
-  - type: update
-    segment_index: '075.0028'
-    new_end_seconds: 165.56
-    new_tarteel_transcript:
-    - وَقِيلَ مَنْ رَاقٍ
+    segment_index: '083.0016'
 - id: '26.1'
   operations:
   - type: update
@@ -1025,29 +1031,29 @@ configs:
     - وَذَا النُّونِ إِذ ذَّهَبَ مُغَاضِبًا فَظَنَّ أَن لَّن نَّقْدِرَ عَلَيْهِ فَنَادَىٰ
       فِي الظُّلُمَاتِ
   - type: update
-    segment_index: '073.0030'
-    new_tarteel_transcript:
-    - ' فَاقْرَءُوا مَا تَيَسَّرَ مِنْهُ'
-  - type: delete
-    segment_index: '075.0029'
-  - type: update
-    segment_index: '075.0028'
-    new_end_seconds: 171.0
-    new_tarteel_transcript:
-    - وَقِيلَ مَنْ رَاقٍ
-  - type: update
-    segment_index: '083.0016'
-    new_start_seconds: 106.7
-    new_tarteel_transcript:
-    - ' بَلْ رَانَ عَلَىٰ قُلُوبِهِم مَّا كَانُوا يَكْسِبُونَ'
-  - type: delete
-    segment_index: '036.0069'
-  - type: update
     segment_index: '036.0068'
     new_end_seconds: 735.78
     new_tarteel_transcript:
     - قَالُوا يَا وَيْلَنَا مَن بَعَثَنَا مِن مَّرْقَدِنَا هَٰذَا مَا وَعَدَ الرَّحْمَٰنُ
       وَصَدَقَ الْمُرْسَلُونَ
+  - type: delete
+    segment_index: '036.0069'
+  - type: update
+    segment_index: '073.0030'
+    new_tarteel_transcript:
+    - ' فَاقْرَءُوا مَا تَيَسَّرَ مِنْهُ'
+  - type: update
+    segment_index: '075.0028'
+    new_end_seconds: 171.0
+    new_tarteel_transcript:
+    - وَقِيلَ مَنْ رَاقٍ
+  - type: delete
+    segment_index: '075.0029'
+  - type: update
+    segment_index: '083.0016'
+    new_start_seconds: 106.7
+    new_tarteel_transcript:
+    - ' بَلْ رَانَ عَلَىٰ قُلُوبِهِم مَّا كَانُوا يَكْسِبُونَ'
 - id: '27.0'
   operations:
   - type: update
@@ -1151,23 +1157,23 @@ configs:
     new_tarteel_transcript:
     - ' وَلَا يَضْرِبْنَ بِأَرْجُلِهِنَّ لِيُعْلَمَ مَا يُخْفِينَ مِن زِينَتِهِنَّ'
   - type: update
-    segment_index: '098.0011'
+    segment_index: '075.0027'
+    new_end_seconds: 140.68
     new_tarteel_transcript:
-    - رَّضِيَ اللَّهُ عَنْهُمْ وَرَضُوا عَنْهُ
+    - وَقِيلَ مَنْ رَاقٍ
   - type: delete
-    segment_index: '083.0015'
+    segment_index: '075.0028'
   - type: update
     segment_index: '083.0014'
     new_end_seconds: 97.62
     new_tarteel_transcript:
     - كَلَّا بَلْ رَانَ عَلَىٰ قُلُوبِهِم مَّا كَانُوا يَكْسِبُونَ
   - type: delete
-    segment_index: '075.0028'
+    segment_index: '083.0015'
   - type: update
-    segment_index: '075.0027'
-    new_end_seconds: 140.68
+    segment_index: '098.0011'
     new_tarteel_transcript:
-    - وَقِيلَ مَنْ رَاقٍ
+    - رَّضِيَ اللَّهُ عَنْهُمْ وَرَضُوا عَنْهُ
 - id: '29.0'
   operations:
   - type: update
@@ -1184,20 +1190,20 @@ configs:
     new_tarteel_transcript:
     - يَا أَيُّهَا النَّبِيُّ إِذَا طَلَّقْتُمُ النِّسَاءَ فَطَلِّقُوهُنَّ لِعِدَّتِهِنَّ
       وَأَحْصُوا الْعِدَّةَ
-  - type: delete
-    segment_index: '083.0015'
-  - type: delete
-    segment_index: '075.0029'
   - type: update
     segment_index: '075.0028'
     new_end_seconds: 144.96
     new_tarteel_transcript:
     - وَقِيلَ مَنْ رَاقٍ
+  - type: delete
+    segment_index: '075.0029'
   - type: update
     segment_index: '083.0014'
     new_end_seconds: 92.1
     new_tarteel_transcript:
     - كَلَّا بَلْ رَانَ عَلَىٰ قُلُوبِهِم مَّا كَانُوا يَكْسِبُونَ
+  - type: delete
+    segment_index: '083.0015'
 - id: '30.0'
   operations:
   - type: update
