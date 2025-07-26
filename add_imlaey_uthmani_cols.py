@@ -82,7 +82,7 @@ def main(args):
     for moshaf in moshaf_pool:
         if args.slurm:
             executor.update_parameters(
-                slurm_job_name=f"UTH{moshaf_id}",
+                slurm_job_name=f"UTH{moshaf.id}",
                 slurm_additional_parameters={
                     # "output": f"QVADcpu_{split}_%j.out"  # %j = Slurm job ID
                 },
