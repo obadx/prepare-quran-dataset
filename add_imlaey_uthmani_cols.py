@@ -43,15 +43,19 @@ def add_quran_columns(moshaf_id: str, dataset_dir: Path):
 
     ds = ds.map(
         lambda ex: {
-            "imlaey": seg_idx_to_tasmeea_info["imlaey"],
-            "uthmani": seg_idx_to_tasmeea_info["uthmani"],
-            "has_quran": seg_idx_to_tasmeea_info["has_quran"],
-            "has_istiaatha": seg_idx_to_tasmeea_info["has_istiaatha"],
-            "has_bismillah": seg_idx_to_tasmeea_info["has_bismillah"],
-            "has_sadaka": seg_idx_to_tasmeea_info["has_sadaka"],
-            "start_span": seg_idx_to_tasmeea_info["start_span"],
-            "end_span": seg_idx_to_tasmeea_info["end_span"],
-            "match_ratio": seg_idx_to_tasmeea_info["ratio"],
+            "imlaey": seg_idx_to_tasmeea_info[ex["segment_index"]]["imlaey"],
+            "uthmani": seg_idx_to_tasmeea_info[ex["segment_index"]]["uthmani"],
+            "has_quran": seg_idx_to_tasmeea_info[ex["segment_index"]]["has_quran"],
+            "has_istiaatha": seg_idx_to_tasmeea_info[ex["segment_index"]][
+                "has_istiaatha"
+            ],
+            "has_bismillah": seg_idx_to_tasmeea_info[ex["segment_index"]][
+                "has_bismillah"
+            ],
+            "has_sadaka": seg_idx_to_tasmeea_info[ex["segment_index"]]["has_sadaka"],
+            "start_span": seg_idx_to_tasmeea_info[ex["segment_index"]]["start_span"],
+            "end_span": seg_idx_to_tasmeea_info[ex["segment_index"]]["end_span"],
+            "match_ratio": seg_idx_to_tasmeea_info[ex["segment_index"]]["ratio"],
         },
         # num_proc=16,
     )
