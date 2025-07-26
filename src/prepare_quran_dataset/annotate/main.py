@@ -59,6 +59,25 @@ OUT_FEATURES = Features(
         "sample_rate": Value(dtype="int32"),
         "duration_seconds": Value(dtype="float32"),
         "timestamp_seconds": Sequence(feature=Value(dtype="float32")),
+        "imalaey": Value(dtype="string", id=None),
+        "uthmani": Value(dtype="string", id=None),
+        "has_quran": Value(dtype="bool", id=None),
+        "has_istiaatha": Value(dtype="bool", id=None),
+        "has_bismillah": Value(dtype="bool", id=None),
+        "has_sadaka": Value(dtype="bool", id=None),
+        "start_span": {
+            "sura_idx": Value(dtype="int32", id=None),
+            "aya_idx": Value(dtype="int32", id=None),
+            "imlaey": Value(dtype="int32", id=None),
+            "uthmani": Value(dtype="int32", id=None),
+        },
+        "end_span": {
+            "sura_idx": Value(dtype="int32", id=None),
+            "aya_idx": Value(dtype="int32", id=None),
+            "imlaey": Value(dtype="int32", id=None),
+            "uthmani": Value(dtype="int32", id=None),
+        },
+        "match_ratio": Value(dtype="float32", id=None),
     }
 )
 
