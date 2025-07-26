@@ -4,7 +4,7 @@ import gc
 from typing import Optional
 import logging
 
-from datasets import IterableDataset, Dataset
+from datasets import IterableDataset, Dataset, Features
 from tqdm import tqdm
 
 
@@ -29,6 +29,7 @@ def save_to_disk_split(
     samples_per_shard: int = 128,
     annotated_segment_ids: Optional[set[str]] = None,
     segment_column="segment_index",
+    features: Features | None = None,
 ):
     """save an Iterable hugginfce dataset onto disk to avoid memory overfill"""
     assert isinstance(dataset, IterableDataset) or isinstance(dataset, Dataset), (
@@ -56,6 +57,9 @@ def save_to_disk_split(
             if cache:
                 shard_ds = Dataset.from_list(cache)
                 logging.info(f"Saving shard: {shard_path}")
+                if features:
+                    shard_ds = shard_ds.cast(features)
+
                 shard_ds.to_parquet(shard_path)
                 del shard_ds
                 del cache
@@ -69,6 +73,8 @@ def save_to_disk_split(
     # rest of the items
     if cache:
         shard_ds = Dataset.from_list(cache)
+        if features:
+            shard_ds = shard_ds.cast(features)
         shard_ds.to_parquet(
             out_path / f"{split_name}/train/shard_{shard_idx:0{5}}.parquet"
         )
