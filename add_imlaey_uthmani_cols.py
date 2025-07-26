@@ -61,7 +61,13 @@ def add_quran_columns(moshaf_id: str, dataset_dir: Path):
     )
     ds = ds.cast(OUT_FEATURES)
 
-    save_to_disk_split(ds, moshaf_id, dataset_dir / "dataset", samples_per_shard=512)
+    save_to_disk_split(
+        ds,
+        moshaf_id,
+        dataset_dir / "dataset",
+        samples_per_shard=512,
+        features=OUT_FEATURES,
+    )
 
 
 def main(args):
