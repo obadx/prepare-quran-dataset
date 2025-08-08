@@ -452,6 +452,15 @@ class Moshaf(BaseDatasetModel):
         " or softening (`tarqeeq`) when pausing at this word in Surah Al-Fajr."
         " `wasl`: means not pasuing so we only have one way (tarqeeq of Raa)",
     )
+    meem_mokhfah: Literal["meem", "ikhfaa"] = Field(
+        default="ikhfaa",
+        field_arabic_name="هل الميم مخفاة أو مدغمة",
+        field_arabic_attrs_map={
+            "meem": "ميم",
+            "ikhfaa": "إخفاء",
+        },
+        description="This is not a standrad Hafs way but a disagreement between schoolars in our century how to pronounc Ikhfaa for meem. Some schoolars do full merging `إدام` and the other open the leaps a little bit `إخفاء`. We did not want to add this but some of the best reciters disagree about this",
+    )
 
     @model_validator(mode="after")
     def check_madd_alleen(self) -> Self:
