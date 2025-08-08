@@ -459,7 +459,7 @@ class Moshaf(BaseDatasetModel):
             "meem": "ميم",
             "ikhfaa": "إخفاء",
         },
-        description="This is not a standrad Hafs way but a disagreement between schoolars in our century how to pronounc Ikhfaa for meem. Some schoolars do full merging `إدام` and the other open the leaps a little bit `إخفاء`. We did not want to add this but some of the best reciters disagree about this",
+        description="This is not a **standard** Hafs way but a disagreement between **scholars** in our century on how to **pronounce** **Ikhfa** for meem. Some **scholars** do full merging (`إدغام`) and the others open the **lips** a little bit (`إخفاء`). We did not want to add this, but some of the best reciters disagree about this.",
     )
 
     @model_validator(mode="after")
