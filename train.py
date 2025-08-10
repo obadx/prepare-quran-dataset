@@ -437,6 +437,7 @@ def prepare_dataset(
                 "obadx/mualem-recitations-annotated",
                 name=f"moshaf_{m_id}",
                 split="train",
+                num_proc=train_config.num_workers,
             )
             for m_id in moshaf_ids
         ]
