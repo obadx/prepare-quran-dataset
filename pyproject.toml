@@ -61,6 +61,7 @@ annotate = [
   "Levenshtein>=0.27.1",
   "accelerate",
   "pyroomacoustics>=0.7.4",
+  "fast_mp3_augment",
 ]
 
 [project.urls]
