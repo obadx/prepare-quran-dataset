@@ -15,7 +15,7 @@ def add_zero_between(L, x=PAD_TOKEN_IDX):
     return out
 
 
-class MutliLevelTokenizer:
+class MultiLevelTokenizer:
     def __init__(self, model_name_or_path: str):
         self.levels = ["phonemes"]
         for fieldname, fieldinfo in SifaOutput.model_fields.items():
@@ -27,6 +27,9 @@ class MutliLevelTokenizer:
             self.level_to_tokenizer[level] = Wav2Vec2CTCTokenizer.from_pretrained(
                 "./", pad_token=PAD_TOKEN, target_lang=level
             )
+
+    def get_tokenizer(self):
+        return self.level_to_tokenizer["phonemes"]
 
     def tokenize(
         self,
