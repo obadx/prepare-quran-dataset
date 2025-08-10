@@ -73,7 +73,7 @@ class TrainConfig(BaseModel):
     hub_model_id: str = "obadx/Muaalem-model-dev"
     wandb_project_name: str = "Muaalem-model-dev"
     warmup_ratio: float = 0.2
-    gradient_checkpoiniting = False
+    gradient_checkpoiniting: bool = False
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "TrainConfig":
