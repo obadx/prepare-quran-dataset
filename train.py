@@ -483,6 +483,8 @@ def register_model():
 
 
 if __name__ == "__main__":
+    # loading wandb tokens ans HF login
+    load_secrets()
     register_model()
     train_config = TrainConfig.from_yaml("./train_config.yml")
     processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
@@ -500,9 +502,6 @@ if __name__ == "__main__":
 
     processor.push_to_hub(train_config.hub_model_id)
     multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id)
-
-    # loading wandb tokens ans HF login
-    load_secrets()
 
     # Initializaze wanddb
     # set the wandb project where this run will be logged
