@@ -59,6 +59,7 @@ annotate = [
   "plotly",
   "audiomentations>=0.42.0",
   "Levenshtein>=0.27.1",
+  "accelerate",
 ]
 
 [project.urls]
