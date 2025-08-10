@@ -60,6 +60,7 @@ annotate = [
   "audiomentations>=0.42.0",
   "Levenshtein>=0.27.1",
   "accelerate",
+  "pyroomacoustics>=0.7.4",
 ]
 
 [project.urls]
