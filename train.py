@@ -6,6 +6,7 @@ import os
 import yaml
 import random
 from typing import List, Union, Dict
+from dataclasses import dataclass
 
 
 from quran_transcript import quran_phonetizer, MoshafAttributes
@@ -434,6 +435,7 @@ def register_model():
     )
 
 
+@dataclass
 class DataCollatorCTCWithPadding:
     processor: Wav2Vec2BertProcessor
     multi_level_tokenizer: MultiLevelTokenizer
