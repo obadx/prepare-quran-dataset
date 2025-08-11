@@ -23,7 +23,7 @@ if __name__ == "__main__":
         batch = 16
         for idx in range(0, len(seg_ids), batch):
             try:
-                texts = uth_txts[idx:batch]
+                texts = uth_txts[idx : idx + batch]
                 photenized_outs = [
                     quran_phonetizer(
                         texts[idx],
@@ -42,9 +42,9 @@ if __name__ == "__main__":
                 )
             except Exception as e:
                 print(f"Moshaf: {moshaf['id']}")
-                print(f"Erro with ids: {seg_ids[idx:batch]}")
+                print(f"Erro with ids: {seg_ids[idx : idx + batch]}")
                 for ph_out, txt, seg_idx in zip(
-                    photenized_outs, texts, seg_ids[idx:batch]
+                    photenized_outs, texts, seg_ids[idx : idx + batch]
                 ):
                     print(
                         f"{seg_idx} -> {txt}\nPhonemes: {ph_out.phonemes}\nSifat:\n{json.dumps(ph_out.sifat, ensure_ascii=False, indent=2)}"
