@@ -400,7 +400,7 @@ def prepare_dataset(
 
     # removihg long samples
     max_samples = int(train_config.max_audio_seconds * 16000)
-    ds = ds.fileter(
+    ds = ds.filter(
         lambda ex: len(ex["audio"]["array"]) <= max_samples,
         num_proc=train_config.num_workers,
     )
