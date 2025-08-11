@@ -43,8 +43,8 @@ weight_decay: 0.01
 warmup_ratio: 0.2
 
 # Model saving and evaluation
-metric_for_bet_model: "average_f1"
-greater_is_better: true
+metric_for_bet_model: "average_per"
+greater_is_better: false
 
 hub_model_id: "obadx/Muaalem-model-dev"
 wandb_project_name: "Muaalem-model-dev"

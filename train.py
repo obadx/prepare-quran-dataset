@@ -7,6 +7,7 @@ import yaml
 import random
 from typing import List, Union, Dict
 from dataclasses import dataclass
+import string
 
 
 from quran_transcript import quran_phonetizer, MoshafAttributes
@@ -22,7 +23,6 @@ from transformers import (
     AutoModelForCTC,
     Wav2Vec2BertProcessor,
 )
-
 from huggingface_hub import login as hf_login
 from datasets import load_dataset, DatasetDict, Dataset, concatenate_datasets
 import numpy as np
@@ -155,118 +155,103 @@ def load_secrets():
         print("HuggingFace token not found!")
 
 
-def compute_phoneme_error_rate_sequences_levenshtein(predictions, labels):
+def ctc_decode(batch_arr, blank_id=0, collapse_consecutive=True) -> list[NDArray]:
+    decoded_list = []
+    for seq in batch_arr:
+        if collapse_consecutive:
+            tokens = []
+            prev = blank_id
+            for current in seq:
+                if current == blank_id:
+                    prev = blank_id
+                    continue
+                if current == prev:
+                    continue
+                tokens.append(current)
+                prev = current
+            decoded_list.append(np.array(tokens, dtype=seq.dtype))
+        else:
+            tokens = seq[seq != blank_id]
+            decoded_list.append(tokens)
+    return decoded_list
+
+
+def sequence_to_chars(labels) -> str:
+    t = ""
+    for label in labels:
+        if label > len(string.ascii_letters):
+            raise ValueError(
+                f"We only support labels up to : `{len(string.ascii_letters)}` got {label}"
+            )
+        t += string.ascii_letters[label]
+    return t
+
+
+def compute_per_level(predictions: list[str], references: list[str], pad_token_idx=0):
     """
-    Compute phoneme error rate considering sequences properly using Levenshtein distance.
-
-    Args:
-        predictions: 2D array of shape (batch_size, sequence_length)
-        labels: 2D array of shape (batch_size, sequence_length)
-
-    Returns:
-        Phoneme error rate as float
+    Compute Phoneme Error Rate using Levenshtein distance.
     """
-    total_levenshtein_distance = 0
-    total_phonemes = 0
+    total_distance = 0
+    total_length = 0
 
-    # Loop over each sequence in the batch
-    for pred_seq, label_seq in zip(predictions, labels):
-        # Remove padding (-100 values)
-        valid_mask = label_seq != -100
-        pred_seq_valid = pred_seq[valid_mask]
-        label_seq_valid = label_seq[valid_mask]
+    pred_ids_list = ctc_decode(
+        predictions, collapse_consecutive=True, blank_id=pad_token_idx
+    )
+    ref_ids_list = ctc_decode(
+        references, collapse_consecutive=False, blank_id=pad_token_idx
+    )
 
-        # Convert to strings for Levenshtein distance calculation
-        pred_str = "".join(map(str, pred_seq_valid))
-        label_str = "".join(map(str, label_seq_valid))
+    for pred, ref in zip(pred_ids_list, ref_ids_list):
+        pred_str = sequence_to_chars(pred)
+        ref_str = sequence_to_chars(ref)
+        # Compute Levenshtein distance
+        distance = min(Levenshtein.distance(pred_str, ref_str), len(ref_str))
+        total_distance += distance
+        total_length += len(ref_str)
 
-        # Calculate Levenshtein distance
-        levenshtein_dist = Levenshtein.distance(pred_str, label_str)
-        total_levenshtein_distance += levenshtein_dist
-        total_phonemes += len(label_str)
-
-    if total_phonemes > 0:
-        return total_levenshtein_distance / total_phonemes
-    else:
-        return 0.0
+    return total_distance / total_length if total_length > 0 else 0.0
 
 
-def compute_metrics(eval_pred):
+def compute_metrics(eval_pred, pad_token_idx=0):
     """
-    Compute metrics for multi-level predictions.
+    Compute PER metrics for multi-level predictions.
 
     Args:
         eval_pred: Tuple of (predictions, labels) where both are dictionaries
-                  with level names as keys and tensors as values
+        multi_level_tokenizer: MultiLevelTokenizer instance for decoding
 
     Returns:
-        Dictionary with computed metrics for each level and averages
+        Dictionary with PER metrics for each level and average
     """
     predictions_dict, labels_dict = eval_pred
-
-    # Convert logits to predictions for each level
-    preds_dict = {}
-    for level_name, logits in predictions_dict.items():
-        preds_dict[level_name] = np.argmax(logits, axis=-1)
-
     metrics = {}
 
-    # Metrics to compute for each level
-    metric_functions = {
-        "accuracy": accuracy_score,
-        "precision": lambda y_true, y_pred: precision_score(
-            y_true, y_pred, average="macro", zero_division=0
-        ),
-        "recall": lambda y_true, y_pred: recall_score(
-            y_true, y_pred, average="macro", zero_division=0
-        ),
-        "f1": lambda y_true, y_pred: f1_score(
-            y_true, y_pred, average="macro", zero_division=0
-        ),
+    # remove -100 id
+    for level in labels_dict:
+        mask = labels_dict[level] < 0
+        labels_dict[level][mask] = pad_token_idx
+
+    pred_labels = {
+        level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
     }
 
-    # Compute metrics for each level
-    for level_name in preds_dict.keys():
-        # Get the raw arrays (batch_size, sequence_length)
-        predictions_batch = preds_dict[level_name]  # Shape: (batch_size, seq_len)
-        labels_batch = labels_dict[level_name]  # Shape: (batch_size, seq_len)
+    for level in labels_dict:
+        metrics[f"per_{level}"] = compute_per_level(
+            pred_labels[level],
+            labels_dict[level],
+            pad_token_idx=pad_token_idx,
+        )
 
-        # Flatten and filter out ignored indices (-100) for element-wise metrics
-        predictions_flat = predictions_batch.flatten()
-        labels_flat = labels_batch.flatten()
-        mask = labels_flat != -100
-        preds_flat = predictions_flat[mask]
-        lbs_flat = labels_flat[mask]
+    # computing average per
+    total_per = 0.0
+    N = 0
+    for key in metrics:
+        total_per += metrics[key]
+        N += 1
 
-        # Compute standard metrics on flattened data
-        for metric_name, metric_func in metric_functions.items():
-            try:
-                metrics[f"{level_name}_{metric_name}"] = metric_func(
-                    lbs_flat, preds_flat
-                )
-            except Exception:
-                metrics[f"{level_name}_{metric_name}"] = 0.0
+    metrics["average_per"] = total_per / N
 
-        # Compute phoneme error rate at sequence level using Levenshtein distance
-        try:
-            per = compute_phoneme_error_rate_sequences_levenshtein(
-                predictions_batch, labels_batch
-            )
-            metrics[f"{level_name}_per"] = per
-        except Exception:
-            metrics[f"{level_name}_per"] = 0.0
-
-    # Calculate averages across all levels
-    metric_types = ["accuracy", "precision", "recall", "f1", "per"]
-    for metric_type in metric_types:
-        level_values = [
-            metrics[f"{level_name}_{metric_type}"] for level_name in preds_dict.keys()
-        ]
-        if level_values:
-            metrics[f"average_{metric_type}"] = np.mean(level_values)
-        else:
-            metrics[f"average_{metric_type}"] = 0.0
-
+    # Compute PER for each leve
     return metrics
 
 
@@ -529,19 +514,6 @@ if __name__ == "__main__":
     # Load dataset
     # Update with your dataset path
     dataset = prepare_dataset(train_config, processor, multi_level_tokenizer)
-
-    # For testing only
-    # dataset['train'] = dataset['train'].take(400)
-    # dataset['validation'] = dataset['validation'].take(100)
-    # dataset['test'] = dataset['test'].take(100)
-    #
-    # # TODO: for testing only
-    # new_ds = {'train': [], 'validation': [], 'test': []}
-    # for split in dataset:
-    #     for item in dataset[split]:
-    #         new_ds[split].append(item)
-    #     new_ds[split] = Dataset.from_list(new_ds[split])
-    # dataset = DatasetDict(new_ds)
 
     # Load pre-trained model
     with open("./vocab.json", encoding="utf-8") as f:
