@@ -62,6 +62,7 @@ annotate = [
   "accelerate",
   "pyroomacoustics>=0.7.4",
   "fast_mp3_augment",
+  "tensorboard",
 ]
 
 [project.urls]
