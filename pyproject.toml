@@ -52,6 +52,16 @@ annotate = [
   "transformers",
   "submitit==1.5.3",
   "stamina",
+  "protobuf==6.31.1",
+  "phonemizer",
+  "wandb",
+  "python-dotenv",
+  "plotly",
+  "audiomentations>=0.42.0",
+  "Levenshtein>=0.27.1",
+  "accelerate",
+  "pyroomacoustics>=0.7.4",
+  "fast_mp3_augment",
 ]
 
 [project.urls]

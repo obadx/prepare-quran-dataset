@@ -734,6 +734,59 @@ def display_hams(ds):
         )
 
 
+def display_hafs_ways(ds):
+    m_id = ds[0]["moshaf_id"]
+    hafs_way_to_poses = {
+        "المد المنفصل, والمتصل": [(2, 21), (101, 10)],
+        "المد المنفصل وقفا والمد العارض": [(3, 5), (3, 6)],
+        "مد اللين": [(106, 1), (106, 2)],
+        "ميم آل عمران": [(3, 1), (3, 2)],
+        "المد الازم الحرفي للعين": [(19, 1), (42, 2)],
+        "السكت عند هوجا": [(18, 1)],
+        "السكت عند مرقدنا": [(36, 52)],
+        "السكت عند من راق": [(75, 27)],
+        "السكت عند بل ران": [(83, 14)],
+        "أوجه ماليه هلك": [(69, 28), (69, 29)],
+        "بين الانفال والتوبة": [(8, 75), (9, 1)],
+        "الإدغام والمد في نون وياسين": [(68, 1), (36, 1)],
+        "آتان بالنمل": [(27, 26)],
+        "سين يبسط": [(2, 245)],
+        "سين بسطة": [(7, 69)],
+        "سين المسيطرون": [(52, 37)],
+        "سين بمسيطر": [(88, 22)],
+        "التسهيل ولامد": [(10, 59), (27, 59), (6, 143), (6, 144), (10, 51), (10, 91)],
+        "يلهث ذلك": [(7, 176)],
+        "اركب معنا": [(10, 42)],
+        "تأمنا": [(12, 11)],
+        "ضعف": [(30, 54)],
+        "سلاسل": [(76, 4)],
+        "نخلقكم": [(77, 20)],
+        "فرق": [(26, 63)],
+        "القطر": [(34, 12)],
+        "مصر": [(10, 87), (12, 21), (12, 99), (43, 51)],
+        "نذر": [(54, 16), (54, 18)],
+        "يسر": [(89, 4)],
+    }
+    hafs_way_to_seg_ids = {}
+    for way in hafs_way_to_poses:
+        if way not in hafs_way_to_seg_ids:
+            hafs_way_to_seg_ids[way] = []
+        for sura_idx, aya_idx in hafs_way_to_poses[way]:
+            hafs_way_to_seg_ids[way] += find_nearest_tasmeea_results(
+                m_id, sura_idx, aya_idx, winodw=0
+            )
+
+    for way in hafs_way_to_seg_ids:
+        st.subheader(way)
+        for seg_idx in hafs_way_to_seg_ids[way]:
+            idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+            display_audio_file(
+                ds[idx],
+                key_prefix=way,
+                ignore_load_button=True,
+            )
+
+
 def display_moshaf(ds_path: Path, moshaf: Moshaf):
     ds = load_dataset(
         str(ds_path), name=f"moshaf_{moshaf.id}", split="train", num_proc=32
@@ -757,6 +810,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     empty_transcript = st.columns(4)
     tasmeea_columns = st.columns(4)
     sakt_columns = st.columns(2)
+    hafa_ways_columns = st.columns(2)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -929,6 +983,17 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.show_sakt:
             st.subheader("الموضع المحتلمة السكت")
             display_hams(ds)
+
+    with hafa_ways_columns[1]:
+        if st.button("أظهر أوجه حفص", use_container_width=True):
+            st.session_state.show_hafs_ways = True
+    with hafa_ways_columns[0]:
+        if st.button("اخف أوجه حفص", use_container_width=True):
+            st.session_state.show_hafs_ways = False
+    if "show_hafs_ways" in st.sessiono_state:
+        if st.sesssion_state.show_hafs_ways:
+            st.subheader("أوجه حفص")
+            display_hafs_ways(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
