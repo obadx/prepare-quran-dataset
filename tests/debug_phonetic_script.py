@@ -20,7 +20,7 @@ if __name__ == "__main__":
         moshaf_attr = MoshafAttributes(**moshaf)
         uth_txts = ds["uthmani"]
         seg_ids = ds["segment_index"]
-        batch = 16
+        batch = 2
         for idx in range(0, len(seg_ids), batch):
             try:
                 texts = uth_txts[idx : idx + batch]
