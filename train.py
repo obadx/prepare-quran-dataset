@@ -288,54 +288,6 @@ def compute_metrics(eval_pred):
 #         return (loss, outputs) if return_outputs else loss
 
 
-class DataCollatorCTCWithPadding:
-    processor: Wav2Vec2BertProcessor
-    multi_level_tokenizer: MultiLevelTokenizer
-    moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
-
-    def __call__(
-        self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
-    ) -> Dict[str, torch.Tensor]:
-        # split inputs and labels since they have to be of different lengths and need
-        # different padding methods
-        input_features = [{"input_features": feature["inputs"]} for feature in features]
-        label_features = [{"input_ids": feature["labels"]} for feature in features]
-
-        batch = self.processor.pad(
-            input_features,
-            padding="longest",
-            return_tensors="pt",
-        )
-
-        moshaf = self.moshaf_id_to_moshaf_attr[features[0]["moshaf_id"]]
-        # geting ids of the labels
-        photenized_outs = [
-            quran_phonetizer(
-                features[idx]["uthmani"],
-                moshaf,
-                remove_spaces=True,
-            )
-            for idx in range(len(features))
-        ]
-
-        labels = self.multi_level_tokenizer.tokenize(
-            [p.phonemes for p in photenized_outs],
-            [p.sifat for p in photenized_outs],
-            to_dict=True,
-            return_tensors="pt",
-            padding="longest",
-        )
-
-        # replace padding with -100 to ignore loss correctly
-        for level in labels["input_ids"]:
-            mask = labels["attention_mask"][level] == 0
-            labels["input_ids"][level][mask] = -100
-
-        batch["labels"] = labels["input_ids"]
-
-        return batch
-
-
 def build_audiomentations_augs(p=0.4, seed=42, all=False):
     """taken form: https://github.com/snakers4/silero-vad/blob/master/tuning/utils.py#L37"""
     # audiomentations usesd python random for its calculations
@@ -398,7 +350,7 @@ class Augment(object):
         self.augment_prob = augment_prob
         self.augment = build_audiomentations_augs(1, seed=seed)
 
-    def _apply_augmentations(
+    def apply(
         self,
         wav: NDArray[np.float32],
         sampling_rate=16000,
@@ -415,7 +367,7 @@ class Augment(object):
         return new_wav
 
     def __call__(self, item):
-        item["audio"]["array"] = self._apply_augmentations(item["audio"]["array"])
+        item["audio"]["array"] = self.apply(item["audio"]["array"])
         return item
 
 
@@ -443,24 +395,24 @@ def prepare_dataset(
         ]
     )
 
-    # Add augmentations
-    if not is_testset:
-        augment_func = Augment(
-            augment_prob=train_config.augment_prob, seed=train_config.seed
-        )
-        ds = ds.map(augment_func, num_proc=train_config.num_workers)
-
-    # Add input features
-    ds = ds.map(
-        lambda ex: {
-            "inputs": processor(
-                ex["audio"]["array"],
-                sampling_rate=sample_rate,
-                return_tensors="np",
-            ).input_features[0],
-        },
-        num_proc=train_config.num_workers,
-    )
+    # # Add augmentations
+    # if not is_testset:
+    #     augment_func = Augment(
+    #         augment_prob=train_config.augment_prob, seed=train_config.seed
+    #     )
+    #     ds = ds.map(augment_func, num_proc=train_config.num_workers)
+    #
+    # # Add input features
+    # ds = ds.map(
+    #     lambda ex: {
+    #         "inputs": processor(
+    #             ex["audio"]["array"],
+    #             sampling_rate=sample_rate,
+    #             return_tensors="np",
+    #         ).input_features[0],
+    #     },
+    #     num_proc=train_config.num_workers,
+    # )
 
     if is_testset:
         return ds
@@ -480,6 +432,57 @@ def register_model():
     AutoModelForCTC.register(
         Wav2Vec2BertForMultilevelCTCConfig, Wav2Vec2BertForMultilevelCTC
     )
+
+
+class DataCollatorCTCWithPadding:
+    processor: Wav2Vec2BertProcessor
+    multi_level_tokenizer: MultiLevelTokenizer
+    moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
+    augment: Augment
+
+    def __call__(
+        self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
+    ) -> Dict[str, torch.Tensor]:
+        # split inputs and labels since they have to be of different lengths and need
+        # different padding methods
+        waves = [f["audio"]["array"] for f in features]
+        for idx in range(len(waves)):
+            waves[idx] = self.augment.apply(waves[idx])
+
+        batch = self.processor(
+            waves,
+            sampling_rate=16000,
+            padding="longest",
+            return_tensors="pt",
+        )
+
+        moshaf = self.moshaf_id_to_moshaf_attr[features[0]["moshaf_id"]]
+        # geting ids of the labels
+        photenized_outs = [
+            quran_phonetizer(
+                features[idx]["uthmani"],
+                moshaf,
+                remove_spaces=True,
+            )
+            for idx in range(len(features))
+        ]
+
+        labels = self.multi_level_tokenizer.tokenize(
+            [p.phonemes for p in photenized_outs],
+            [p.sifat for p in photenized_outs],
+            to_dict=True,
+            return_tensors="pt",
+            padding="longest",
+        )
+
+        # replace padding with -100 to ignore loss correctly
+        for level in labels["input_ids"]:
+            mask = labels["attention_mask"][level] == 0
+            labels["input_ids"][level][mask] = -100
+
+        batch["labels"] = labels["input_ids"]
+
+        return batch
 
 
 if __name__ == "__main__":
