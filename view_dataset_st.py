@@ -990,8 +990,8 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     with hafa_ways_columns[0]:
         if st.button("اخف أوجه حفص", use_container_width=True):
             st.session_state.show_hafs_ways = False
-    if "show_hafs_ways" in st.sessiono_state:
-        if st.sesssion_state.show_hafs_ways:
+    if "show_hafs_ways" in st.session_state:
+        if st.session_state.show_hafs_ways:
             st.subheader("أوجه حفص")
             display_hafs_ways(ds)
 
