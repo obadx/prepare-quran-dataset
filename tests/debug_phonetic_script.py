@@ -47,7 +47,7 @@ if __name__ == "__main__":
                     photenized_outs, texts, seg_ids[idx : idx + batch]
                 ):
                     print(
-                        f"{seg_idx} -> {txt}\nPhonemes: {ph_out.phonemes}\nSifat:\n{json.dumps(ph_out.sifat, ensure_ascii=False, indent=2)}"
+                        f"{seg_idx} -> {txt}\nPhonemes: {ph_out.phonemes}\nSifat:\n{json.dumps([s.model_dump() for s in ph_out.sifat], ensure_ascii=False, indent=2)}"
                     )
                     print("-" * 40)
                 raise e
