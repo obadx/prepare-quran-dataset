@@ -50,4 +50,4 @@ if __name__ == "__main__":
                         f"{seg_idx} -> {txt}\nPhonemes: {ph_out.phonemes}\nSifat:\n{json.dumps(ph_out.sifat, ensure_ascii=False, indent=2)}"
                     )
                     print("-" * 40)
-                    raise e
+                raise e
