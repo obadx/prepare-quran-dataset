@@ -467,12 +467,10 @@ class DataCollatorCTCWithPadding:
             return_tensors="pt",
         )
 
-        moshaf = self.moshaf_id_to_moshaf_attr[features[0]["moshaf_id"]]
-        # geting ids of the labels
         photenized_outs = [
             quran_phonetizer(
                 features[idx]["uthmani"],
-                moshaf,
+                self.moshaf_id_to_moshaf_attr[features[idx]["moshaf_id"]],
                 remove_spaces=True,
             )
             for idx in range(len(features))
