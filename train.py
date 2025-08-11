@@ -577,6 +577,7 @@ if __name__ == "__main__":
         gradient_checkpointing=train_config.gradient_checkpoiniting,  # Optional for memory savings
         save_total_limit=3,
         hub_strategy="all_checkpoints",  # pushes all checkpoints to the Hub with one checkpoint per subfolder in your model repository
+        remove_unused_columns=False,
     )
 
     # Initialize label processor
