@@ -492,6 +492,7 @@ if __name__ == "__main__":
     load_secrets()
     register_model()
     train_config = TrainConfig.from_yaml("./train_config.yml")
+    print(train_config)
     processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
     multi_level_tokenizer = MultiLevelTokenizer("./")
 
