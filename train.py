@@ -580,6 +580,7 @@ if __name__ == "__main__":
         hub_strategy="all_checkpoints",  # pushes all checkpoints to the Hub with one checkpoint per subfolder in your model repository
         remove_unused_columns=False,
     )
+    print(training_args)
 
     # Initialize label processor
     data_collector = DataCollatorCTCWithPadding(
