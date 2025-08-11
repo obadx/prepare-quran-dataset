@@ -90,6 +90,7 @@ REQUIRED_MOSHAF_FIELDS = [
     "raa_misr",
     "raa_nudhur",
     "raa_yasr",
+    "meem_mokhfah",
 ]
 
 EXCLUDED_MSHAF_ITEM_FIELDS_IN_VIEW = [
