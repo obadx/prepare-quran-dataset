@@ -582,6 +582,7 @@ if __name__ == "__main__":
         processor=processor,
         multi_level_tokenizer=multi_level_tokenizer,
         moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
+        augment=Augment(augment_prob=train_config.augment_prob, seed=train_config.seed),
     )
 
     # Initialize Trainer
