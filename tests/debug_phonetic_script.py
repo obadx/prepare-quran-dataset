@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import re
 
 from datasets import load_dataset
 from quran_transcript import quran_phonetizer, MoshafAttributes
@@ -26,7 +27,7 @@ if __name__ == "__main__":
                 texts = uth_txts[idx : idx + batch]
                 photenized_outs = [
                     quran_phonetizer(
-                        texts[idx],
+                        re.sub(r"(\s$|^\s)", "", texts[idx]),
                         moshaf_attr,
                         remove_spaces=True,
                     )
