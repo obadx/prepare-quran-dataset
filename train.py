@@ -60,6 +60,8 @@ class TrainConfig(BaseModel):
     train_moshaf_ids: list[str]
     test_moshaf_ids: list[str] | None = None
     augment_prob: float = 0.4
+    phonemes_loss_weight: float = 0.4
+    max_audio_seconds: float = 35.0
     num_epochs: int = 1
     devset_ratio: float = 0.1
     save_every: float = 0.2
@@ -396,6 +398,13 @@ def prepare_dataset(
         ]
     )
 
+    # removihg long samples
+    max_samples = int(train_config.max_audio_seconds * 16000)
+    ds = ds.fileter(
+        lambda ex: len(ex["audio"]["array"]) <= max_samples,
+        num_proc=train_config.num_workers,
+    )
+
     # # Add augmentations
     # if not is_testset:
     #     augment_func = Augment(
@@ -543,6 +552,7 @@ if __name__ == "__main__":
     config = Wav2Vec2BertForMultilevelCTCConfig(
         level_to_vocab_size=level_to_vocab_size,
         pad_token_id=PAD_TOKEN_IDX,
+        level_to_loss_weight={"phonemes": train_config.phonemes_loss_weight},
     )
     model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
         "facebook/w2v-bert-2.0", config=config

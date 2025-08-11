@@ -15,8 +15,12 @@ train_moshaf_ids:
 #   - "moshaf_006"
 
 
+# Loss
+phonemes_loss_weight: 0.4
+
 # Augmentaion
 augment_prob: 0.4
+max_audio_seconds: 35.0
 
 # Training parameters
 num_epochs: 1
@@ -46,4 +50,4 @@ hub_model_id: "obadx/Muaalem-model-dev"
 wandb_project_name: "Muaalem-model-dev"
 
 # Gradient checkpointing
-gradient_checkpoiniting: false
+gradient_checkpoiniting: true
