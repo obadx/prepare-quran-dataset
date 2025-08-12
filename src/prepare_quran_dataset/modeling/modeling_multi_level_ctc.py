@@ -133,6 +133,7 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                         zero_infinity=self.config.ctc_zero_infinity,
                     )
 
+        print(f"Loss: {loss}")
         if not return_dict:
             output = (level_to_logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
             return ((loss,) + output) if loss is not None else output
