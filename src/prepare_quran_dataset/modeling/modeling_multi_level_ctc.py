@@ -67,6 +67,8 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     f"Label has to be a dict for level to its tartget labels got `{type(labels)}`"
                 )
             for level in labels:
+                if level == "segment_index":
+                    continue
                 if labels[level].max() >= self.config.level_to_vocab_size[level]:
                     raise ValueError(
                         f"Label values must be <= vocab_size: {self.config.level_to_vocab_size[level]} for level: `{level}`"
