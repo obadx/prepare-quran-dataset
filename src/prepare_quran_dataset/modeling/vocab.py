@@ -13,7 +13,7 @@ SIFAT_ATTR_TO_ARABIC = {
     "rikhw": "رخو",
     "mofakham": "مفخم",
     "moraqaq": "مرقق",
-    "monfateh": "مفخم",
+    "monfateh": "منفتح",
     "motbaq": "مطبق",
     "safeer": "صفير",
     "no_safeer": "لا صفير",

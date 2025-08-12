@@ -25,7 +25,7 @@ class MultiLevelTokenizer:
         self.level_to_tokenizer = {}
         for level in self.levels:
             self.level_to_tokenizer[level] = Wav2Vec2CTCTokenizer.from_pretrained(
-                "./", pad_token=PAD_TOKEN, target_lang=level
+                model_name_or_path, pad_token=PAD_TOKEN, target_lang=level
             )
 
     def get_tokenizer(self):
