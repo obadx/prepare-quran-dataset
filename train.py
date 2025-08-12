@@ -501,22 +501,22 @@ def prepare_special_moshaf_ways(
     moshaf_id_to_seg_moshaf_attr = {
         "6.0": {
             "010.0158": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
             ),
             "027.0107": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
             ),
             "010.0140": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
             ),
             "010.0233": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
             ),
             "012.0023": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"noon_tamnna": "rawm"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"noon_tamnna": "rawm"})
             ),
             "026.0076": MoshafAttributes(
-                (moshaf_id_to_moshaf_dict["6.0"] | {"raa_firq": "tarqeeq"})
+                **(moshaf_id_to_moshaf_dict["6.0"] | {"raa_firq": "tarqeeq"})
             ),
         }
     }
