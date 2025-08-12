@@ -442,8 +442,8 @@ class DataCollatorCTCWithPadding:
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
         waves = [f["audio"]["array"] for f in features]
-        for idx in range(len(waves)):
-            waves[idx] = self.augment.apply(waves[idx])
+        # for idx in range(len(waves)):
+        #     waves[idx] = self.augment.apply(waves[idx])
 
         batch = self.processor(
             waves,
