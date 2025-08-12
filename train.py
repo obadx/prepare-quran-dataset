@@ -474,7 +474,9 @@ class DataCollatorCTCWithPadding:
             mask = labels["attention_mask"][level] == 0
             labels["input_ids"][level][mask] = -100
 
+        seg_ids = [f["segment_index"] for f in features]
         batch["labels"] = labels["input_ids"]
+        batch["labels"]["segment_index"] = seg_ids
 
         return batch
 

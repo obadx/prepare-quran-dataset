@@ -109,6 +109,8 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
             loss = 0.0
             for level in labels:
+                if level == "segment_index":
+                    continue
                 # assuming that padded tokens are filled with -100
                 # when not being attended to
                 labels_mask = labels[level] >= 0
@@ -136,6 +138,7 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         print(
             f"Loss: {loss}, input: {attention_mask.sum(-1)}, labels: {labels['phonemes'].shape}"
         )
+        print(f"{labels['segment_index']} -> {labels['phonemes']}")
         if not return_dict:
             output = (level_to_logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
             return ((loss,) + output) if loss is not None else output
