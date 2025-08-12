@@ -16,7 +16,7 @@ train_moshaf_ids:
 
 
 # Loss
-phonemes_loss_weight: 1.0
+phonemes_loss_weight: 0.4
 
 # Augmentaion
 augment_prob: 0.4
@@ -29,11 +29,11 @@ seed: 42
 
 # Batch sizes
 per_device_train_batch_size: 64
-pre_device_eval_batch_size: 64
+pre_device_eval_batch_size: 90
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.05
+save_every: 0.2
 
 # Hardware settings
 # num_workers: 4
