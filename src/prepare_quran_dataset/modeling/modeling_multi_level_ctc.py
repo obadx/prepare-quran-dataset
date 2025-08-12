@@ -67,8 +67,6 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     f"Label has to be a dict for level to its tartget labels got `{type(labels)}`"
                 )
             for level in labels:
-                if level == "segment_index":
-                    continue
                 if labels[level].max() >= self.config.level_to_vocab_size[level]:
                     raise ValueError(
                         f"Label values must be <= vocab_size: {self.config.level_to_vocab_size[level]} for level: `{level}`"
@@ -111,8 +109,6 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
             loss = 0.0
             for level in labels:
-                if level == "segment_index":
-                    continue
                 # assuming that padded tokens are filled with -100
                 # when not being attended to
                 labels_mask = labels[level] >= 0
@@ -137,10 +133,6 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                         zero_infinity=self.config.ctc_zero_infinity,
                     )
 
-        print(
-            f"Loss: {loss}, input: {attention_mask.sum(-1)}, labels: {labels['phonemes'].shape}"
-        )
-        print(f"{labels['segment_index']} -> {labels['phonemes']}")
         if not return_dict:
             output = (level_to_logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
             return ((loss,) + output) if loss is not None else output

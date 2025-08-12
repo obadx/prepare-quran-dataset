@@ -474,9 +474,7 @@ class DataCollatorCTCWithPadding:
             mask = labels["attention_mask"][level] == 0
             labels["input_ids"][level][mask] = -100
 
-        seg_ids = [f["segment_index"] for f in features]
         batch["labels"] = labels["input_ids"]
-        batch["labels"]["segment_index"] = seg_ids
 
         return batch
 
@@ -525,6 +523,13 @@ if __name__ == "__main__":
         level_to_vocab_size=level_to_vocab_size,
         pad_token_id=PAD_TOKEN_IDX,
         level_to_loss_weight={"phonemes": train_config.phonemes_loss_weight},
+        attention_dropout=0.0,
+        hidden_dropout=0.0,
+        feat_proj_dropout=0.0,
+        mask_time_prob=0.0,
+        layerdrop=0.0,
+        ctc_loss_reduction="mean",
+        add_adapter=True,
     )
     model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
         "facebook/w2v-bert-2.0", config=config
