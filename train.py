@@ -435,6 +435,7 @@ class DataCollatorCTCWithPadding:
     multi_level_tokenizer: MultiLevelTokenizer
     moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
     augment: Augment
+    special_moshaf_id_to_seg_to_moshaf_attr: dict[str, dict[str, MoshafAttributes]]
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -452,10 +453,25 @@ class DataCollatorCTCWithPadding:
             return_tensors="pt",
         )
 
+        # Preparing Moshaf Attributes
+        moshaf_attrs = []
+        for idx in range(len(features)):
+            m_id = features[idx]["moshaf_id"]
+            if m_id in self.special_moshaf_id_to_seg_to_moshaf_attr:
+                seg_idx = features[idx]["segment_index"]
+                if seg_idx in self.special_moshaf_id_to_seg_to_moshaf_attr[m_id]:
+                    moshaf_attrs.append(
+                        self.special_moshaf_id_to_seg_to_moshaf_attr[m_id][seg_idx]
+                    )
+                else:
+                    moshaf_attrs.append(self.moshaf_id_to_moshaf_attr[m_id])
+            else:
+                moshaf_attrs.append(self.moshaf_id_to_moshaf_attr[m_id])
+
         photenized_outs = [
             quran_phonetizer(
                 features[idx]["uthmani"],
-                self.moshaf_id_to_moshaf_attr[features[idx]["moshaf_id"]],
+                moshaf_attrs[idx],
                 remove_spaces=True,
             )
             for idx in range(len(features))
@@ -479,6 +495,35 @@ class DataCollatorCTCWithPadding:
         return batch
 
 
+def prepare_special_moshaf_ways(
+    moshaf_id_to_moshaf_attr: dict[str, dict],
+) -> dict[str, dict[str, MoshafAttributes]]:
+    moshaf_id_to_seg_moshaf_attr = {
+        "6.0": {
+            "010.0158": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+            ),
+            "027.0107": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+            ),
+            "010.0140": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+            ),
+            "010.0233": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"tasheel_or_madd": "tasheel"})
+            ),
+            "012.0023": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"noon_tamnna": "rawm"})
+            ),
+            "026.0076": MoshafAttributes(
+                (moshaf_id_to_moshaf_dict["6.0"] | {"raa_firq": "tarqeeq"})
+            ),
+        }
+    }
+
+    return moshaf_id_to_seg_moshaf_attr
+
+
 if __name__ == "__main__":
     # loading wandb tokens ans HF login
     load_secrets()
@@ -488,11 +533,15 @@ if __name__ == "__main__":
     processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
     multi_level_tokenizer = MultiLevelTokenizer("./")
 
-    # loading moshaf data
+    # Loading moshaf data
     moshaf_dataeet = load_dataset(
         "obadx/mualem-recitations-annotated",
         name="moshaf_metadata",
         split="train",
+    )
+    moshaf_id_to_moshaf_dict = {ex["id"]: ex for ex in moshaf_dataeet}
+    special_moshaf_id_to_seg_to_moshaf_attr = prepare_special_moshaf_ways(
+        moshaf_id_to_moshaf_dict
     )
     moshaf_id_to_moshaf_attr = {
         ex["id"]: MoshafAttributes(**ex) for ex in moshaf_dataeet
@@ -575,6 +624,7 @@ if __name__ == "__main__":
         multi_level_tokenizer=multi_level_tokenizer,
         moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
         augment=Augment(augment_prob=train_config.augment_prob, seed=train_config.seed),
+        special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
     )
 
     # Initialize Trainer
