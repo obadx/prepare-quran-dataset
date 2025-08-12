@@ -24,7 +24,7 @@ max_audio_seconds: 20.0
 
 # Training parameters
 num_epochs: 1
-learning_rate: 5e-5
+learning_rate: 5e-7
 seed: 42
 
 # Batch sizes
