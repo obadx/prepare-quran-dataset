@@ -516,7 +516,7 @@ if __name__ == "__main__":
         ctc_loss_reduction="mean",
         add_adapter=True,
         pad_token_id=PAD_TOKEN_IDX,
-        vocab_size=len(level_to_vocab_size["phonemes"]),
+        vocab_size=level_to_vocab_size["phonemes"],
     )
 
     # Configure training arguments
