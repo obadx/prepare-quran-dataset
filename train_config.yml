@@ -33,7 +33,7 @@ pre_device_eval_batch_size: 1
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.5
+save_every: 0.05
 
 # Hardware settings
 # num_workers: 4
