@@ -134,9 +134,8 @@ class Wav2Vec2BertForMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     )
 
         print(
-            f"Len of input: {attention_mask.sum(-1)}, labels: {labels['phonemes'].shape}"
+            f"Loss: {loss}, input: {attention_mask.sum(-1)}, labels: {labels['phonemes'].shape}"
         )
-        print(f"Loss: {loss}")
         if not return_dict:
             output = (level_to_logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
             return ((loss,) + output) if loss is not None else output
