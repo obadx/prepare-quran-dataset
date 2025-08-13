@@ -649,7 +649,7 @@ if __name__ == "__main__":
         testset = prepare_dataset(
             train_config, processor, multi_level_tokenizer, is_testset=True
         )
-        test_results = trainer.evaluate(dataset["test"], metric_key_prefix="test_")
+        test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
         with open("./results/test_results.json", "w") as f:
             json.dump(test_results, f, indent=4)
         print("Test Results:", test_results)
