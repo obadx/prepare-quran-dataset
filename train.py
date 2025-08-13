@@ -410,7 +410,7 @@ def prepare_dataset(
     # )
 
     if is_testset:
-        return ds
+        return DatasetDict({"test": ds})
 
     else:
         # split train / validation
