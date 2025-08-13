@@ -60,8 +60,7 @@ class TrainConfig(BaseModel):
     train_moshaf_ids: list[str]
     test_moshaf_ids: list[str] | None = None
     augment_prob: float = 0.4
-    phonemes_loss_weight: float = 0.4
-    shidda_loss_weight: float | None = None
+    loss_weights: dict[str, float] = {"phonemes": 0.4}
     max_audio_seconds: float = 35.0
     num_epochs: int = 1
     devset_ratio: float = 0.1
@@ -534,6 +533,15 @@ if __name__ == "__main__":
     processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
     multi_level_tokenizer = MultiLevelTokenizer("./")
 
+    with open("./vocab.json", encoding="utf-8") as f:
+        vocab = json.load(f)
+    level_to_vocab_size = {l: len(v) for l, v in vocab.items()}
+    for level in train_config.loss_weights:
+        if level not in level_to_vocab_size:
+            raise ValueError(
+                f"The level `{level}` does not exist availabel are: `{list(level_to_vocab_size.values())}`"
+            )
+
     # Loading moshaf data
     moshaf_dataeet = load_dataset(
         "obadx/mualem-recitations-annotated",
@@ -566,21 +574,11 @@ if __name__ == "__main__":
     dataset = prepare_dataset(train_config, processor, multi_level_tokenizer)
 
     # Load pre-trained model
-    with open("./vocab.json", encoding="utf-8") as f:
-        vocab = json.load(f)
-    level_to_vocab_size = {l: len(v) for l, v in vocab.items()}
-    if train_config.shidda_loss_weight is not None:
-        loss_weight = {
-            "phonemes": train_config.phonemes_loss_weight,
-            "shidda_or_rakhawa": train_config.shidda_loss_weight,
-        }
-    else:
-        loss_weight = {"phonemes": train_config.phonemes_loss_weight}
 
     config = Wav2Vec2BertForMultilevelCTCConfig(
         level_to_vocab_size=level_to_vocab_size,
         pad_token_id=PAD_TOKEN_IDX,
-        level_to_loss_weight=loss_weight,
+        level_to_loss_weight=train_config.loss_weights,
         attention_dropout=0.0,
         hidden_dropout=0.0,
         feat_proj_dropout=0.0,
