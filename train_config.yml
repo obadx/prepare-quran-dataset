@@ -66,8 +66,8 @@ warmup_ratio: 0.2
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-model-v1"
-wandb_project_name: "muaalem-model-v1"
+hub_model_id: "obadx/muaalem-model-v2"
+wandb_project_name: "muaalem-model-v2"
 
 # Gradient checkpointing
 gradient_checkpoiniting: true
