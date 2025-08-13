@@ -61,6 +61,7 @@ class TrainConfig(BaseModel):
     test_moshaf_ids: list[str] | None = None
     augment_prob: float = 0.4
     phonemes_loss_weight: float = 0.4
+    shidda_loss_weight: float | None = None
     max_audio_seconds: float = 35.0
     num_epochs: int = 1
     devset_ratio: float = 0.1
@@ -568,10 +569,18 @@ if __name__ == "__main__":
     with open("./vocab.json", encoding="utf-8") as f:
         vocab = json.load(f)
     level_to_vocab_size = {l: len(v) for l, v in vocab.items()}
+    if train_config.shidda_loss_weight is not None:
+        loss_weight = {
+            "phonemes": train_config.phonemes_loss_weight,
+            "shidda_or_rakhawa": train_config.shidda_loss_weight,
+        }
+    else:
+        loss_weight = {"phonemes": train_config.phonemes_loss_weight}
+
     config = Wav2Vec2BertForMultilevelCTCConfig(
         level_to_vocab_size=level_to_vocab_size,
         pad_token_id=PAD_TOKEN_IDX,
-        level_to_loss_weight={"phonemes": train_config.phonemes_loss_weight},
+        level_to_loss_weight=loss_weight,
         attention_dropout=0.0,
         hidden_dropout=0.0,
         feat_proj_dropout=0.0,

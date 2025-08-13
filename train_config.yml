@@ -33,6 +33,7 @@ test_moshaf_ids:
 
 # Loss
 phonemes_loss_weight: 0.4
+shidda_loss_weight: 0.08
 
 # Augmentaion
 augment_prob: 0.4
@@ -62,8 +63,8 @@ warmup_ratio: 0.2
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-model-v0"
-wandb_project_name: "muaalem-model-v0"
+hub_model_id: "obadx/muaalem-model-v1"
+wandb_project_name: "muaalem-model-v1"
 
 # Gradient checkpointing
 gradient_checkpoiniting: true
