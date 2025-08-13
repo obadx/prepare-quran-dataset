@@ -34,8 +34,8 @@ test_moshaf_ids:
 # Loss
 loss_weights:
   phonemes: 0.4
-  shidda_or_rakhawa: 0.068
-  tafkheem_or_taqeeq: 0.063
+  shidda_or_rakhawa: 0.063
+  tafkheem_or_taqeeq: 0.060
 
 
 # Augmentaion
