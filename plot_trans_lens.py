@@ -116,7 +116,7 @@ import plotly.graph_objects as go
 from collections import defaultdict
 
 
-def plot_transcript_stats(d, path: Path):
+def plot_transcript_stats(d, path: Path, unit: str):
     """Generate and save interactive statistics plots"""
 
     # Create output directory
@@ -141,7 +141,7 @@ def plot_transcript_stats(d, path: Path):
     )
     fig_hist.update_layout(
         title="Distribution of Part Lengths (All Moshafs & Suras)",
-        xaxis_title="Part Length (characters)",
+        xaxis_title=f"Part Length ({unit})",
         yaxis_title="Frequency",
         bargap=0.1,
         template="plotly_white",
@@ -198,7 +198,7 @@ def plot_transcript_stats(d, path: Path):
     fig_sura.update_layout(
         title="Part Length Statistics by Sura (All Moshafs)",
         xaxis_title="Sura ID",
-        yaxis_title="Length (characters)",
+        yaxis_title=f"Length ({unit})",
         barmode="group",
         template="plotly_white",
         height=600,
@@ -297,7 +297,7 @@ def plot_transcript_stats(d, path: Path):
     fig_moshaf.update_layout(
         title="Part Length Statistics by Moshaf",
         xaxis_title="Moshaf ID",
-        yaxis_title="Length (characters)",
+        yaxis_title=f"Length ({unit})",
         barmode="group",
         template="plotly_white",
         height=600,
@@ -478,7 +478,7 @@ def plot_transcript_stats(d, path: Path):
         ],
         title="Part Length Statistics by Sura - " + first_moshaf,
         xaxis_title="Sura ID",
-        yaxis_title="Length (characters)",
+        yaxis_title=f"Length ({unit})",
         barmode="group",
         template="plotly_white",
         height=600,
@@ -491,8 +491,9 @@ def plot_transcript_stats(d, path: Path):
 
 if __name__ == "__main__":
     # Create output directory
-    path = Path("./assets/moshaf_transcript_stats")
-    with open("./assets/trans_lens.json", "r") as f:
+    # path = Path("./assets/moshaf_transcript_stats")
+    path = Path("./assets/moshaf_audio_stats")
+    with open("./assets/audio_lens.json", "r") as f:
         d = json.load(f)
 
     d = {
@@ -500,4 +501,5 @@ if __name__ == "__main__":
         for m_id in d
     }
 
-    plot_transcript_stats(d, path)
+    # plot_transcript_stats(d, path, unit="characters")
+    plot_transcript_stats(d, path, unit="seconds")
