@@ -22,20 +22,22 @@ train_moshaf_ids:
   - "26.0"
   - "27.0"
   - "28.0"
-  - "29.0"
-  - "30.0"
+  # - "29.0"
+  # - "30.0"
 
 # Test moshaf IDs (optional)
 test_moshaf_ids:
   - "19.0"
-  - "26.1"
+  - "29.0"
+  - "30.0"
+  # - "26.1"
 
 
 # Loss
 loss_weights:
   phonemes: 0.4
-  shidda_or_rakhawa: 0.062
-  tafkheem_or_taqeeq: 0.060
+  shidda_or_rakhawa: 0.061
+  tafkheem_or_taqeeq: 0.061
 
 
 # Augmentaion
@@ -66,8 +68,8 @@ warmup_ratio: 0.2
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-model-v2"
-wandb_project_name: "muaalem-model-v2"
+hub_model_id: "obadx/muaalem-model-v3"
+wandb_project_name: "muaalem-model-v3"
 
 # Gradient checkpointing
 gradient_checkpoiniting: true
