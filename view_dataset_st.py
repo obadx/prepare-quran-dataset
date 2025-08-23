@@ -720,9 +720,25 @@ def display_tasmeea_missings(ds):
             )
 
 
-def display_hams(ds):
+def display_sakt(ds):
     m_id = ds[0]["moshaf_id"]
     hams_positions = [(18, 1), (18, 2), (36, 52), (75, 27), (83, 14)]
+    seg_ids = []
+    for sura_idx, aya_idx in hams_positions:
+        seg_ids += find_nearest_tasmeea_results(m_id, sura_idx, aya_idx, winodw=0)
+
+    for seg_idx in seg_ids:
+        idx = st.session_state.moshaf_to_seg_to_idx[m_id][seg_idx]
+        display_audio_file(
+            ds[idx],
+            key_prefix=f"hams_",
+            ignore_load_button=True,
+        )
+
+
+def display_ghayn(ds):
+    m_id = ds[0]["moshaf_id"]
+    hams_positions = [(18, 64)]
     seg_ids = []
     for sura_idx, aya_idx in hams_positions:
         seg_ids += find_nearest_tasmeea_results(m_id, sura_idx, aya_idx, winodw=0)
@@ -814,6 +830,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     tasmeea_columns = st.columns(4)
     sakt_columns = st.columns(2)
     hafa_ways_columns = st.columns(2)
+    ghayn_columns = st.columns(2)
 
     with col4:
         if st.button("اختر عينة عشاوئية", use_container_width=True):
@@ -985,7 +1002,7 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
     if "show_sakt" in st.session_state:
         if st.session_state.show_sakt:
             st.subheader("الموضع المحتلمة السكت")
-            display_hams(ds)
+            display_sakt(ds)
 
     with hafa_ways_columns[1]:
         if st.button("أظهر أوجه حفص", use_container_width=True):
@@ -997,6 +1014,17 @@ def display_moshaf(ds_path: Path, moshaf: Moshaf):
         if st.session_state.show_hafs_ways:
             st.subheader("أوجه حفص")
             display_hafs_ways(ds)
+
+    with ghayn_columns[1]:
+        if st.button("أظهر الغين المكسورة وقفا", use_container_width=True):
+            st.session_state.show_ghayn = True
+    with ghayn_columns[0]:
+        if st.button("أخف الغين المكسورة وقفا", use_container_width=True):
+            st.session_state.show_ghayn = False
+    if "show_ghayn" in st.session_state:
+        if st.session_state.show_ghayn:
+            st.subheader("العين المكسورة وقفا")
+            display_ghayn(ds)
 
     st.subheader("مقاطع السورة")
     display_sura(ds, sura_idx, moshaf.id)
