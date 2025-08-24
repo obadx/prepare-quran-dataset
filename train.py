@@ -651,6 +651,9 @@ if __name__ == "__main__":
     else:
         trainer.train()
 
+    # Evaluate last step
+    trainer.evaluate()
+
     # Final evaluation on test set
     if train_config.test_moshaf_ids is not None:
         testset = prepare_dataset(
