@@ -32,7 +32,7 @@ def add_phonetic_script_map(ex, moshaf):
 
 if __name__ == "__main__":
     # loading wandb tokens ans HF login
-    repo_id = "obadx/muaalem-annotated-v1"
+    repo_id = "obadx/muaalem-annotated-v3"
     load_secrets()
     ds_path = Path("/cluster/users/shams035u1/data/mualem-recitations-annotated")
     moshaf_ds = load_dataset(str(ds_path), name="moshaf_metadata")
