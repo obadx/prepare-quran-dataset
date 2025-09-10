@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from multi_level_ctc_model.modeling_multi_level_ctc import Wav2Vec2BertForMultilevelCTC
 import os
 import json
+from tqdm import tqdm
 
 
 def ctc_decode(batch_arr, blank_id=0, collapse_consecutive=True) -> list:
@@ -96,7 +97,7 @@ def main(args):
 
     results = []
     with torch.no_grad():
-        for batch in dataloader:
+        for batch in tqdm(dataloader):
             ids = batch.pop("id")
             original_ids = batch.pop("original_id")
             batch = {k: v.to(device, dtype=dtype) for k, v in batch.items()}
@@ -181,4 +182,3 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
-
