@@ -163,7 +163,7 @@ if __name__ == "__main__":
         help="Output filename. If not provided, will generate based on model name",
     )
     parser.add_argument(
-        "--batch-size", type=int, default=16, help="Batch size for inference"
+        "--batch-size", type=int, default=32, help="Batch size for inference"
     )
     parser.add_argument(
         "--num-workers",
@@ -181,3 +181,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
+
