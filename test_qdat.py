@@ -143,7 +143,7 @@ if __name__ == "__main__":
     # Required arguments
     parser.add_argument(
         "--model-id",
-        required=True,
+        default="obadx/muaalem-model-v3_2",
         help="Model identifier from Hugging Face Hub or local path",
     )
 
@@ -181,4 +181,3 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
-
