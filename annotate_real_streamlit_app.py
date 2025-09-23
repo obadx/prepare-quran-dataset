@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import numpy as np
 from datasets import load_dataset
-from quran_transcript import Aya, quran_phonetizer, MoshafAttributes
+from qdran_transcript import Aya, quran_phonetizer, MoshafAttributes, search
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -12,12 +12,10 @@ if "index" not in st.session_state:
     st.session_state.index = 0
 if "sura_idx" not in st.session_state:
     st.session_state.sura_idx = 1
-if "aya_idx" not in st.session_state:
-    st.session_state.aya_idx = 1
-if "start_word_index" not in st.session_state:
-    st.session_state.start_word_index = 0
-if "num_words" not in st.session_state:
-    st.session_state.num_words = 5
+if "start_aya" not in st.session_state:
+    st.session_state.start_aya = Aya(1, 1)
+if "uthmani_script" not in st.session_state:
+    st.session_state.uthmani_script = ""
 if "phonetic_script" not in st.session_state:
     st.session_state.phonetic_script = ""
 if "sifat_df" not in st.session_state:
@@ -120,50 +118,47 @@ with col3:
 with col4:
     st.metric("Progress", f"{st.session_state.index + 1}/{len(ids)}")
 
-    # Show annotation status
-    if item["id"] in st.session_state.annotations:
-        st.success("✓ Annotated")
-    else:
-        st.info("Not annotated")
+# Show annotation status
+if item["id"] in st.session_state.annotations:
+    st.success("✓ Annotated")
+else:
+    st.info("Not annotated")
 
 # Quran reference selection
 st.header("Quran Reference")
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    sura_idx = st.selectbox(
-        "Sura",
-        options=list(range(1, 115)),
-        format_func=lambda x: f"{x}. {sura_idx_to_name[x]}",
-        index=st.session_state.sura_idx - 1,
-    )
-with col2:
-    max_aya = sura_to_aya_count[sura_idx]
-    aya_idx = st.number_input(
-        "Aya", min_value=1, max_value=max_aya, value=st.session_state.aya_idx
-    )
-with col3:
-    start_word_index = st.number_input(
-        "Start Word Index", min_value=0, value=st.session_state.start_word_index
-    )
-with col4:
-    num_words = st.number_input(
-        "Number of Words", min_value=1, max_value=20, value=st.session_state.num_words
-    )
-
-# Update session state
-st.session_state.sura_idx = sura_idx
-st.session_state.aya_idx = aya_idx
-st.session_state.start_word_index = start_word_index
-st.session_state.num_words = num_words
-
-# Get Uthmani script
-start_aya = Aya()
-start_aya.set(sura_idx, aya_idx)
-uthmani_script = start_aya.get_by_imlaey_words(start_word_index, num_words).uthmani
+sura_idx = st.selectbox(
+    "Sura",
+    options=list(range(1, 115)),
+    format_func=lambda x: f"{x}. {sura_idx_to_name[x]}",
+    # index=st.session_state.sura_idx - 1,
+)
+max_aya = sura_to_aya_count[sura_idx]
+st.session_state.start_aya.set(sura_idx, max_aya // 2)
+search_text = st.text_input(
+    "Enter search text",
+    value=st.session_state.start_aya.set_new(sura_idx, 1).get().imlaey,
+)
+search_out = search(
+    search_text,
+    start_aya=st.session_state.start_aya,
+    window=max_aya + 1,
+    remove_tashkeel=True,
+    ignore_hamazat=True,
+)
+if len(search_out) == 0:
+    st.error("No search results found")
+    uthmani_script = ""
+else:
+    uthmani_script = search_out[0].uthmani_script
 
 st.subheader("Uthmani Script")
 st.write(uthmani_script)
+
+# Update session state
+st.session_state.sura_idx = sura_idx
+st.session_state.uthmani_script = uthmani_script
+
 
 # Phonetization
 st.subheader("Phonetic Transcription")
@@ -179,23 +174,10 @@ if st.button("Generate Phonetic Transcription"):
     st.session_state.phonetic_script = phonetizer_out.phonemes
 
     # Create sifat table
+    # TODO: aligment here
     sifat_data = []
     for sifa in phonetizer_out.sifat:
-        sifat_data.append(
-            {
-                "phoneme": sifa.phonemes,
-                "hams_or_jahr": sifa.hams_or_jahr,
-                "shidda_or_rakhawa": sifa.shidda_or_rakhawa,
-                "tafkheem_or_taqeeq": sifa.tafkheem_or_taqeeq,
-                "itbaq": sifa.itbaq,
-                "safeer": sifa.safeer,
-                "qalqla": sifa.qalqla,
-                "tikraar": sifa.tikraar,
-                "tafashie": sifa.tafashie,
-                "istitala": sifa.istitala,
-                "ghonna": sifa.ghonna,
-            }
-        )
+        sifat_data.append(sifa.model_dump())
 
     st.session_state.sifat_df = pd.DataFrame(sifat_data)
     st.rerun()
