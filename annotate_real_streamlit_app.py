@@ -100,6 +100,9 @@ if item["id"] in st.session_state.annotations and not st.session_state.edit_mode
     st.session_state.sifat_df = pd.DataFrame(
         st.session_state.annotations[item["id"]]["sifat_table"]
     )
+    # Add row index column
+    if not st.session_state.sifat_df.empty:
+        st.session_state.sifat_df.insert(0, 'row_index', range(1, len(st.session_state.sifat_df) + 1))
 
 # App layout
 st.title("Quran Audio Transcription Annotation Tool")
@@ -193,19 +196,24 @@ phonetic_script = st.text_area(
 # Editable sifat table
 if not st.session_state.sifat_df.empty:
     st.subheader("Sifat Table")
-    
+        
+    # Add row index column if it doesn't exist
+    if 'row_index' not in st.session_state.sifat_df.columns:
+        st.session_state.sifat_df.insert(0, 'row_index', range(1, len(st.session_state.sifat_df) + 1))
+        
     # Add row operations
     col_add, col_add_pos, col_del = st.columns(3)
     with col_add:
         if st.button("➕ Add Row at End"):
             # Add a new empty row at the end
-            new_row = {col: "" for col in st.session_state.sifat_df.columns}
+            new_row = {col: "" for col in st.session_state.sifat_df.columns if col != 'row_index'}
+            new_row['row_index'] = len(st.session_state.sifat_df) + 1
             st.session_state.sifat_df = pd.concat([
                 st.session_state.sifat_df, 
                 pd.DataFrame([new_row])
             ], ignore_index=True)
             st.rerun()
-    
+        
     with col_add_pos:
         if len(st.session_state.sifat_df) > 0:
             insert_position = st.selectbox(
@@ -215,14 +223,18 @@ if not st.session_state.sifat_df.empty:
             )
             if st.button("➕ Insert Row"):
                 # Split the dataframe and insert new row
-                new_row = {col: "" for col in st.session_state.sifat_df.columns}
+                new_row = {col: "" for col in st.session_state.sifat_df.columns if col != 'row_index'}
+                new_row['row_index'] = insert_position + 1.5  # Placeholder, will be renumbered
+                # Insert the new row
                 st.session_state.sifat_df = pd.concat([
                     st.session_state.sifat_df.iloc[:insert_position + 1],
                     pd.DataFrame([new_row]),
                     st.session_state.sifat_df.iloc[insert_position + 1:]
                 ], ignore_index=True)
+                # Renumber all rows
+                st.session_state.sifat_df['row_index'] = range(1, len(st.session_state.sifat_df) + 1)
                 st.rerun()
-    
+        
     with col_del:
         if len(st.session_state.sifat_df) > 0:
             row_to_delete = st.selectbox(
@@ -234,6 +246,8 @@ if not st.session_state.sifat_df.empty:
                 st.session_state.sifat_df = st.session_state.sifat_df.drop(
                     st.session_state.sifat_df.index[row_to_delete]
                 ).reset_index(drop=True)
+                # Renumber remaining rows
+                st.session_state.sifat_df['row_index'] = range(1, len(st.session_state.sifat_df) + 1)
                 st.rerun()
 
     # Define options for each column
@@ -257,6 +271,7 @@ if not st.session_state.sifat_df.empty:
     edited_df = st.data_editor(
         st.session_state.sifat_df,
         column_config={
+            "row_index": st.column_config.NumberColumn("Row", width="small", disabled=True),
             "phoneme": st.column_config.TextColumn("Phoneme", width="small"),
             **{
                 col: st.column_config.SelectboxColumn(col, options=options)
@@ -266,6 +281,7 @@ if not st.session_state.sifat_df.empty:
         use_container_width=True,
         num_rows="dynamic",  # Change to dynamic to allow adding rows through the editor
         key=editor_key,
+        disabled=["row_index"],  # Make row index non-editable
     )
 
     # Update the session state directly when the editor key changes
@@ -294,9 +310,11 @@ with col1:
 
 with col2:
     if st.button("Save Annotation"):
+        # Remove the row_index column before saving
+        sifat_df_to_save = st.session_state.sifat_df.drop(columns=['row_index'], errors='ignore')
         annotation = {
             "phonetic_script": phonetic_script,
-            "sifat_table": st.session_state.sifat_df.to_dict(orient="records"),
+            "sifat_table": sifat_df_to_save.to_dict(orient="records"),
         }
 
         # Save to JSON file
@@ -378,6 +396,9 @@ if st.session_state.annotations:
                     annotation = st.session_state.annotations[row["id"]]
                     st.session_state.phonetic_script = annotation["phonetic_script"]
                     st.session_state.sifat_df = pd.DataFrame(annotation["sifat_table"])
+                    # Add row index column
+                    if not st.session_state.sifat_df.empty:
+                        st.session_state.sifat_df.insert(0, 'row_index', range(1, len(st.session_state.sifat_df) + 1))
 
                     st.rerun()
                 else:
