@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import numpy as np
 from datasets import load_dataset
-from qdran_transcript import Aya, quran_phonetizer, MoshafAttributes, search
+from quran_transcript import Aya, quran_phonetizer, MoshafAttributes, search
 from pathlib import Path
 from typing import Dict, List, Any
 
