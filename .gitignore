@@ -20,3 +20,5 @@
 hpc-scripts/ngrok_url.txt
 
 frontend/temp/
+.aider*
+.env
