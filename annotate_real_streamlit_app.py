@@ -193,6 +193,48 @@ phonetic_script = st.text_area(
 # Editable sifat table
 if not st.session_state.sifat_df.empty:
     st.subheader("Sifat Table")
+    
+    # Add row operations
+    col_add, col_add_pos, col_del = st.columns(3)
+    with col_add:
+        if st.button("➕ Add Row at End"):
+            # Add a new empty row at the end
+            new_row = {col: "" for col in st.session_state.sifat_df.columns}
+            st.session_state.sifat_df = pd.concat([
+                st.session_state.sifat_df, 
+                pd.DataFrame([new_row])
+            ], ignore_index=True)
+            st.rerun()
+    
+    with col_add_pos:
+        if len(st.session_state.sifat_df) > 0:
+            insert_position = st.selectbox(
+                "Insert after row",
+                options=list(range(len(st.session_state.sifat_df))),
+                format_func=lambda x: f"After row {x + 1}"
+            )
+            if st.button("➕ Insert Row"):
+                # Split the dataframe and insert new row
+                new_row = {col: "" for col in st.session_state.sifat_df.columns}
+                st.session_state.sifat_df = pd.concat([
+                    st.session_state.sifat_df.iloc[:insert_position + 1],
+                    pd.DataFrame([new_row]),
+                    st.session_state.sifat_df.iloc[insert_position + 1:]
+                ], ignore_index=True)
+                st.rerun()
+    
+    with col_del:
+        if len(st.session_state.sifat_df) > 0:
+            row_to_delete = st.selectbox(
+                "Select row to delete",
+                options=list(range(len(st.session_state.sifat_df))),
+                format_func=lambda x: f"Row {x + 1}"
+            )
+            if st.button("➖ Delete Selected Row"):
+                st.session_state.sifat_df = st.session_state.sifat_df.drop(
+                    st.session_state.sifat_df.index[row_to_delete]
+                ).reset_index(drop=True)
+                st.rerun()
 
     # Define options for each column
     column_options = {
@@ -222,7 +264,7 @@ if not st.session_state.sifat_df.empty:
             },
         },
         use_container_width=True,
-        num_rows="fixed",
+        num_rows="dynamic",  # Change to dynamic to allow adding rows through the editor
         key=editor_key,
     )
 
