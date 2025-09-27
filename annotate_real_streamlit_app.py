@@ -540,8 +540,35 @@ with col3:
         if st.button("Edit Annotation", type="secondary"):
             # Load the existing annotation
             annotation = st.session_state.annotations[item["id"]]
-            st.session_state.phonetic_script = annotation["phonetic_script"]
-            st.session_state.sifat_df = pd.DataFrame(annotation["sifat_table"])
+            st.session_state.phonetic_script = annotation.get("phonetic_transcript", "")
+            # Convert sifat to DataFrame
+            sifat_list = annotation.get("sifat", [])
+            st.session_state.sifat_df = pd.DataFrame(
+                [
+                    sifa.model_dump() if isinstance(sifa, SifaOutput) else sifa
+                    for sifa in sifat_list
+                ]
+            )
+            # Add row index column
+            if not st.session_state.sifat_df.empty:
+                st.session_state.sifat_df.insert(
+                    0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
+                )
+            # Load other fields
+            st.session_state.gender = annotation.get("gender", "male")
+            st.session_state.qalo_alif_len = annotation.get("qalo_alif_len", 4)
+            st.session_state.qalo_waw_len = annotation.get("qalo_waw_len", 4)
+            st.session_state.laa_alif_len = annotation.get("laa_alif_len", 4)
+            st.session_state.separate_madd = annotation.get("separate_madd", 4)
+            st.session_state.noon_moshaddadah_len = annotation.get(
+                "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
+            )
+            st.session_state.noon_mokhfah_len = annotation.get(
+                "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
+            )
+            st.session_state.allam_alif_len = annotation.get("allam_alif_len", 4)
+            st.session_state.madd_aared_len = annotation.get("madd_aared_len", 4)
+            st.session_state.qalqalah = annotation.get("qalqalah", Qalqalah.qalqalah)
             st.session_state.edit_mode = True
             st.success("Annotation loaded for editing")
     else:
@@ -614,8 +641,13 @@ if st.session_state.annotations:
                     st.session_state.phonetic_script = annotation.get(
                         "phonetic_transcript", ""
                     )
+                    # Convert sifat to DataFrame
+                    sifat_list = annotation.get("sifat", [])
                     st.session_state.sifat_df = pd.DataFrame(
-                        annotation.get("sifat", [])
+                        [
+                            sifa.model_dump() if isinstance(sifa, SifaOutput) else sifa
+                            for sifa in sifat_list
+                        ]
                     )
                     # Add row index column
                     if not st.session_state.sifat_df.empty:
@@ -643,7 +675,8 @@ if st.session_state.annotations:
                     st.session_state.qalqalah = annotation.get(
                         "qalqalah", Qalqalah.qalqalah
                     )
-
+                    st.session_state.edit_mode = True
+                    st.session_state.index = row["item_index"]
                     st.rerun()
                 else:
                     st.error(f"Could not find item {row['id']} in dataset")
