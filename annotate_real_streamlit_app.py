@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Literal
 from enum import IntEnum
 
-from quran_transcript import Aya, quran_phonetizer, MoshafAttributes, search
+from quran_transcript import Aya, quran_phonetizer, MoshafAttributes, search, SifaOutput
 from datasets import load_dataset
 from pydantic import BaseModel, Field
 
@@ -31,9 +31,12 @@ class Qalqalah(IntEnum):
 
 
 class QdataBenchItem:
+    # premetives
     id: str = Field(description="Unique hash id for every element")
     original_id: str = Field(description="The item's id in the original dataset")
     gender: Literal["male", "female"]
+
+    # General Tajeweed
     qalo_alif_len: MADD_LEN = Field(
         description="The lengths of the normal madd alif form word `قالوا`"
     )
@@ -59,6 +62,14 @@ class QdataBenchItem:
     madd_aared_len: MADD_LEN = Field(description="The length of the مد العارض للسكون ")
     qalqalah: Qalqalah = Field(
         description="The existance of qalqalah for not for word `الغيوب`"
+    )
+
+    # quran-transcript
+    phonetic_transcript: str = Field(
+        description="The phoetic transcript using `quran-transcript` package guidlenes"
+    )
+    sifat: list[SifaOutput] = Field(
+        description="The sifat  transcript level using `quran-transcript` package guidlenes"
     )
 
 
