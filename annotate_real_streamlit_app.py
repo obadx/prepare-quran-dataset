@@ -100,27 +100,12 @@ if "edit_mode" not in st.session_state:
 if "item_to_edit" not in st.session_state:
     st.session_state.item_to_edit = None
 
+
 # Initialize QdataBenchItem fields
-if "gender" not in st.session_state:
-    st.session_state.gender = "male"
-if "qalo_alif_len" not in st.session_state:
-    st.session_state.qalo_alif_len = 4
-if "qalo_waw_len" not in st.session_state:
-    st.session_state.qalo_waw_len = 4
-if "laa_alif_len" not in st.session_state:
-    st.session_state.laa_alif_len = 4
-if "separate_madd" not in st.session_state:
-    st.session_state.separate_madd = 4
-if "noon_moshaddadah_len" not in st.session_state:
-    st.session_state.noon_moshaddadah_len = NoonMoshaddahLen.COMPLETE
-if "noon_mokhfah_len" not in st.session_state:
-    st.session_state.noon_mokhfah_len = NoonMokhfahLen.COMPLETE
-if "allam_alif_len" not in st.session_state:
-    st.session_state.allam_alif_len = 4
-if "madd_aared_len" not in st.session_state:
-    st.session_state.madd_aared_len = 4
-if "qalqalah" not in st.session_state:
-    st.session_state.qalqalah = Qalqalah.qalqalah
+qdat_item_fields = set(QdataBenchItem.model_fields.keys()) - {"id", "original_id"}
+for field_name in qdat_item_fields:
+    if field_name not in st.session_state:
+        st.session_state[field_name] = QdataBenchItem.model_fields[field_name].default
 
 
 # Load dataset
@@ -212,20 +197,16 @@ if item["id"] in st.session_state.annotations and not st.session_state.edit_mode
             0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
         )
     # Load other fields
-    st.session_state.gender = annotation_data.get("gender", "male")
-    st.session_state.qalo_alif_len = annotation_data.get("qalo_alif_len", 4)
-    st.session_state.qalo_waw_len = annotation_data.get("qalo_waw_len", 4)
-    st.session_state.laa_alif_len = annotation_data.get("laa_alif_len", 4)
-    st.session_state.separate_madd = annotation_data.get("separate_madd", 4)
-    st.session_state.noon_moshaddadah_len = annotation_data.get(
-        "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
-    )
-    st.session_state.noon_mokhfah_len = annotation_data.get(
-        "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
-    )
-    st.session_state.allam_alif_len = annotation_data.get("allam_alif_len", 4)
-    st.session_state.madd_aared_len = annotation_data.get("madd_aared_len", 4)
-    st.session_state.qalqalah = annotation_data.get("qalqalah", Qalqalah.qalqalah)
+    st.session_state.gender = annotation_data.get("gender")
+    st.session_state.qalo_alif_len = annotation_data.get("qalo_alif_len")
+    st.session_state.qalo_waw_len = annotation_data.get("qalo_waw_len")
+    st.session_state.laa_alif_len = annotation_data.get("laa_alif_len")
+    st.session_state.separate_madd = annotation_data.get("separate_madd")
+    st.session_state.noon_moshaddadah_len = annotation_data.get("noon_moshaddadah_len")
+    st.session_state.noon_mokhfah_len = annotation_data.get("noon_mokhfah_len")
+    st.session_state.allam_alif_len = annotation_data.get("allam_alif_len")
+    st.session_state.madd_aared_len = annotation_data.get("madd_aared_len")
+    st.session_state.qalqalah = annotation_data.get("qalqalah")
 
 # App layout
 st.title("Quran Audio Transcription Annotation Tool")
@@ -440,13 +421,7 @@ if not st.session_state.sifat_df.empty:
 # QdataBenchItem fields
 st.header("QdataBenchItem Annotation")
 
-col1, col2 = st.columns(2)
-with col1:
-    st.session_state.gender = st.radio("Gender", ["male", "female"])
-with col2:
-    st.session_state.qalqalah = st.selectbox(
-        "Qalqalah", options=list(Qalqalah), format_func=lambda x: x.name
-    )
+st.session_state.gender = st.radio("Gender", ["male", "female"])
 
 st.subheader("Madd Lengths")
 cols = st.columns(4)
@@ -476,16 +451,26 @@ with cols[1]:
     st.session_state.madd_aared_len = st.slider(
         "Madd Aared Len", 0, 8, st.session_state.madd_aared_len
     )
-with cols[2]:
+
+st.subheader("Ghonnah")
+ghonnah_cols = st.columns(2)
+with ghonnah_cols[1]:
     st.session_state.noon_moshaddadah_len = st.selectbox(
         "Noon Moshaddadah Len",
         options=list(NoonMoshaddahLen),
         format_func=lambda x: x.name,
     )
 
-st.session_state.noon_mokhfah_len = st.selectbox(
-    "Noon Mokhfah Len", options=list(NoonMokhfahLen), format_func=lambda x: x.name
+with ghonnah_cols[0]:
+    st.session_state.noon_mokhfah_len = st.selectbox(
+        "Noon Mokhfah Len", options=list(NoonMokhfahLen), format_func=lambda x: x.name
+    )
+
+st.subheader("Qalqalah")
+st.session_state.qalqalah = st.selectbox(
+    "Qalqalah", options=list(Qalqalah), format_func=lambda x: x.name
 )
+
 
 # Navigation and saving
 st.divider()
@@ -560,20 +545,18 @@ with col3:
                     0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
                 )
             # Load other fields
-            st.session_state.gender = annotation.get("gender", "male")
-            st.session_state.qalo_alif_len = annotation.get("qalo_alif_len", 4)
-            st.session_state.qalo_waw_len = annotation.get("qalo_waw_len", 4)
-            st.session_state.laa_alif_len = annotation.get("laa_alif_len", 4)
-            st.session_state.separate_madd = annotation.get("separate_madd", 4)
+            st.session_state.gender = annotation.get("gender")
+            st.session_state.qalo_alif_len = annotation.get("qalo_alif_len")
+            st.session_state.qalo_waw_len = annotation.get("qalo_waw_len")
+            st.session_state.laa_alif_len = annotation.get("laa_alif_len")
+            st.session_state.separate_madd = annotation.get("separate_madd")
             st.session_state.noon_moshaddadah_len = annotation.get(
-                "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
+                "noon_moshaddadah_len"
             )
-            st.session_state.noon_mokhfah_len = annotation.get(
-                "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
-            )
-            st.session_state.allam_alif_len = annotation.get("allam_alif_len", 4)
-            st.session_state.madd_aared_len = annotation.get("madd_aared_len", 4)
-            st.session_state.qalqalah = annotation.get("qalqalah", Qalqalah.qalqalah)
+            st.session_state.noon_mokhfah_len = annotation.get("noon_mokhfah_len")
+            st.session_state.allam_alif_len = annotation.get("allam_alif_len")
+            st.session_state.madd_aared_len = annotation.get("madd_aared_len")
+            st.session_state.qalqalah = annotation.get("qalqalah")
             st.session_state.edit_mode = True
             st.success("Annotation loaded for editing")
     else:
@@ -662,26 +645,20 @@ if st.session_state.annotations:
                             0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
                         )
                     # Load other fields
-                    st.session_state.gender = annotation.get("gender", "male")
-                    st.session_state.qalo_alif_len = annotation.get("qalo_alif_len", 4)
-                    st.session_state.qalo_waw_len = annotation.get("qalo_waw_len", 4)
-                    st.session_state.laa_alif_len = annotation.get("laa_alif_len", 4)
-                    st.session_state.separate_madd = annotation.get("separate_madd", 4)
+                    st.session_state.gender = annotation.get("gender")
+                    st.session_state.qalo_alif_len = annotation.get("qalo_alif_len")
+                    st.session_state.qalo_waw_len = annotation.get("qalo_waw_len")
+                    st.session_state.laa_alif_len = annotation.get("laa_alif_len")
+                    st.session_state.separate_madd = annotation.get("separate_madd")
                     st.session_state.noon_moshaddadah_len = annotation.get(
-                        "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
+                        "noon_moshaddadah_len"
                     )
                     st.session_state.noon_mokhfah_len = annotation.get(
-                        "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
+                        "noon_mokhfah_len"
                     )
-                    st.session_state.allam_alif_len = annotation.get(
-                        "allam_alif_len", 4
-                    )
-                    st.session_state.madd_aared_len = annotation.get(
-                        "madd_aared_len", 4
-                    )
-                    st.session_state.qalqalah = annotation.get(
-                        "qalqalah", Qalqalah.qalqalah
-                    )
+                    st.session_state.allam_alif_len = annotation.get("allam_alif_len")
+                    st.session_state.madd_aared_len = annotation.get("madd_aared_len")
+                    st.session_state.qalqalah = annotation.get("qalqalah")
                     st.session_state.edit_mode = True
                     st.session_state.index = row["item_index"]
                     st.rerun()
