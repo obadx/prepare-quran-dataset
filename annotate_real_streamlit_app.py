@@ -197,8 +197,12 @@ if item["id"] in st.session_state.annotations and not st.session_state.edit_mode
     st.session_state.qalo_waw_len = annotation_data.get("qalo_waw_len", 4)
     st.session_state.laa_alif_len = annotation_data.get("laa_alif_len", 4)
     st.session_state.separate_madd = annotation_data.get("separate_madd", 4)
-    st.session_state.noon_moshaddadah_len = annotation_data.get("noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE)
-    st.session_state.noon_mokhfah_len = annotation_data.get("noon_mokhfah_len", NoonMokhfahLen.COMPLETE)
+    st.session_state.noon_moshaddadah_len = annotation_data.get(
+        "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
+    )
+    st.session_state.noon_mokhfah_len = annotation_data.get(
+        "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
+    )
     st.session_state.allam_alif_len = annotation_data.get("allam_alif_len", 4)
     st.session_state.madd_aared_len = annotation_data.get("madd_aared_len", 4)
     st.session_state.qalqalah = annotation_data.get("qalqalah", Qalqalah.qalqalah)
@@ -420,27 +424,43 @@ col1, col2 = st.columns(2)
 with col1:
     st.session_state.gender = st.radio("Gender", ["male", "female"])
 with col2:
-    st.session_state.qalqalah = st.selectbox("Qalqalah", options=list(Qalqalah), format_func=lambda x: x.name)
+    st.session_state.qalqalah = st.selectbox(
+        "Qalqalah", options=list(Qalqalah), format_func=lambda x: x.name
+    )
 
 st.subheader("Madd Lengths")
 cols = st.columns(4)
 with cols[0]:
-    st.session_state.qalo_alif_len = st.slider("Qalo Alif Len", 0, 8, st.session_state.qalo_alif_len)
+    st.session_state.qalo_alif_len = st.slider(
+        "Qalo Alif Len", 0, 8, st.session_state.qalo_alif_len
+    )
 with cols[1]:
-    st.session_state.qalo_waw_len = st.slider("Qalo Waw Len", 0, 8, st.session_state.qalo_waw_len)
+    st.session_state.qalo_waw_len = st.slider(
+        "Qalo Waw Len", 0, 8, st.session_state.qalo_waw_len
+    )
 with cols[2]:
-    st.session_state.laa_alif_len = st.slider("Laa Alif Len", 0, 8, st.session_state.laa_alif_len)
+    st.session_state.laa_alif_len = st.slider(
+        "Laa Alif Len", 0, 8, st.session_state.laa_alif_len
+    )
 with cols[3]:
-    st.session_state.separate_madd = st.slider("Separate Madd", 0, 8, st.session_state.separate_madd)
+    st.session_state.separate_madd = st.slider(
+        "Separate Madd", 0, 8, st.session_state.separate_madd
+    )
 
 cols = st.columns(3)
 with cols[0]:
-    st.session_state.allam_alif_len = st.slider("Allam Alif Len", 0, 8, st.session_state.allam_alif_len)
+    st.session_state.allam_alif_len = st.slider(
+        "Allam Alif Len", 0, 8, st.session_state.allam_alif_len
+    )
 with cols[1]:
-    st.session_state.madd_aared_len = st.slider("Madd Aared Len", 0, 8, st.session_state.madd_aared_len)
+    st.session_state.madd_aared_len = st.slider(
+        "Madd Aared Len", 0, 8, st.session_state.madd_aared_len
+    )
 with cols[2]:
     st.session_state.noon_moshaddadah_len = st.selectbox(
-        "Noon Moshaddadah Len", options=list(NoonMoshaddahLen), format_func=lambda x: x.name
+        "Noon Moshaddadah Len",
+        options=list(NoonMoshaddahLen),
+        format_func=lambda x: x.name,
     )
 
 st.session_state.noon_mokhfah_len = st.selectbox(
@@ -482,9 +502,9 @@ with col2:
             madd_aared_len=st.session_state.madd_aared_len,
             qalqalah=st.session_state.qalqalah,
             phonetic_transcript=phonetic_script,
-            sifat=sifat_df_to_save.to_dict(orient="records")
+            sifat=sifat_df_to_save.to_dict(orient="records"),
         )
-        
+
         # Save to JSON file
         save_annotation(item["id"], bench_item.model_dump())
         st.success(f"Annotation saved for ID: {item['id']}")
@@ -562,8 +582,12 @@ if st.session_state.annotations:
 
                     # Load the annotation data
                     annotation = st.session_state.annotations[row["id"]]
-                    st.session_state.phonetic_script = annotation.get("phonetic_transcript", "")
-                    st.session_state.sifat_df = pd.DataFrame(annotation.get("sifat", []))
+                    st.session_state.phonetic_script = annotation.get(
+                        "phonetic_transcript", ""
+                    )
+                    st.session_state.sifat_df = pd.DataFrame(
+                        annotation.get("sifat", [])
+                    )
                     # Add row index column
                     if not st.session_state.sifat_df.empty:
                         st.session_state.sifat_df.insert(
@@ -575,11 +599,21 @@ if st.session_state.annotations:
                     st.session_state.qalo_waw_len = annotation.get("qalo_waw_len", 4)
                     st.session_state.laa_alif_len = annotation.get("laa_alif_len", 4)
                     st.session_state.separate_madd = annotation.get("separate_madd", 4)
-                    st.session_state.noon_moshaddadah_len = annotation.get("noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE)
-                    st.session_state.noon_mokhfah_len = annotation.get("noon_mokhfah_len", NoonMokhfahLen.COMPLETE)
-                    st.session_state.allam_alif_len = annotation.get("allam_alif_len", 4)
-                    st.session_state.madd_aared_len = annotation.get("madd_aared_len", 4)
-                    st.session_state.qalqalah = annotation.get("qalqalah", Qalqalah.qalqalah)
+                    st.session_state.noon_moshaddadah_len = annotation.get(
+                        "noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE
+                    )
+                    st.session_state.noon_mokhfah_len = annotation.get(
+                        "noon_mokhfah_len", NoonMokhfahLen.COMPLETE
+                    )
+                    st.session_state.allam_alif_len = annotation.get(
+                        "allam_alif_len", 4
+                    )
+                    st.session_state.madd_aared_len = annotation.get(
+                        "madd_aared_len", 4
+                    )
+                    st.session_state.qalqalah = annotation.get(
+                        "qalqalah", Qalqalah.qalqalah
+                    )
 
                     st.rerun()
                 else:
