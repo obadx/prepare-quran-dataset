@@ -160,9 +160,11 @@ def load_annotations():
             raw_annotations = json.load(f)
         # Convert sifat lists to SifaOutput instances
         for item_id, annotation in raw_annotations.items():
-            if 'sifat' in annotation:
-                annotation['sifat'] = [SifaOutput(**sifa) if isinstance(sifa, dict) else sifa 
-                                      for sifa in annotation['sifat']]
+            if "sifat" in annotation:
+                annotation["sifat"] = [
+                    SifaOutput(**sifa) if isinstance(sifa, dict) else sifa
+                    for sifa in annotation["sifat"]
+                ]
         return raw_annotations
     return {}
 
@@ -193,7 +195,12 @@ if item["id"] in st.session_state.annotations and not st.session_state.edit_mode
     st.session_state.phonetic_script = annotation_data.get("phonetic_transcript", "")
     # Convert sifat to DataFrame
     sifat_list = annotation_data.get("sifat", [])
-    st.session_state.sifat_df = pd.DataFrame([sifa.model_dump() if isinstance(sifa, SifaOutput) else sifa for sifa in sifat_list])
+    st.session_state.sifat_df = pd.DataFrame(
+        [
+            sifa.model_dump() if isinstance(sifa, SifaOutput) else sifa
+            for sifa in sifat_list
+        ]
+    )
     # Add row index column
     if not st.session_state.sifat_df.empty:
         st.session_state.sifat_df.insert(
@@ -499,9 +506,11 @@ with col2:
         sifat_list = []
         for record in sifat_df_to_save.to_dict(orient="records"):
             # Filter out None values and empty strings
-            filtered_record = {k: v for k, v in record.items() if v is not None and v != ''}
+            filtered_record = {
+                k: v for k, v in record.items() if v is not None and v != ""
+            }
             sifat_list.append(SifaOutput(**filtered_record))
-        
+
         # Create QdataBenchItem instance
         bench_item = QdataBenchItem(
             id=item["id"],
