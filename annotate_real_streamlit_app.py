@@ -575,13 +575,18 @@ if st.session_state.annotations:
                 item_index = idx
                 break
 
+        # Use the correct key 'phonetic_transcript' instead of 'phonetic_script'
+        phonetic_text = annotation.get("phonetic_transcript", "")
+        truncated_phonetic = phonetic_text[:50] + "..." if len(phonetic_text) > 50 else phonetic_text
+        
+        # Get sifat count
+        sifat_count = len(annotation.get("sifat", []))
+        
         annotations_list.append(
             {
                 "id": item_id,
-                "phonetic_script": annotation["phonetic_script"][:50] + "..."
-                if len(annotation["phonetic_script"]) > 50
-                else annotation["phonetic_script"],
-                "sifat_count": len(annotation["sifat_table"]),
+                "phonetic_script": truncated_phonetic,
+                "sifat_count": sifat_count,
                 "item_index": item_index,
             }
         )
