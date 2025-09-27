@@ -30,7 +30,7 @@ class Qalqalah(IntEnum):
     qalqalah = 1
 
 
-class QdataBenchItem:
+class QdataBenchItem(BaseModel):
     # premetives
     id: str = Field(description="Unique hash id for every element")
     original_id: str = Field(description="The item's id in the original dataset")
@@ -49,10 +49,10 @@ class QdataBenchItem:
     separate_madd: MADD_LEN = Field(
         description="The length of separate madd for word `لنا إنك`"
     )
-    noon_moshaddadah_len = Field(
+    noon_moshaddadah_len: NoonMoshaddahLen = Field(
         description="The length of noon moshaddah for word `إنَّك`"
     )
-    noon_mokhfah_len = NoonMokhfahLen = Field(
+    noon_mokhfah_len: NoonMokhfahLen = Field(
         description="The length of noon mokhfah for word ` أنت`"
     )
     allam_alif_len: MADD_LEN = Field(
