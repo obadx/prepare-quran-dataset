@@ -95,6 +95,28 @@ if "edit_mode" not in st.session_state:
 if "item_to_edit" not in st.session_state:
     st.session_state.item_to_edit = None
 
+# Initialize QdataBenchItem fields
+if "gender" not in st.session_state:
+    st.session_state.gender = "male"
+if "qalo_alif_len" not in st.session_state:
+    st.session_state.qalo_alif_len = 4
+if "qalo_waw_len" not in st.session_state:
+    st.session_state.qalo_waw_len = 4
+if "laa_alif_len" not in st.session_state:
+    st.session_state.laa_alif_len = 4
+if "separate_madd" not in st.session_state:
+    st.session_state.separate_madd = 4
+if "noon_moshaddadah_len" not in st.session_state:
+    st.session_state.noon_moshaddadah_len = NoonMoshaddahLen.COMPLETE
+if "noon_mokhfah_len" not in st.session_state:
+    st.session_state.noon_mokhfah_len = NoonMokhfahLen.COMPLETE
+if "allam_alif_len" not in st.session_state:
+    st.session_state.allam_alif_len = 4
+if "madd_aared_len" not in st.session_state:
+    st.session_state.madd_aared_len = 4
+if "qalqalah" not in st.session_state:
+    st.session_state.qalqalah = Qalqalah.qalqalah
+
 
 # Load dataset
 @st.cache_resource
@@ -160,17 +182,26 @@ item = ds[current_id]
 
 # Check if current item has existing annotation
 if item["id"] in st.session_state.annotations and not st.session_state.edit_mode:
-    st.session_state.phonetic_script = st.session_state.annotations[item["id"]][
-        "phonetic_script"
-    ]
-    st.session_state.sifat_df = pd.DataFrame(
-        st.session_state.annotations[item["id"]]["sifat_table"]
-    )
+    annotation_data = st.session_state.annotations[item["id"]]
+    # Load QdataBenchItem fields
+    st.session_state.phonetic_script = annotation_data.get("phonetic_transcript", "")
+    st.session_state.sifat_df = pd.DataFrame(annotation_data.get("sifat", []))
     # Add row index column
     if not st.session_state.sifat_df.empty:
         st.session_state.sifat_df.insert(
             0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
         )
+    # Load other fields
+    st.session_state.gender = annotation_data.get("gender", "male")
+    st.session_state.qalo_alif_len = annotation_data.get("qalo_alif_len", 4)
+    st.session_state.qalo_waw_len = annotation_data.get("qalo_waw_len", 4)
+    st.session_state.laa_alif_len = annotation_data.get("laa_alif_len", 4)
+    st.session_state.separate_madd = annotation_data.get("separate_madd", 4)
+    st.session_state.noon_moshaddadah_len = annotation_data.get("noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE)
+    st.session_state.noon_mokhfah_len = annotation_data.get("noon_mokhfah_len", NoonMokhfahLen.COMPLETE)
+    st.session_state.allam_alif_len = annotation_data.get("allam_alif_len", 4)
+    st.session_state.madd_aared_len = annotation_data.get("madd_aared_len", 4)
+    st.session_state.qalqalah = annotation_data.get("qalqalah", Qalqalah.qalqalah)
 
 # App layout
 st.title("Quran Audio Transcription Annotation Tool")
@@ -382,6 +413,40 @@ if not st.session_state.sifat_df.empty:
             # Force a rerun to immediately reflect changes
             st.rerun()
 
+# QdataBenchItem fields
+st.header("QdataBenchItem Annotation")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.session_state.gender = st.radio("Gender", ["male", "female"])
+with col2:
+    st.session_state.qalqalah = st.selectbox("Qalqalah", options=list(Qalqalah), format_func=lambda x: x.name)
+
+st.subheader("Madd Lengths")
+cols = st.columns(4)
+with cols[0]:
+    st.session_state.qalo_alif_len = st.slider("Qalo Alif Len", 0, 8, st.session_state.qalo_alif_len)
+with cols[1]:
+    st.session_state.qalo_waw_len = st.slider("Qalo Waw Len", 0, 8, st.session_state.qalo_waw_len)
+with cols[2]:
+    st.session_state.laa_alif_len = st.slider("Laa Alif Len", 0, 8, st.session_state.laa_alif_len)
+with cols[3]:
+    st.session_state.separate_madd = st.slider("Separate Madd", 0, 8, st.session_state.separate_madd)
+
+cols = st.columns(3)
+with cols[0]:
+    st.session_state.allam_alif_len = st.slider("Allam Alif Len", 0, 8, st.session_state.allam_alif_len)
+with cols[1]:
+    st.session_state.madd_aared_len = st.slider("Madd Aared Len", 0, 8, st.session_state.madd_aared_len)
+with cols[2]:
+    st.session_state.noon_moshaddadah_len = st.selectbox(
+        "Noon Moshaddadah Len", options=list(NoonMoshaddahLen), format_func=lambda x: x.name
+    )
+
+st.session_state.noon_mokhfah_len = st.selectbox(
+    "Noon Mokhfah Len", options=list(NoonMokhfahLen), format_func=lambda x: x.name
+)
+
 # Navigation and saving
 st.divider()
 col1, col2, col3, col4 = st.columns(4)
@@ -402,13 +467,26 @@ with col2:
         sifat_df_to_save = st.session_state.sifat_df.drop(
             columns=["row_index"], errors="ignore"
         )
-        annotation = {
-            "phonetic_script": phonetic_script,
-            "sifat_table": sifat_df_to_save.to_dict(orient="records"),
-        }
-
+        # Create QdataBenchItem instance
+        bench_item = QdataBenchItem(
+            id=item["id"],
+            original_id=item["original_id"],
+            gender=st.session_state.gender,
+            qalo_alif_len=st.session_state.qalo_alif_len,
+            qalo_waw_len=st.session_state.qalo_waw_len,
+            laa_alif_len=st.session_state.laa_alif_len,
+            separate_madd=st.session_state.separate_madd,
+            noon_moshaddadah_len=st.session_state.noon_moshaddadah_len,
+            noon_mokhfah_len=st.session_state.noon_mokhfah_len,
+            allam_alif_len=st.session_state.allam_alif_len,
+            madd_aared_len=st.session_state.madd_aared_len,
+            qalqalah=st.session_state.qalqalah,
+            phonetic_transcript=phonetic_script,
+            sifat=sifat_df_to_save.to_dict(orient="records")
+        )
+        
         # Save to JSON file
-        save_annotation(item["id"], annotation)
+        save_annotation(item["id"], bench_item.model_dump())
         st.success(f"Annotation saved for ID: {item['id']}")
         st.session_state.edit_mode = False
 
@@ -484,13 +562,24 @@ if st.session_state.annotations:
 
                     # Load the annotation data
                     annotation = st.session_state.annotations[row["id"]]
-                    st.session_state.phonetic_script = annotation["phonetic_script"]
-                    st.session_state.sifat_df = pd.DataFrame(annotation["sifat_table"])
+                    st.session_state.phonetic_script = annotation.get("phonetic_transcript", "")
+                    st.session_state.sifat_df = pd.DataFrame(annotation.get("sifat", []))
                     # Add row index column
                     if not st.session_state.sifat_df.empty:
                         st.session_state.sifat_df.insert(
                             0, "row_index", range(1, len(st.session_state.sifat_df) + 1)
                         )
+                    # Load other fields
+                    st.session_state.gender = annotation.get("gender", "male")
+                    st.session_state.qalo_alif_len = annotation.get("qalo_alif_len", 4)
+                    st.session_state.qalo_waw_len = annotation.get("qalo_waw_len", 4)
+                    st.session_state.laa_alif_len = annotation.get("laa_alif_len", 4)
+                    st.session_state.separate_madd = annotation.get("separate_madd", 4)
+                    st.session_state.noon_moshaddadah_len = annotation.get("noon_moshaddadah_len", NoonMoshaddahLen.COMPLETE)
+                    st.session_state.noon_mokhfah_len = annotation.get("noon_mokhfah_len", NoonMokhfahLen.COMPLETE)
+                    st.session_state.allam_alif_len = annotation.get("allam_alif_len", 4)
+                    st.session_state.madd_aared_len = annotation.get("madd_aared_len", 4)
+                    st.session_state.qalqalah = annotation.get("qalqalah", Qalqalah.qalqalah)
 
                     st.rerun()
                 else:
