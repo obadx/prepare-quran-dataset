@@ -26,8 +26,8 @@ class NoonMokhfahLen(IntEnum):
 
 
 class Qalqalah(IntEnum):
-    no_qalqalh = 0
-    qalqalah = 1
+    NO_QALQALH = 0
+    HAS_QALQALAH = 1
 
 
 class QdataBenchItem(BaseModel):
@@ -38,30 +38,35 @@ class QdataBenchItem(BaseModel):
 
     # General Tajeweed
     qalo_alif_len: MADD_LEN = Field(
-        description="The lengths of the normal madd alif form word `قالوا`"
+        default=2, description="The lengths of the normal madd alif form word `قالوا`"
     )
     qalo_waw_len: MADD_LEN = Field(
-        description="The length of the normal madd waw form word `قالوا`"
+        default=2, description="The length of the normal madd waw form word `قالوا`"
     )
     laa_alif_len: MADD_LEN = Field(
-        description="The length of the normal madd alif form word `لا`"
+        default=2, description="The length of the normal madd alif form word `لا`"
     )
     separate_madd: MADD_LEN = Field(
-        description="The length of separate madd for word `لنا إنك`"
+        default=4, description="The length of separate madd for word `لنا إنك`"
     )
     noon_moshaddadah_len: NoonMoshaddahLen = Field(
-        description="The length of noon moshaddah for word `إنَّك`"
+        default=NoonMoshaddahLen.COMPLETE,
+        description="The length of noon moshaddah for word `إنَّك`",
     )
     noon_mokhfah_len: NoonMokhfahLen = Field(
-        description="The length of noon mokhfah for word ` أنت`"
+        default=NoonMokhfahLen.COMPLETE,
+        description="The length of noon mokhfah for word ` أنت`",
     )
     allam_alif_len: MADD_LEN = Field(
-        description="The lengths of the normal madd alif form word `علام`"
+        default=2, description="The lengths of the normal madd alif form word `علام`"
     )
 
-    madd_aared_len: MADD_LEN = Field(description="The length of the مد العارض للسكون ")
+    madd_aared_len: MADD_LEN = Field(
+        default=4, description="The length of the مد العارض للسكون "
+    )
     qalqalah: Qalqalah = Field(
-        description="The existance of qalqalah for not for word `الغيوب`"
+        default=Qalqalah.HAS_QALQALAH,
+        description="The existance of qalqalah for not for word `الغيوب`",
     )
 
     # quran-transcript
@@ -604,11 +609,13 @@ if st.session_state.annotations:
 
         # Use the correct key 'phonetic_transcript' instead of 'phonetic_script'
         phonetic_text = annotation.get("phonetic_transcript", "")
-        truncated_phonetic = phonetic_text[:50] + "..." if len(phonetic_text) > 50 else phonetic_text
-        
+        truncated_phonetic = (
+            phonetic_text[:50] + "..." if len(phonetic_text) > 50 else phonetic_text
+        )
+
         # Get sifat count
         sifat_count = len(annotation.get("sifat", []))
-        
+
         annotations_list.append(
             {
                 "id": item_id,
