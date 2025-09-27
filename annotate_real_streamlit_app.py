@@ -157,7 +157,13 @@ def load_annotations():
     annotations_file = Path("annotations.json")
     if annotations_file.exists():
         with open(annotations_file, "r", encoding="utf-8") as f:
-            return json.load(f)
+            raw_annotations = json.load(f)
+        # Convert sifat lists to SifaOutput instances
+        for item_id, annotation in raw_annotations.items():
+            if 'sifat' in annotation:
+                annotation['sifat'] = [SifaOutput(**sifa) if isinstance(sifa, dict) else sifa 
+                                      for sifa in annotation['sifat']]
+        return raw_annotations
     return {}
 
 
@@ -185,7 +191,9 @@ if item["id"] in st.session_state.annotations and not st.session_state.edit_mode
     annotation_data = st.session_state.annotations[item["id"]]
     # Load QdataBenchItem fields
     st.session_state.phonetic_script = annotation_data.get("phonetic_transcript", "")
-    st.session_state.sifat_df = pd.DataFrame(annotation_data.get("sifat", []))
+    # Convert sifat to DataFrame
+    sifat_list = annotation_data.get("sifat", [])
+    st.session_state.sifat_df = pd.DataFrame([sifa.model_dump() if isinstance(sifa, SifaOutput) else sifa for sifa in sifat_list])
     # Add row index column
     if not st.session_state.sifat_df.empty:
         st.session_state.sifat_df.insert(
@@ -487,6 +495,13 @@ with col2:
         sifat_df_to_save = st.session_state.sifat_df.drop(
             columns=["row_index"], errors="ignore"
         )
+        # Convert sifat records to SifaOutput instances
+        sifat_list = []
+        for record in sifat_df_to_save.to_dict(orient="records"):
+            # Filter out None values and empty strings
+            filtered_record = {k: v for k, v in record.items() if v is not None and v != ''}
+            sifat_list.append(SifaOutput(**filtered_record))
+        
         # Create QdataBenchItem instance
         bench_item = QdataBenchItem(
             id=item["id"],
@@ -502,7 +517,7 @@ with col2:
             madd_aared_len=st.session_state.madd_aared_len,
             qalqalah=st.session_state.qalqalah,
             phonetic_transcript=phonetic_script,
-            sifat=sifat_df_to_save.to_dict(orient="records"),
+            sifat=sifat_list,
         )
 
         # Save to JSON file
