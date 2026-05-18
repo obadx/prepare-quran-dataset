@@ -4,7 +4,7 @@ from quran_transcript import quran_phonetizer, Aya, MoshafAttributes
 from transformers import AutoFeatureExtractor
 import torch
 
-from prepare_quran_dataset.modeling.multi_level_tokenizer import MutliLevelTokenizer
+from prepare_quran_dataset.modeling.multi_level_tokenizer import MultiLevelTokenizer
 from prepare_quran_dataset.modeling.configuration_multi_level_ctc import (
     Wav2Vec2BertForMultilevelCTCConfig,
 )
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     print(model_output)
 
     # Test Inference with labels
-    tokenizer = MutliLevelTokenizer("./")
+    tokenizer = MultiLevelTokenizer("./")
 
     uth_strings = [Aya(2, i).get().uthmani for i in range(1, batch_size + 1)]
     moshaf = MoshafAttributes(

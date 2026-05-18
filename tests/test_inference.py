@@ -9,7 +9,7 @@ import torch
 from prepare_quran_dataset.modeling.multi_level_tokenizer import MultiLevelTokenizer
 
 if __name__ == "__main__":
-    repo_id = "obadx/Muaalem-model-dev"
+    repo_id = "obadx/muaalem-model-v2_1"
     model = Wav2Vec2BertForMultilevelCTC.from_pretrained(repo_id)
     multi_level_tokenizer = MultiLevelTokenizer(repo_id)
     processor = AutoFeatureExtractor.from_pretrained(repo_id)
@@ -19,9 +19,9 @@ if __name__ == "__main__":
     model.to(device, dtype=dtype)
 
     # wave, _ = load("/home/abdullah/Downloads/test_sample_2.mp3", sr=16000)
-    wave, _ = load("/home/abdullah/Downloads/test_sample_3.mp3", sr=16000)
+    # wave, _ = load("/home/abdullah/Downloads/test_sample_3.mp3", sr=16000)
     # wave, _ = load("/home/abdullah/Downloads/test_sample.mp3", sr=16000)
-    # wave, _ = load("/home/abdullah/Downloads/test.wav", sr=16000)
+    wave, _ = load("/home/abdullah/Downloads/test.wav", sr=16000)
     features = processor(wave, sampling_rate=16000, return_tensors="pt")
     features = {k: v.to(device, dtype=dtype) for k, v in features.items()}
     outs = model(**features, return_dict=False)[0]
