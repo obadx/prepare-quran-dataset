@@ -34,6 +34,8 @@ from torch.nn import CrossEntropyLoss
 from pydantic import BaseModel, validator
 
 
+import argparse
+
 from prepare_quran_dataset.modeling.multi_level_tokenizer import MultiLevelTokenizer
 from prepare_quran_dataset.modeling.vocab import PAD_TOKEN_IDX
 
@@ -62,7 +64,14 @@ class TrainConfig(BaseModel):
     augment_prob: float = 0.4
     loss_weights: dict[str, float] = {"phonemes": 0.4}
     max_audio_seconds: float = 35.0
+    dropout: float = 0.0
     num_epochs: int = 1
+    num_hidden_layers: int = 24
+    hidden_size: int = 1024
+    output_hidden_size: int | None = None
+    intermediate_size: int = 4096
+    num_attention_heads: int = 16
+    output_dir: str = "./results"
     devset_ratio: float = 0.1
     save_every: float = 0.2
     learning_rate: float = 5e-5
@@ -374,7 +383,7 @@ def prepare_dataset(
     ds = concatenate_datasets(
         [
             load_dataset(
-                "obadx/mualem-recitations-annotated",
+                "obadx/muaalem-annotated-v3",
                 name=f"moshaf_{m_id}",
                 split="train",
                 num_proc=train_config.num_workers,
@@ -525,10 +534,24 @@ def prepare_special_moshaf_ways(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="./train_config.yml",
+        help="Path to training config YAML",
+    )
+    parser.add_argument(
+        "--push-to-hub",
+        action="store_true",
+        help="Push model to HuggingFace Hub after training",
+    )
+    args = parser.parse_args()
+
     # loading wandb tokens ans HF login
     load_secrets()
     register_model()
-    train_config = TrainConfig.from_yaml("./train_config.yml")
+    train_config = TrainConfig.from_yaml(args.config)
     print(train_config)
     processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
     multi_level_tokenizer = MultiLevelTokenizer("./")
@@ -579,13 +602,19 @@ if __name__ == "__main__":
         level_to_vocab_size=level_to_vocab_size,
         pad_token_id=PAD_TOKEN_IDX,
         level_to_loss_weight=train_config.loss_weights,
-        attention_dropout=0.0,
-        hidden_dropout=0.0,
-        feat_proj_dropout=0.0,
+        attention_dropout=train_config.dropout,
+        hidden_dropout=train_config.dropout,
+        feat_proj_dropout=train_config.dropout,
+        num_hidden_layers=train_config.num_hidden_layers,
+        hidden_size=train_config.hidden_size,
+        output_hidden_size=train_config.output_hidden_size,
+        intermediate_size=train_config.intermediate_size,
+        num_attention_heads=train_config.num_attention_heads,
         mask_time_prob=0.0,
         layerdrop=0.0,
         ctc_loss_reduction="mean",
-        add_adapter=True,
+        add_adapter=False,
+        adapter_stride=1,
     )
     model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
         "facebook/w2v-bert-2.0", config=config
@@ -594,7 +623,7 @@ if __name__ == "__main__":
     # Configure training arguments
     training_args = TrainingArguments(
         seed=train_config.seed,
-        output_dir="./results",
+        output_dir=train_config.output_dir,
         eval_strategy="steps",
         eval_steps=train_config.save_every,
         save_strategy="steps",
@@ -607,7 +636,7 @@ if __name__ == "__main__":
         num_train_epochs=train_config.num_epochs,
         dataloader_num_workers=train_config.num_workers,
         weight_decay=train_config.weight_decay,
-        logging_dir="./logs",
+        logging_dir=str(Path(train_config.output_dir) / "logs"),
         load_best_model_at_end=True,
         metric_for_best_model=train_config.metric_for_bet_model,
         greater_is_better=train_config.greater_is_better,
@@ -645,7 +674,7 @@ if __name__ == "__main__":
     )
 
     # Start training
-    if list(Path("./results").glob("checkpoint-*")):
+    if list(Path(train_config.output_dir).glob("checkpoint-*")):
         print("Resuming !")
         trainer.train(resume_from_checkpoint=True)
     else:
@@ -657,7 +686,7 @@ if __name__ == "__main__":
             train_config, processor, multi_level_tokenizer, is_testset=True
         )
         test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
-        with open("./results/test_results.json", "w") as f:
+        with open(Path(train_config.output_dir) / "test_results.json", "w") as f:
             json.dump(test_results, f, indent=4)
         print("Test Results:", test_results)
 
@@ -665,4 +694,5 @@ if __name__ == "__main__":
     wandb.finish()
 
     # Push model and tokenizer to Hub
-    trainer.push_to_hub()
+    if args.push_to_hub:
+        trainer.push_to_hub()

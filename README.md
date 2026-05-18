@@ -321,3 +321,70 @@ https://github.com/user-attachments/assets/a9742b75-985c-4808-9fcb-cc8c0b6ff549
 > [!NOTE]
 > This documentation is auto generated using `python generate_moshaf_docs.py`.
 
+---
+
+## Training
+
+The training script uses `accelerate` and is configured via a YAML file.
+
+### Quick Start
+
+```bash
+accelerate launch train.py
+```
+
+### CLI Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--config` | `./train_config.yml` | Path to training config YAML |
+| `--push-to-hub` | `false` | Push model to HuggingFace Hub after training |
+
+### Config Reference (`train_config.yml`)
+
+| Field | Default | Description |
+|---|---|---|
+| `train_moshaf_ids` | — | List of moshaf IDs for training |
+| `test_moshaf_ids` | `null` | List of moshaf IDs for testing |
+| `loss_weights` | — | Per-level loss weights |
+| `dropout` | `0.0` | Dropout for attention, hidden, and feature projection layers |
+| `num_hidden_layers` | `24` | Number of transformer encoder layers |
+| `hidden_size` | `1024` | Dimensionality of encoder layers |
+| `output_hidden_size` | `null` | Output dimensionality (defaults to `hidden_size`) |
+| `intermediate_size` | `4096` | Feed-forward layer dimensionality |
+| `num_attention_heads` | `16` | Number of attention heads per layer |
+| `num_epochs` | `1` | Number of training epochs |
+| `learning_rate` | `5e-5` | Learning rate |
+| `per_device_train_batch_size` | `128` | Per-device training batch size |
+| `pre_device_eval_batch_size` | `128` | Per-device evaluation batch size |
+| `output_dir` | `"./results"` | Directory to save checkpoints and logs |
+| `seed` | `42` | Random seed |
+| `augment_prob` | `0.4` | Augmentation probability |
+| `max_audio_seconds` | `35.0` | Max audio length (seconds) |
+| `devset_ratio` | `0.1` | Validation split ratio |
+| `save_every` | `0.2` | Save/eval interval (fraction of epoch) |
+| `weight_decay` | `0.01` | Weight decay |
+| `warmup_ratio` | `0.2` | Warmup ratio |
+| `metric_for_bet_model` | `"average_per"` | Metric for best model selection |
+| `greater_is_better` | `false` | Whether higher metric is better |
+| `hub_model_id` | — | HuggingFace Hub model ID |
+| `wandb_project_name` | — | Weights & Biases project name |
+| `gradient_checkpoiniting` | `false` | Enable gradient checkpointing |
+
+### Resuming Training
+
+If the `output_dir` contains checkpoint directories (`checkpoint-*`), training automatically resumes from the latest checkpoint.
+
+### Examples
+
+```bash
+# Train with a custom config
+accelerate launch train.py --config my_config.yml
+
+# Train and push the best model to the Hub
+accelerate launch train.py --push-to-hub
+
+# Full custom run
+accelerate launch train.py --config my_config.yml --push-to-hub
+```
+
