@@ -1,0 +1,19 @@
+{
+    "test__loss": 0.011957109905779362,
+    "test__per_phonemes": 0.005383774887559674,
+    "test__per_hams_or_jahr": 0.0014393890685244603,
+    "test__per_shidda_or_rakhawa": 0.002670336348307266,
+    "test__per_tafkheem_or_taqeeq": 0.0021943424128225923,
+    "test__per_itbaq": 0.0009955428716019322,
+    "test__per_safeer": 0.0014622035926653378,
+    "test__per_qalqla": 0.0009436916803726649,
+    "test__per_tikraar": 0.004272538157291625,
+    "test__per_tafashie": 0.0014632406164899233,
+    "test__per_istitala": 0.0008731740603008613,
+    "test__per_ghonna": 0.0012776133518891462,
+    "test__average_per": 0.0020887133679841348,
+    "test__runtime": 565.4297,
+    "test__samples_per_second": 59.482,
+    "test__steps_per_second": 0.93,
+    "epoch": 1.0
+}
