@@ -25,5 +25,7 @@ if __name__ == "__main__":
                     moshaf_to_dup[moshaf.id] = []
                 moshaf_to_dup[moshaf.id].append(seg)
 
+    print(moshaf_to_dup)
+
     with open("duplicate_segs.json", "w+") as f:
         json.dump(f, moshaf_to_dup, indent=2)
