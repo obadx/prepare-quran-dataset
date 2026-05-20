@@ -18,11 +18,21 @@ if __name__ == "__main__":
         vocab = json.load(f)
     level_to_vocab_size = {l: len(v) for l, v in vocab.items()}
 
-    config = Wav2Vec2ForMultilevelCTCConfig(level_to_vocab_size=level_to_vocab_size)
+    config = Wav2Vec2ForMultilevelCTCConfig(
+        level_to_vocab_size=level_to_vocab_size,
+        attention_dropout=0,
+        mask_time_prob=0.0,
+        layerdrop=0.0,
+        ctc_loss_reduction="mean",
+        add_adapter=False,
+        adapter_stride=1,
+    )
     print(config)
 
     model = Wav2Vec2ForMultilevelCTC.from_pretrained(
-        "facebook/wav2vec2-large-xlsr-53", config=config
+        # "facebook/wav2vec2-large-xlsr-53",
+        "facebook/wav2vec2-xls-r-300m",
+        config=config,
     )
     print(model)
     processor = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
