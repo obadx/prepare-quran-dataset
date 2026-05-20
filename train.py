@@ -24,7 +24,7 @@ from transformers import (
     Wav2Vec2BertProcessor,
 )
 from huggingface_hub import login as hf_login
-from datasets import load_dataset, DatasetDict, Dataset, concatenate_datasets
+from datasets import load_dataset, DatasetDict, Dataset, concatenate_datasets, Audio
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -35,6 +35,8 @@ from pydantic import BaseModel, validator
 
 
 import argparse
+import io
+import librosa
 
 from prepare_quran_dataset.modeling.multi_level_tokenizer import MultiLevelTokenizer
 from prepare_quran_dataset.modeling.vocab import PAD_TOKEN_IDX
@@ -364,7 +366,10 @@ class Augment(object):
         return new_wav
 
     def __call__(self, item):
-        item["audio"]["array"] = self.apply(item["audio"]["array"])
+        audio_dict = item["audio"]
+        src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+        wav, _ = librosa.load(src, sr=16000, mono=True)
+        item["audio"] = self.apply(wav)
         return item
 
 
@@ -392,10 +397,19 @@ def prepare_dataset(
         ]
     )
 
+    # disable torchcodec decoding, use liborsa instead
+    ds = ds.cast_column("audio", Audio(decode=False))
+
     # removihg long samples
     max_samples = int(train_config.max_audio_seconds * 16000)
+
+    def _audio_len(audio_dict):
+        src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+        wav, _ = librosa.load(src, sr=16000, mono=True)
+        return len(wav)
+
     ds = ds.filter(
-        lambda ex: len(ex["audio"]["array"]) <= max_samples,
+        lambda ex: _audio_len(ex["audio"]) <= max_samples,
         num_proc=train_config.num_workers,
     )
 
@@ -451,7 +465,12 @@ class DataCollatorCTCWithPadding:
     ) -> Dict[str, torch.Tensor]:
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
-        waves = [f["audio"]["array"] for f in features]
+        waves = []
+        for f in features:
+            audio_dict = f["audio"]
+            src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+            wav, _ = librosa.load(src, sr=16000, mono=True)
+            waves.append(wav)
         for idx in range(len(waves)):
             waves[idx] = self.augment.apply(waves[idx])
 
@@ -617,7 +636,9 @@ if __name__ == "__main__":
         adapter_stride=1,
     )
     model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
-        "facebook/w2v-bert-2.0", config=config
+        "facebook/w2v-bert-2.0",
+        config=config,
+        ignore_mismatched_sizes=True,
     )
 
     # Configure training arguments

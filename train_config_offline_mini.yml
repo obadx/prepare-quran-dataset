@@ -60,12 +60,12 @@ learning_rate: 5e-5
 seed: 42
 
 # Batch sizes
-per_device_train_batch_size: 16
-pre_device_eval_batch_size: 16
+per_device_train_batch_size: 32
+pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.2
+save_every: 0.1
 
 # Hardware settings
 # num_workers: 4
