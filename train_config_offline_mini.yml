@@ -81,6 +81,18 @@ greater_is_better: false
 hub_model_id: "obadx/muaalem-model-v3-mini"
 wandb_project_name: "muaalem-model-v3-mini"
 
+# Architecture selection: w2v2bert (Wav2Vec2Bert) or w2v2 (Wav2Vec2)
+architecture: w2v2bert
+
+# Base model weights ID or path (backbone)
+base_model_name_or_path: facebook/w2v-bert-2.0
+
+# Processor/feature extractor ID or path
+processor_name_or_path: facebook/w2v-bert-2.0
+
+# Ignore mismatched sizes when loading pretrained weights
+ignore_mismatched_sizes: true
+
 # Gradint checkpointing
 gradient_checkpoiniting: true
 

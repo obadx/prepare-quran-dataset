@@ -42,17 +42,17 @@ loss_weights:
 
 # Augmentaion
 augment_prob: 0.4
-max_audio_seconds: 30.0
+max_audio_seconds: 20.0
 
 # Model dropout
 dropout: 0.0
 
 # Model architecture (defaults match w2v-bert-2.0)
 num_hidden_layers: 24
-hidden_size: 1024
-output_hidden_size: 1024
-intermediate_size: 4096
-num_attention_heads: 16
+hidden_size: 384
+output_hidden_size: 384
+intermediate_size: 1536
+num_attention_heads: 6
 
 # Training parameters
 num_epochs: 1
@@ -60,8 +60,8 @@ learning_rate: 5e-5
 seed: 42
 
 # Batch sizes
-per_device_train_batch_size: 64
-pre_device_eval_batch_size: 64
+per_device_train_batch_size: 32
+pre_device_eval_batch_size: 32
 
 # Dataset parameters
 devset_ratio: 0.1
@@ -78,17 +78,17 @@ warmup_ratio: 0.2
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-model-v3"
-wandb_project_name: "muaalem-model-v3"
+hub_model_id: "obadx/muaalem-model-w2v2-384"
+wandb_project_name: "muaalem-model-w2v2-384"
 
 # Architecture selection: w2v2bert (Wav2Vec2Bert) or w2v2 (Wav2Vec2)
-architecture: w2v2bert
+architecture: w2v2
 
 # Base model weights ID or path (backbone)
-base_model_name_or_path: facebook/w2v-bert-2.0
+base_model_name_or_path: "./w2v2-384"
 
 # Processor/feature extractor ID or path
-processor_name_or_path: facebook/w2v-bert-2.0
+processor_name_or_path: "facebook/wav2vec2-large-xlsr-53"
 
 # Ignore mismatched sizes when loading pretrained weights
 ignore_mismatched_sizes: false
@@ -97,4 +97,4 @@ ignore_mismatched_sizes: false
 gradient_checkpoiniting: true
 
 # Output directory for checkpoints
-output_dir: "./results"
+output_dir: "./results-w2v2-384"

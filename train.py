@@ -46,6 +46,13 @@ from multi_level_ctc_model.configuration_multi_level_ctc import (
 )
 from multi_level_ctc_model.modeling_multi_level_ctc import Wav2Vec2BertForMultilevelCTC
 
+from prepare_quran_dataset.modeling_w2v.configuration_multi_level_ctc_w2v import (
+    Wav2Vec2ForMultilevelCTCConfig,
+)
+from prepare_quran_dataset.modeling_w2v.modeling_multi_level_ctc_w2v import (
+    Wav2Vec2ForMultilevelCTC,
+)
+
 
 # TODO:
 # * Hyberparamets
@@ -88,6 +95,10 @@ class TrainConfig(BaseModel):
     wandb_project_name: str = "Muaalem-model-dev"
     warmup_ratio: float = 0.2
     gradient_checkpoiniting: bool = False
+    architecture: str = "w2v2bert"
+    base_model_name_or_path: str = "facebook/w2v-bert-2.0"
+    processor_name_or_path: str = "facebook/w2v-bert-2.0"
+    ignore_mismatched_sizes: bool = True
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "TrainConfig":
@@ -137,6 +148,13 @@ class TrainConfig(BaseModel):
 
         with open(yaml_path, "w", encoding="utf-8") as file:
             yaml.dump(config_dict, file, default_flow_style=False, allow_unicode=True)
+
+    @validator("architecture")
+    def validate_architecture(cls, v):
+        allowed = ["w2v2bert", "w2v2"]
+        if v not in allowed:
+            raise ValueError(f"architecture must be one of {allowed}, got `{v}`")
+        return v
 
     @validator("num_workers", pre=True, always=True)
     def set_num_workers(cls, v):
@@ -450,6 +468,56 @@ def register_model():
     AutoModelForCTC.register(
         Wav2Vec2BertForMultilevelCTCConfig, Wav2Vec2BertForMultilevelCTC
     )
+    AutoConfig.register("multi_level_ctc_w2v", Wav2Vec2ForMultilevelCTCConfig)
+    AutoModel.register(Wav2Vec2ForMultilevelCTCConfig, Wav2Vec2ForMultilevelCTC)
+    AutoModelForCTC.register(Wav2Vec2ForMultilevelCTCConfig, Wav2Vec2ForMultilevelCTC)
+
+
+def build_model_components(
+    train_config: TrainConfig,
+    level_to_vocab_size: dict[str, int],
+    pad_token_id: int,
+    ignore_mismatched_sizes: bool = True,
+):
+    processor = AutoFeatureExtractor.from_pretrained(
+        train_config.processor_name_or_path
+    )
+
+    common_config_kwargs = dict(
+        level_to_vocab_size=level_to_vocab_size,
+        pad_token_id=pad_token_id,
+        level_to_loss_weight=train_config.loss_weights,
+        attention_dropout=train_config.dropout,
+        hidden_dropout=train_config.dropout,
+        feat_proj_dropout=train_config.dropout,
+        num_hidden_layers=train_config.num_hidden_layers,
+        hidden_size=train_config.hidden_size,
+        output_hidden_size=train_config.output_hidden_size,
+        intermediate_size=train_config.intermediate_size,
+        num_attention_heads=train_config.num_attention_heads,
+        mask_time_prob=0.0,
+        layerdrop=0.0,
+        ctc_loss_reduction="mean",
+        add_adapter=False,
+        adapter_stride=1,
+    )
+
+    if train_config.architecture == "w2v2bert":
+        config = Wav2Vec2BertForMultilevelCTCConfig(**common_config_kwargs)
+        model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
+            train_config.base_model_name_or_path,
+            config=config,
+            ignore_mismatched_sizes=ignore_mismatched_sizes,
+        )
+    elif train_config.architecture == "w2v2":
+        config = Wav2Vec2ForMultilevelCTCConfig(**common_config_kwargs)
+        model = Wav2Vec2ForMultilevelCTC.from_pretrained(
+            train_config.base_model_name_or_path,
+            config=config,
+            ignore_mismatched_sizes=ignore_mismatched_sizes,
+        )
+
+    return processor, config, model
 
 
 @dataclass
@@ -572,7 +640,6 @@ if __name__ == "__main__":
     register_model()
     train_config = TrainConfig.from_yaml(args.config)
     print(train_config)
-    processor = AutoFeatureExtractor.from_pretrained("facebook/w2v-bert-2.0")
     multi_level_tokenizer = MultiLevelTokenizer("./")
 
     with open("./vocab.json", encoding="utf-8") as f:
@@ -583,6 +650,14 @@ if __name__ == "__main__":
             raise ValueError(
                 f"The level `{level}` does not exist availabel are: `{list(level_to_vocab_size.values())}`"
             )
+
+    # Load pre-trained model components
+    processor, config, model = build_model_components(
+        train_config,
+        level_to_vocab_size,
+        PAD_TOKEN_IDX,
+        ignore_mismatched_sizes=train_config.ignore_mismatched_sizes,
+    )
 
     # Loading moshaf data
     moshaf_dataeet = load_dataset(
@@ -614,32 +689,6 @@ if __name__ == "__main__":
     # Load dataset
     # Update with your dataset path
     dataset = prepare_dataset(train_config, processor, multi_level_tokenizer)
-
-    # Load pre-trained model
-
-    config = Wav2Vec2BertForMultilevelCTCConfig(
-        level_to_vocab_size=level_to_vocab_size,
-        pad_token_id=PAD_TOKEN_IDX,
-        level_to_loss_weight=train_config.loss_weights,
-        attention_dropout=train_config.dropout,
-        hidden_dropout=train_config.dropout,
-        feat_proj_dropout=train_config.dropout,
-        num_hidden_layers=train_config.num_hidden_layers,
-        hidden_size=train_config.hidden_size,
-        output_hidden_size=train_config.output_hidden_size,
-        intermediate_size=train_config.intermediate_size,
-        num_attention_heads=train_config.num_attention_heads,
-        mask_time_prob=0.0,
-        layerdrop=0.0,
-        ctc_loss_reduction="mean",
-        add_adapter=False,
-        adapter_stride=1,
-    )
-    model = Wav2Vec2BertForMultilevelCTC.from_pretrained(
-        "facebook/w2v-bert-2.0",
-        config=config,
-        ignore_mismatched_sizes=True,
-    )
 
     # Configure training arguments
     training_args = TrainingArguments(

@@ -14,6 +14,11 @@ Preparing and chunking quranic recitation dataset for Automatic Pronunciation Er
     * [Demo](#demo)
 * [Hafs Ways](#أوجه-حفص)
 * [Moshaf Attributes Docs](#moshaf-attributes-docs)
+* [Model Pruning](#model-pruning)
+    * [Quick Start](#pruning-quick-start)
+    * [Output](#pruning-output)
+    * [Push to Hub](#pruning-push-to-hub)
+    * [Advanced: Full Pipeline](#pruning-full-pipeline)
 
 ## Description
 
@@ -320,6 +325,82 @@ https://github.com/user-attachments/assets/a9742b75-985c-4808-9fcb-cc8c0b6ff549
 
 > [!NOTE]
 > This documentation is auto generated using `python generate_moshaf_docs.py`.
+
+---
+
+## Model Pruning
+
+Structured width pruning for Wav2Vec2-XLS-R-300M encoder models. Prunes the model's hidden size, FFN intermediate size, and attention heads to a smaller architecture while preserving compatibility with the HuggingFace `transformers` API.
+
+| Dimension | Original | Target |
+|-----------|----------|--------|
+| `hidden_size` | 1024 | 384 |
+| `intermediate_size` | 4096 | 1536 |
+| `num_attention_heads` | 16 | 6 |
+
+Uses weight-magnitude importance scoring to determine which neurons/heads/dimensions to keep, with balanced pruning across the positional convolution groups for the hidden size reduction.
+
+### Pruning Quick Start
+
+```bash
+# Prune the model locally
+uv run python prune_w2v2_width.py \
+    --model-id facebook/wav2vec2-xls-r-300m \
+    --output-dir ./pruned-model
+
+# Verify it loads correctly
+uv run python -c "
+from transformers import Wav2Vec2ForPreTraining, AutoFeatureExtractor
+m = Wav2Vec2ForPreTraining.from_pretrained('./pruned-model')
+p = AutoFeatureExtractor.from_pretrained('./pruned-model')
+print(m.config.hidden_size, m.config.intermediate_size, m.config.num_attention_heads)
+"
+```
+
+### Pruning Output
+
+```
+./pruned-model/
+    config.json              # Updated with pruned dimensions
+    model.safetensors         # Pruned weights (HF-compatible)
+    preprocessor_config.json  # Copied from source model
+    pruning_summary.json      # Pruning metadata
+```
+
+The pruned model is fully compatible with `Wav2Vec2ForPreTraining.from_pretrained()` and can be used for downstream fine-tuning with CTC heads.
+
+### Pruning Push to Hub
+
+```bash
+uv run python prune_w2v2_width.py \
+    --model-id facebook/wav2vec2-xls-r-300m \
+    --output-dir ./pruned-model \
+    --hf-token hf_... \
+    --push-to-hub your-username/wav2vec2-xlsr-300m-384
+```
+
+### CLI Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--model-id` | `facebook/wav2vec2-xls-r-300m` | Source HuggingFace model |
+| `--output-dir` | `./pruned_w2v2` | Output directory |
+| `--hidden-size` | `384` | Target hidden size |
+| `--intermediate-size` | `1536` | Target FFN intermediate size |
+| `--num-attention-heads` | `6` | Target attention heads |
+| `--device` | `cpu` | Device for any tensor ops |
+| `--hf-token` | — | HuggingFace token (for push) |
+| `--push-to-hub` | — | Repository ID to push to |
+| `--strip-pretrain-heads` | `True` | Remove quantizer/project heads |
+| `--no-strip-pretrain-heads` | — | Keep pretraining heads |
+
+### Advanced: Full Pipeline
+
+For more advanced pruning (with layer depth pruning, KD-guided importance scoring, and calibration data), see the full pruning pipeline:
+
+```bash
+uv run python w2v_pruning_pipeline.py --head_target 6 --ffn_target 1536 --hidden_target 384
+```
 
 ---
 

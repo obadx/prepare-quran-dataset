@@ -21,14 +21,15 @@ dependencies = [
   "datasets[audio]==4.8.5",
   "pyarrow>=20.0.0",
   "mutagen==1.47.0",
- "quran-transcript==0.1.2",
+  "quran-transcript==0.1.2",
   "beautifulsoup4==4.12.3",
   "filetype==1.2.0",
   "ruamel.yaml==0.18.6", # It has duplicate key validation in a dict structure
   "huggingface_hub",
   "pyyaml",
+  "numpy>=2.4.6",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.13,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -49,7 +50,7 @@ annotate = [
   "torch>=2.12.0",
   "torchaudio",
   "recitations-segmenter==1.0.0",
-  "transformers",
+  "transformers>=5.9.0",
   "submitit==1.5.3",
   "stamina",
   "protobuf==6.31.1",
@@ -66,10 +67,8 @@ annotate = [
 ]
 
 
-annotate-real-ui = [
-    "pandas>=2.3.2",
-    "streamlit>=1.49.1",
-]
+[tool.uv.extra-build-dependencies]
+mamba-ssm = ["torch"]
 
 [project.urls]
 Homepage = "https://github.com/obadx/prepare-quran-dataset"
