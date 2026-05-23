@@ -419,7 +419,7 @@ def prepare_dataset(
     ds = ds.cast_column("audio", Audio(decode=False))
 
     # removihg long samples
-    max_samples = int(train_config.max_audio_seconds * 16000)
+    max_samples = int(train_config.max_audio_seconds * sample_rate)
 
     def _audio_len(audio_dict):
         src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
@@ -459,6 +459,7 @@ def prepare_dataset(
             test_size=train_config.devset_ratio,
             generator=np.random.default_rng(train_config.seed),
         )
+
         return DatasetDict({"train": ds["train"], "validation": ds["test"]})
 
 
@@ -721,6 +722,7 @@ if __name__ == "__main__":
         save_total_limit=3,
         hub_strategy="all_checkpoints",  # pushes all checkpoints to the Hub with one checkpoint per subfolder in your model repository
         remove_unused_columns=False,
+        eval_accumulation_steps=128,  # offload eval logits to CPU each step to prevent GPU OOM from accumulated predictions
     )
     print(training_args)
 

@@ -58,10 +58,10 @@ annotate = [
   "wandb",
   "python-dotenv",
   "plotly",
-  "audiomentations>=0.42.0",
+  "audiomentations>=0.43.1",
   "Levenshtein>=0.27.1",
-  "accelerate",
-  "pyroomacoustics>=0.7.4",
+  "accelerate>=1.13",
+  "pyroomacoustics>=0.10.1",
   "fast_mp3_augment",
   "tensorboard",
 ]

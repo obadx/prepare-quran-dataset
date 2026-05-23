@@ -19,7 +19,7 @@ wheels = [
 
 [[package]]
 name = "accelerate"
-version = "1.10.1"
+version = "1.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -30,9 +30,9 @@ dependencies = [
     { name = "safetensors" },
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/72/ff3961c19ee395c3d30ac630ee77bfb0e1b46b87edc504d4f83bb4a89705/accelerate-1.10.1.tar.gz", hash = "sha256:3dea89e433420e4bfac0369cae7e36dcd6a56adfcfd38cdda145c6225eab5df8", size = 392446, upload-time = "2025-08-25T13:57:06.21Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/14/787e5498cd062640f0f3d92ef4ae4063174f76f9afd29d13fc52a319daae/accelerate-1.13.0.tar.gz", hash = "sha256:d631b4e0f5b3de4aff2d7e9e6857d164810dfc3237d54d017f075122d057b236", size = 402835, upload-time = "2026-03-04T19:34:12.359Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/a0/d9ef19f780f319c21ee90ecfef4431cbeeca95bec7f14071785c17b6029b/accelerate-1.10.1-py3-none-any.whl", hash = "sha256:3621cff60b9a27ce798857ece05e2b9f56fcc71631cfb31ccf71f0359c311f11", size = 374909, upload-time = "2025-08-25T13:57:04.55Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/46/02ac5e262d4af18054b3e922b2baedbb2a03289ee792162de60a865defc5/accelerate-1.13.0-py3-none-any.whl", hash = "sha256:cf1a3efb96c18f7b152eb0fa7490f3710b19c3f395699358f08decca2b8b62e0", size = 383744, upload-time = "2026-03-04T19:34:10.313Z" },
 ]
 
 [[package]]
@@ -1485,8 +1485,8 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "accelerate", marker = "extra == 'annotate'" },
-    { name = "audiomentations", marker = "extra == 'annotate'", specifier = ">=0.42.0" },
+    { name = "accelerate", marker = "extra == 'annotate'", specifier = ">=1.13" },
+    { name = "audiomentations", marker = "extra == 'annotate'", specifier = ">=0.43.1" },
     { name = "beautifulsoup4", specifier = "==4.12.3" },
     { name = "datasets", extras = ["audio"], specifier = "==4.8.5" },
     { name = "fast-mp3-augment", marker = "extra == 'annotate'" },
@@ -1503,7 +1503,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=20.0.0" },
     { name = "pydantic" },
     { name = "pypdl", specifier = "==1.4.4" },
-    { name = "pyroomacoustics", marker = "extra == 'annotate'", specifier = ">=0.7.4" },
+    { name = "pyroomacoustics", marker = "extra == 'annotate'", specifier = ">=0.10.1" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "python-dotenv", marker = "extra == 'annotate'" },
     { name = "pyyaml" },
@@ -1616,15 +1616,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pybind11"
-version = "3.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2f/7b/a6d8dcb83c457e24a9df1e4d8fd5fb8034d4bbc62f3c324681e8a9ba57c2/pybind11-3.0.1.tar.gz", hash = "sha256:9c0f40056a016da59bab516efb523089139fcc6f2ba7e4930854c61efb932051", size = 546914, upload-time = "2025-08-22T20:09:27.265Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/8a/37362fc2b949d5f733a8b0f2ff51ba423914cabefe69f1d1b6aab710f5fe/pybind11-3.0.1-py3-none-any.whl", hash = "sha256:aa8f0aa6e0a94d3b64adfc38f560f33f15e589be2175e103c0a33c6bce55ee89", size = 293611, upload-time = "2025-08-22T20:09:25.235Z" },
-]
-
-[[package]]
 name = "pycparser"
 version = "2.23"
 source = { registry = "https://pypi.org/simple" }
@@ -1707,15 +1698,20 @@ wheels = [
 
 [[package]]
 name = "pyroomacoustics"
-version = "0.8.4"
+version = "0.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cython" },
     { name = "numpy" },
-    { name = "pybind11" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/3a/7bc15b0d46e1e2de5f4a6a1a568f52316f003530061e0caff3e3365b32fc/pyroomacoustics-0.8.4.tar.gz", hash = "sha256:cb70e511c41952f0f578355ae261b72acc4b688d995d02780ac0847d0b400d99", size = 35092344, upload-time = "2025-05-18T15:20:26.888Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/f9/063c249181cdbbbd80eb621f871a4173e95df439e5d8fd22de4df44fed60/pyroomacoustics-0.10.1.tar.gz", hash = "sha256:26aa7d680e68d0b947220026b95b1c5a05eee08f38c53ff49a7804672c0a2886", size = 553656, upload-time = "2026-05-01T13:35:45.873Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/b1/b6c02e0f3374ddc6776e6a58fe19e2bdeb5cae0192893b9030810f3b47a7/pyroomacoustics-0.10.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:d58f9d819554d552cb1d228ef6cffaff5a308aabbf9db2a72faea3c96e7b9445", size = 1090496, upload-time = "2026-05-01T13:35:29.976Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/ac/fdbf223e09843c90a825665e1e156f3f095d2b742bd1f186028aeee68bab/pyroomacoustics-0.10.1-cp313-cp313-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:af4d4f672982d616a46df4de0f7ec734703fb904d9c984d9f07ddb1e8c222818", size = 1244884, upload-time = "2026-05-01T13:35:31.325Z" },
+    { url = "https://files.pythonhosted.org/packages/84/20/90361ee35389cff48165fb08072af7b75551eac3387f839804b3016d20e6/pyroomacoustics-0.10.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c73af58bca4109bcf4bb567f0a3db9d5d94684a16705be4b674223f4f048f2ad", size = 1282528, upload-time = "2026-05-01T13:35:32.662Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/df/fd267974029c8a1426b35ed00f30e68afbb7810acde50cd31d7c40ba7022/pyroomacoustics-0.10.1-cp313-cp313-win_amd64.whl", hash = "sha256:abcc05fe21315b6f0244ba77e96b4d0be63efdf99288614b50c33871a2d4ed2d", size = 706197, upload-time = "2026-05-01T13:35:33.955Z" },
+]
 
 [[package]]
 name = "pytest"
