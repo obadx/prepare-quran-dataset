@@ -64,11 +64,15 @@ annotate = [
   "pyroomacoustics>=0.10.1",
   "fast_mp3_augment",
   "tensorboard",
+  "qdat-bench",
 ]
 
 
 [tool.uv.extra-build-dependencies]
 mamba-ssm = ["torch"]
+
+[tool.uv.sources]
+qdat-bench = { git = "https://github.com/obadx/qdat_bench.git" }
 
 [project.urls]
 Homepage = "https://github.com/obadx/prepare-quran-dataset"

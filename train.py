@@ -53,6 +53,11 @@ from prepare_quran_dataset.modeling_w2v.modeling_multi_level_ctc_w2v import (
     Wav2Vec2ForMultilevelCTC,
 )
 
+from qdat_bench.audio_utils import decode_audio
+from qdat_bench.eval_results import eval_qdat_bench
+from huggingface_hub import HfApi
+from tqdm import tqdm
+
 
 # TODO:
 # * Hyberparamets
@@ -622,6 +627,121 @@ def prepare_special_moshaf_ways(
     return moshaf_id_to_seg_moshaf_attr
 
 
+def run_qdat_bench_test(model, processor, multi_level_tokenizer, output_dir, vocab, device, dtype, batch_size=64):
+    """
+    Run inference + evaluation on the qdat_bench dataset.
+
+    Loads ``obadx/qdat_bench``, runs the model with greedy CTC decoding,
+    saves predictions as ``qdat_bench_predictions.jsonl``, then evaluates
+    with ``eval_qdat_bench`` and saves metrics as ``qdat_bench_test_results.json``.
+
+    Args:
+        model: Trained Wav2Vec2BertForMultilevelCTC model (eval mode).
+        processor: AutoFeatureExtractor for audio processing.
+        multi_level_tokenizer: MultiLevelTokenizer instance for eval.
+        output_dir: Path to save prediction/results JSON files.
+        vocab: Dict mapping level name -> {label: id} (from ``vocab.json``).
+        device: torch device (cuda/cpu).
+        dtype: torch dtype (bfloat16/float32).
+        batch_size: Inference batch size.
+    """
+    from torch.utils.data import DataLoader
+    from dataclasses import dataclass
+
+    @dataclass
+    class _Collator:
+        processor: AutoFeatureExtractor
+
+        def __call__(self, features):
+            waves = [decode_audio(f["audio"]).wav for f in features]
+            ids = [f["id"] for f in features]
+            batch = self.processor(
+                waves,
+                sampling_rate=16000,
+                padding="longest",
+                return_tensors="pt",
+            )
+            batch["id"] = ids
+            return batch
+
+    ds = load_dataset("obadx/qdat_bench", split="train")
+    ds = ds.cast_column("audio", Audio(decode=False))
+
+    collator = _Collator(processor=processor)
+    dataloader = DataLoader(
+        ds,
+        batch_size=batch_size,
+        collate_fn=collator,
+    )
+
+    model.eval()
+    results = []
+    with torch.no_grad():
+        for batch in tqdm(dataloader):
+            ids = batch.pop("id")
+            batch = {k: v.to(device, dtype=dtype) for k, v in batch.items()}
+
+            outputs = model(**batch)
+            level_to_logits = outputs[0]
+
+            level_to_labels = {}
+            for level in level_to_logits:
+                labels = level_to_logits[level].argmax(dim=-1).cpu().numpy()
+                level_to_labels[level] = ctc_decode(labels)
+
+            level_to_batch_to_script = {}
+            for level in vocab:
+                ids_to_ph = {idx: label for label, idx in vocab[level].items()}
+                batch_list = []
+                for seq in level_to_labels[level]:
+                    seq_list = [ids_to_ph[int(label)] for label in seq]
+                    batch_list.append(seq_list)
+                level_to_batch_to_script[level] = batch_list
+
+            for idx in range(len(ids)):
+                results.append(
+                    {
+                        "id": ids[idx],
+                        "levels_labels": {
+                            level: [int(x) for x in level_to_labels[level][idx]]
+                            for level in level_to_labels
+                        },
+                        "level_to_scripts": {
+                            level: (
+                                "".join(level_to_batch_to_script[level][idx])
+                                if level == "phonemes"
+                                else level_to_batch_to_script[level][idx]
+                            )
+                            for level in level_to_batch_to_script
+                        },
+                    }
+                )
+
+    pred_path = Path(output_dir) / "qdat_bench_predictions.jsonl"
+    with open(pred_path, "w") as f:
+        for r in results:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"Predictions saved to {pred_path}")
+
+    pred_ds = Dataset.from_json(str(pred_path))
+    metrics = eval_qdat_bench(
+        pred_trans_ds=pred_ds,
+        multi_level_tokenizer=multi_level_tokenizer,
+        bootstrap=False,
+    )
+
+    results_path = Path(output_dir) / "qdat_bench_test_results.json"
+    with open(results_path, "w") as f:
+        json.dump(metrics, f, indent=4, ensure_ascii=False)
+    print(f"QDAT benchmark results saved to {results_path}")
+
+    print("Speech metrics:", metrics.get("speech_metrics"))
+    print("QDAT metrics:", metrics.get("qdat_metrics"))
+    print("QDAT avg metrics:", metrics.get("qdat_avg_metrics"))
+
+    return metrics
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -634,6 +754,16 @@ if __name__ == "__main__":
         "--push-to-hub",
         action="store_true",
         help="Push model to HuggingFace Hub after training",
+    )
+    parser.add_argument(
+        "--rerun-testset",
+        action="store_true",
+        help="Force re-run test set evaluation even if test_results.json exists",
+    )
+    parser.add_argument(
+        "--rerun-qdat-bench",
+        action="store_true",
+        help="Force re-run qdat_bench inference + evaluation even if results exist",
     )
     args = parser.parse_args()
 
@@ -754,14 +884,50 @@ if __name__ == "__main__":
         trainer.train()
 
     # Final evaluation on test set
+    test_results_path = Path(train_config.output_dir) / "test_results.json"
     if train_config.test_moshaf_ids is not None:
-        testset = prepare_dataset(
-            train_config, processor, multi_level_tokenizer, is_testset=True
+        if test_results_path.exists() and not args.rerun_testset:
+            print(f"Found existing {test_results_path}, skipping test evaluation. Use --rerun-testset to force.")
+        else:
+            testset = prepare_dataset(
+                train_config, processor, multi_level_tokenizer, is_testset=True
+            )
+            test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
+            with open(test_results_path, "w") as f:
+                json.dump(test_results, f, indent=4)
+            print("Test Results:", test_results)
+
+    # QDAT benchmark evaluation
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dtype = torch.bfloat16
+    qdat_pred_path = Path(train_config.output_dir) / "qdat_bench_predictions.jsonl"
+    qdat_results_path = Path(train_config.output_dir) / "qdat_bench_test_results.json"
+
+    if qdat_results_path.exists() and not args.rerun_qdat_bench:
+        print(f"Found existing {qdat_results_path}, skipping qdat_bench. Use --rerun-qdat-bench to force.")
+    elif qdat_pred_path.exists() and not args.rerun_qdat_bench:
+        print("Found predictions file, running qdat_bench evaluation only...")
+        pred_ds = Dataset.from_json(str(qdat_pred_path))
+        metrics = eval_qdat_bench(
+            pred_trans_ds=pred_ds,
+            multi_level_tokenizer=multi_level_tokenizer,
+            bootstrap=False,
         )
-        test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
-        with open(Path(train_config.output_dir) / "test_results.json", "w") as f:
-            json.dump(test_results, f, indent=4)
-        print("Test Results:", test_results)
+        with open(qdat_results_path, "w") as f:
+            json.dump(metrics, f, indent=4, ensure_ascii=False)
+        print(f"QDAT benchmark results saved to {qdat_results_path}")
+    else:
+        print("Running full qdat_bench test...")
+        run_qdat_bench_test(
+            model=trainer.model,
+            processor=processor,
+            multi_level_tokenizer=multi_level_tokenizer,
+            output_dir=train_config.output_dir,
+            vocab=vocab,
+            device=device,
+            dtype=dtype,
+            batch_size=train_config.pre_device_eval_batch_size,
+        )
 
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()
@@ -769,3 +935,15 @@ if __name__ == "__main__":
     # Push model and tokenizer to Hub
     if args.push_to_hub:
         trainer.push_to_hub()
+
+        api = HfApi()
+        for fname in ["test_results.json", "qdat_bench_test_results.json"]:
+            fpath = Path(train_config.output_dir) / fname
+            if fpath.exists():
+                api.upload_file(
+                    path_or_fileobj=str(fpath),
+                    path_in_repo=fname,
+                    repo_id=train_config.hub_model_id,
+                    repo_type="model",
+                )
+                print(f"Uploaded {fname} to {train_config.hub_model_id}")

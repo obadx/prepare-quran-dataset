@@ -3,7 +3,7 @@ from typing import get_origin, Literal, Any
 from quran_transcript import SifaOutput, quran_phonetizer
 from transformers import Wav2Vec2CTCTokenizer
 
-from .vocab import PAD_TOKEN, PAD_TOKEN_IDX, SIFAT_ATTR_TO_ARABIC
+from .vocab import PAD_TOKEN, PAD_TOKEN_IDX, SIFAT_ATTR_TO_ARABIC, SIFAT_ATTR_TO_ENGLISH
 
 
 def add_zero_between(L, x=PAD_TOKEN_IDX):
@@ -28,8 +28,23 @@ class MultiLevelTokenizer:
                 model_name_or_path, pad_token=PAD_TOKEN, target_lang=level
             )
 
+        self.level_to_id_vocab = self.get_level_to_id_to_voab()
+        self.sifat_level_to_id_to_en_vocab = self.get_sifat_levels_to_en_name()
+
     def get_tokenizer(self):
         return self.level_to_tokenizer["phonemes"]
+
+    @property
+    def vocab(self):
+        return self.get_tokenizer().vocab
+
+    @property
+    def id_to_vocab(self):
+        return self.level_to_id_vocab
+
+    @property
+    def sifat_to_en_vocab(self):
+        return self.sifat_level_to_id_to_en_vocab
 
     def tokenize(
         self,
@@ -85,3 +100,23 @@ class MultiLevelTokenizer:
                 input_ids,
             )
         return level_to_decoded_outs
+
+    def get_level_to_id_to_voab(self):
+        vocab = self.get_tokenizer().vocab
+        level_to_ids_to_vocab = {}
+        for level in vocab:
+            level_to_ids_to_vocab[level] = {v: k for k, v in vocab[level].items()}
+        return level_to_ids_to_vocab
+
+    def get_sifat_levels_to_en_name(self):
+        level_to_id_to_vocab = self.get_level_to_id_to_voab()
+        level_to_id_to_en_vocab = {}
+        for level in level_to_id_to_vocab:
+            if level == "phonemes":
+                continue
+            level_to_id_to_en_vocab[level] = {
+                k: SIFAT_ATTR_TO_ENGLISH[v] if k != PAD_TOKEN_IDX else PAD_TOKEN
+                for k, v in level_to_id_to_vocab[level].items()
+            }
+        return level_to_id_to_en_vocab
+
