@@ -31,7 +31,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from torch.utils.data import default_collate
 import torch
 from torch.nn import CrossEntropyLoss
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 import argparse
@@ -149,18 +149,19 @@ class TrainConfig(BaseModel):
         with open(yaml_path, "w", encoding="utf-8") as file:
             yaml.dump(config_dict, file, default_flow_style=False, allow_unicode=True)
 
-    @validator("architecture")
+    @field_validator("architecture")
+    @classmethod
     def validate_architecture(cls, v):
         allowed = ["w2v2bert", "w2v2"]
         if v not in allowed:
             raise ValueError(f"architecture must be one of {allowed}, got `{v}`")
         return v
 
-    @validator("num_workers", pre=True, always=True)
-    def set_num_workers(cls, v):
-        if v is None:
-            return os.cpu_count() or 1
-        return v
+    @model_validator(mode="after")
+    def set_num_workers(self):
+        if self.num_workers is None:
+            self.num_workers = min(os.cpu_count() or 1, self.per_device_train_batch_size)
+        return self
 
 
 def load_secrets():
