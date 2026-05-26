@@ -91,7 +91,7 @@ class WhisperEncoderForMultilevelCTC(WhisperPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
 
-        self.whisper_encoder = WhisperEncoderVariableLength(config)
+        self.encoder = WhisperEncoderVariableLength(config)
         self.dropout = nn.Dropout(config.dropout)
 
         if config.level_to_vocab_size == {}:
@@ -143,7 +143,7 @@ class WhisperEncoderForMultilevelCTC(WhisperPreTrainedModel):
             return_dict if return_dict is not None else self.config.use_return_dict
         )
 
-        outputs = self.whisper_encoder(
+        outputs = self.encoder(
             input_features,
             attention_mask=attention_mask,
             output_attentions=output_attentions,

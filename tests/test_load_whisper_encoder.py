@@ -3,6 +3,10 @@ from transformers import WhisperModel, AutoFeatureExtractor
 from transformers.models.whisper.configuration_whisper import WhisperConfig
 from prepare_quran_dataset.modeling_whisper.modeling_multi_level_ctc_whisper_encoder import (
     WhisperEncoderVariableLength,
+    WhisperEncoderForMultilevelCTC,
+)
+from prepare_quran_dataset.modeling_whisper.configuration_for_multi_level_ctc import (
+    WhisperEncoderForMultilevelCTCConfig,
 )
 
 # 1. Load the full whisper-small and extract only the encoder state dict
@@ -21,7 +25,24 @@ encoder = WhisperEncoderVariableLength(config)
 # 3. Load the pretrained weights – strict loading will succeed now
 encoder.load_state_dict(encoder_state_dict)
 
-# 4. Use feature extractor as before
+# 4. Wrap in the outer model and save a proper checkpoint
+outer_config = WhisperEncoderForMultilevelCTCConfig(
+    level_to_vocab_size={"phonemes": 43},
+)
+outer_model = WhisperEncoderForMultilevelCTC(outer_config)
+outer_model.encoder = encoder  # substitute with pretrained encoder
+
+# outer_model.save_pretrained("./whisper-small-encoder-only")
+
+# 5. Verify the saved checkpoint loads correctly
+print("Verifying saved checkpoint...")
+loaded = WhisperEncoderForMultilevelCTC.from_pretrained(
+    "./whisper-small-encoder-only",
+    config=outer_config,
+)
+print("Checkpoint verified successfully!")
+
+# 6. Use feature extractor as before
 feature_extractor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
 audio = torch.zeros(1, int(16000 * 0.7))
 inputs = feature_extractor(
@@ -29,10 +50,7 @@ inputs = feature_extractor(
 )
 mel = inputs.input_features
 
-# 5. Forward – now uses actual pretrained features
+# 7. Forward through the loaded model
 with torch.no_grad():
-    outputs = encoder(mel)
-print(outputs[0].shape)  # (1, 35, 768) – but this time with real weights
-
-# encoder.save_pretrained("./whisper-small-encoder-only")
-
+    outputs = loaded.encoder(mel)
+print(outputs[0].shape)  # (1, 35, 768) – with real weights
