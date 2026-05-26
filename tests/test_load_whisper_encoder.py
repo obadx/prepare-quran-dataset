@@ -2,7 +2,7 @@ import torch
 from transformers import WhisperModel, AutoFeatureExtractor
 from transformers.models.whisper.configuration_whisper import WhisperConfig
 from prepare_quran_dataset.modeling_whisper.modeling_multi_level_ctc_whisper_encoder import (
-    WhisperEncoderForMultilevelCTC,
+    WhisperEncoderVariableLength,
 )
 
 # 1. Load the full whisper-small and extract only the encoder state dict
@@ -16,7 +16,7 @@ del full_model  # free memory
 
 # 2. Create your custom encoder with the original config
 config = WhisperConfig.from_pretrained("openai/whisper-small")
-encoder = WhisperEncoderForMultilevelCTC(config)
+encoder = WhisperEncoderVariableLength(config)
 
 # 3. Load the pretrained weights – strict loading will succeed now
 encoder.load_state_dict(encoder_state_dict)
@@ -35,3 +35,4 @@ with torch.no_grad():
 print(outputs[0].shape)  # (1, 35, 768) – but this time with real weights
 
 # encoder.save_pretrained("./whisper-small-encoder-only")
+
