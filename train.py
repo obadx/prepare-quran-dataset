@@ -5,7 +5,7 @@ import json
 import os
 import yaml
 import random
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Literal
 from dataclasses import dataclass
 import string
 
@@ -51,6 +51,13 @@ from prepare_quran_dataset.modeling_w2v.configuration_multi_level_ctc_w2v import
 )
 from prepare_quran_dataset.modeling_w2v.modeling_multi_level_ctc_w2v import (
     Wav2Vec2ForMultilevelCTC,
+)
+
+from prepare_quran_dataset.modeling_whisper.configuration_for_multi_level_ctc import (
+    WhisperEncoderForMultilevelCTCConfig,
+)
+from prepare_quran_dataset.modeling_whisper.modeling_multi_level_ctc_whisper_encoder import (
+    WhisperEncoderForMultilevelCTC,
 )
 
 from qdat_bench.audio_utils import decode_audio
@@ -100,7 +107,7 @@ class TrainConfig(BaseModel):
     wandb_project_name: str = "Muaalem-model-dev"
     warmup_ratio: float = 0.2
     gradient_checkpoiniting: bool = False
-    architecture: str = "w2v2bert"
+    architecture: Literal["w2v2bert", "w2v2", "whisper-encoder"] = "w2v2bert"
     base_model_name_or_path: str = "facebook/w2v-bert-2.0"
     processor_name_or_path: str = "facebook/w2v-bert-2.0"
     ignore_mismatched_sizes: bool = True
@@ -154,18 +161,12 @@ class TrainConfig(BaseModel):
         with open(yaml_path, "w", encoding="utf-8") as file:
             yaml.dump(config_dict, file, default_flow_style=False, allow_unicode=True)
 
-    @field_validator("architecture")
-    @classmethod
-    def validate_architecture(cls, v):
-        allowed = ["w2v2bert", "w2v2"]
-        if v not in allowed:
-            raise ValueError(f"architecture must be one of {allowed}, got `{v}`")
-        return v
-
     @model_validator(mode="after")
     def set_num_workers(self):
         if self.num_workers is None:
-            self.num_workers = min(os.cpu_count() or 1, self.per_device_train_batch_size)
+            self.num_workers = min(
+                os.cpu_count() or 1, self.per_device_train_batch_size
+            )
         return self
 
 
@@ -478,6 +479,13 @@ def register_model():
     AutoConfig.register("multi_level_ctc_w2v", Wav2Vec2ForMultilevelCTCConfig)
     AutoModel.register(Wav2Vec2ForMultilevelCTCConfig, Wav2Vec2ForMultilevelCTC)
     AutoModelForCTC.register(Wav2Vec2ForMultilevelCTCConfig, Wav2Vec2ForMultilevelCTC)
+    AutoConfig.register("multi_level_ctc_whisper", WhisperEncoderForMultilevelCTCConfig)
+    AutoModel.register(
+        WhisperEncoderForMultilevelCTCConfig, WhisperEncoderForMultilevelCTC
+    )
+    AutoModelForCTC.register(
+        WhisperEncoderForMultilevelCTCConfig, WhisperEncoderForMultilevelCTC
+    )
 
 
 def build_model_components(
@@ -519,6 +527,27 @@ def build_model_components(
     elif train_config.architecture == "w2v2":
         config = Wav2Vec2ForMultilevelCTCConfig(**common_config_kwargs)
         model = Wav2Vec2ForMultilevelCTC.from_pretrained(
+            train_config.base_model_name_or_path,
+            config=config,
+            ignore_mismatched_sizes=ignore_mismatched_sizes,
+        )
+    elif train_config.architecture == "whisper-encoder":
+        whisper_kwargs = dict(
+            level_to_vocab_size=level_to_vocab_size,
+            pad_token_id=pad_token_id,
+            level_to_loss_weight=train_config.loss_weights,
+            attention_dropout=train_config.dropout,
+            dropout=train_config.dropout,
+            encoder_layers=train_config.num_hidden_layers,
+            d_model=train_config.hidden_size,
+            encoder_ffn_dim=train_config.intermediate_size,
+            encoder_attention_heads=train_config.num_attention_heads,
+            mask_time_prob=0.0,
+            encoder_layerdrop=0.0,
+            ctc_loss_reduction="mean",
+        )
+        config = WhisperEncoderForMultilevelCTCConfig(**whisper_kwargs)
+        model = WhisperEncoderForMultilevelCTC.from_pretrained(
             train_config.base_model_name_or_path,
             config=config,
             ignore_mismatched_sizes=ignore_mismatched_sizes,
@@ -627,7 +656,16 @@ def prepare_special_moshaf_ways(
     return moshaf_id_to_seg_moshaf_attr
 
 
-def run_qdat_bench_test(model, processor, multi_level_tokenizer, output_dir, vocab, device, dtype, batch_size=64):
+def run_qdat_bench_test(
+    model,
+    processor,
+    multi_level_tokenizer,
+    output_dir,
+    vocab,
+    device,
+    dtype,
+    batch_size=64,
+):
     """
     Run inference + evaluation on the qdat_bench dataset.
 
@@ -887,7 +925,9 @@ if __name__ == "__main__":
     test_results_path = Path(train_config.output_dir) / "test_results.json"
     if train_config.test_moshaf_ids is not None:
         if test_results_path.exists() and not args.rerun_testset:
-            print(f"Found existing {test_results_path}, skipping test evaluation. Use --rerun-testset to force.")
+            print(
+                f"Found existing {test_results_path}, skipping test evaluation. Use --rerun-testset to force."
+            )
         else:
             testset = prepare_dataset(
                 train_config, processor, multi_level_tokenizer, is_testset=True
@@ -904,7 +944,9 @@ if __name__ == "__main__":
     qdat_results_path = Path(train_config.output_dir) / "qdat_bench_test_results.json"
 
     if qdat_results_path.exists() and not args.rerun_qdat_bench:
-        print(f"Found existing {qdat_results_path}, skipping qdat_bench. Use --rerun-qdat-bench to force.")
+        print(
+            f"Found existing {qdat_results_path}, skipping qdat_bench. Use --rerun-qdat-bench to force."
+        )
     elif qdat_pred_path.exists() and not args.rerun_qdat_bench:
         print("Found predictions file, running qdat_bench evaluation only...")
         pred_ds = Dataset.from_json(str(qdat_pred_path))

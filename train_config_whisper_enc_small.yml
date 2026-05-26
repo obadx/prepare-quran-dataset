@@ -1,0 +1,100 @@
+# Training configuration example
+train_moshaf_ids:
+  - "0.0"
+  - "0.1"
+  - "0.2"
+  - "0.3"
+  - "1.0"
+  - "2.0"
+  - "2.1"
+  - "3.0"
+  - "4.0"
+  - "5.0"
+  - "6.0"
+  - "7.0"
+  - "8.0"
+  - "9.0"
+  - "11.0"
+  - "12.0"
+  - "13.0"
+  - "22.0"
+  - "24.0"
+  - "26.0"
+  - "27.0"
+  - "28.0"
+  # - "29.0"
+  # - "30.0"
+
+# Test moshaf IDs (optional)
+test_moshaf_ids:
+  - "19.0"
+  - "29.0"
+  - "30.0"
+  # - "26.1"
+
+
+# Loss
+loss_weights:
+  phonemes: 0.5789
+  shidda_or_rakhawa: 0.05263
+  tafkheem_or_taqeeq: 0.05263
+
+
+# Augmentaion
+augment_prob: 0.4
+max_audio_seconds: 20.0
+
+# Model dropout
+dropout: 0.0
+
+# Model architecture (defaults match w2v-bert-2.0)
+num_hidden_layers: 12
+hidden_size: 768
+output_hidden_size: 768
+intermediate_size: 3072
+num_attention_heads: 12
+
+# Training parameters
+num_epochs: 3
+learning_rate: 5e-5
+seed: 42
+
+# Batch sizes
+per_device_train_batch_size: 8
+pre_device_eval_batch_size: 8
+
+# Dataset parameters
+devset_ratio: 0.1
+save_every: 0.2
+
+# Hardware settings
+# num_workers: 4
+
+# Optimizer settings
+weight_decay: 0.00
+warmup_ratio: 0.2
+
+# Model saving and evaluation
+metric_for_bet_model: "average_per"
+greater_is_better: false
+
+hub_model_id: "obadx/muaalem-model-whisper-encoder-small"
+wandb_project_name: "muaalem-model-whisper-encoder-small"
+
+# Architecture selection: w2v2bert (Wav2Vec2Bert) or w2v2 (Wav2Vec2)
+architecture: w2v2
+
+# Base model weights ID or path (backbone)
+base_model_name_or_path: "./whisper-small-encoder-only"
+
+# Processor/feature extractor ID or path
+processor_name_or_path: "openai/whisper-small"
+
+# Ignore mismatched sizes when loading pretrained weights
+ignore_mismatched_sizes: false
+
+# Gradint checkpointing
+gradient_checkpoiniting: true
+
+# Output directory for checkpoints
+output_dir: "./results-whisper-encoder-small"
