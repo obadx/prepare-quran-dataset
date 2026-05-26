@@ -2,11 +2,17 @@ import torch
 from transformers import AutoFeatureExtractor
 from transformers.models.whisper.modeling_whisper import WhisperEncoder
 from transformers.models.whisper.configuration_whisper import WhisperConfig
+from prepare_quran_dataset.modeling_whisper.modeling_multi_level_ctc_whisper_encoder import (
+    WhisperEncoderForMultilevelCTC,
+)
 
 # Load encoder and feature extractor
 model_id = "openai/whisper-small"
-config = WhisperConfig.from_pretrained(model_id, max_source_positions=35)
-encoder = WhisperEncoder.from_pretrained(model_id, config=config)
+config = WhisperConfig.from_pretrained(
+    model_id,
+    # max_source_positions=35,
+)
+encoder = WhisperEncoderForMultilevelCTC.from_pretrained(model_id, config=config)
 feature_extractor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
 
 # Create 0.7 seconds of silence at 16 kHz
