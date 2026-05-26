@@ -1,35 +1,35 @@
 import torch
-from transformers import AutoFeatureExtractor
-from transformers.models.whisper.modeling_whisper import WhisperEncoder
+from transformers import WhisperModel, AutoFeatureExtractor
 from transformers.models.whisper.configuration_whisper import WhisperConfig
 from prepare_quran_dataset.modeling_whisper.modeling_multi_level_ctc_whisper_encoder import (
     WhisperEncoderForMultilevelCTC,
 )
 
-# Load encoder and feature extractor
-model_id = "openai/whisper-small"
-config = WhisperConfig.from_pretrained(
-    model_id,
-    # max_source_positions=35,
-)
-encoder = WhisperEncoderForMultilevelCTC.from_pretrained(model_id, config=config)
+# 1. Load the full whisper-small and extract only the encoder state dict
+full_model = WhisperModel.from_pretrained("openai/whisper-small")
+encoder_state_dict = {
+    k.removeprefix("encoder."): v
+    for k, v in full_model.state_dict().items()
+    if k.startswith("encoder.")
+}
+del full_model  # free memory
+
+# 2. Create your custom encoder with the original config
+config = WhisperConfig.from_pretrained("openai/whisper-small")
+encoder = WhisperEncoderForMultilevelCTC(config)
+
+# 3. Load the pretrained weights – strict loading will succeed now
+encoder.load_state_dict(encoder_state_dict)
+
+# 4. Use feature extractor as before
 feature_extractor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
-
-# Create 0.7 seconds of silence at 16 kHz
-audio = torch.zeros(1, int(16000 * 0.7))  # shape: (1, 11200)
-
-# Convert to log‑mel spectrogram (the encoder's expected input)
+audio = torch.zeros(1, int(16000 * 0.7))
 inputs = feature_extractor(
     audio.squeeze(0), sampling_rate=16000, return_tensors="pt", padding=False
 )
-print("Inut Features")
-print(inputs["input_features"].shape)
-input_features = inputs.input_features  # (1, 80, 70)
+mel = inputs.input_features
 
-# Forward through encoder
+# 5. Forward – now uses actual pretrained features
 with torch.no_grad():
-    outputs = encoder(input_features)
-
-# Expected output: (batch, seq_len, d_model) -> (1, 18, 768)
-print("Outputs")
-print(outputs[0].shape)
+    outputs = encoder(mel)
+print(outputs[0].shape)  # (1, 35, 768) – but this time with real weights
