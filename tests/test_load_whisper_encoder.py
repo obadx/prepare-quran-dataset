@@ -32,6 +32,7 @@ outer_config = WhisperEncoderForMultilevelCTCConfig(
 outer_model = WhisperEncoderForMultilevelCTC(outer_config)
 outer_model.encoder = encoder  # substitute with pretrained encoder
 
+# Saving the model
 # outer_model.save_pretrained("./whisper-small-encoder-only")
 
 # 5. Verify the saved checkpoint loads correctly
@@ -44,9 +45,10 @@ print("Checkpoint verified successfully!")
 
 # 6. Use feature extractor as before
 feature_extractor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
-audio = torch.zeros(1, int(16000 * 0.7))
+audio1 = [0] * int(0.7 * 16000)
+audio2 = [0] * int(1 * 16000)
 inputs = feature_extractor(
-    audio.squeeze(0), sampling_rate=16000, return_tensors="pt", padding=False
+    [audio1, audio2], sampling_rate=16000, return_tensors="pt", padding="longest"
 )
 mel = inputs.input_features
 
