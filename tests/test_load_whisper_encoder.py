@@ -33,3 +33,5 @@ mel = inputs.input_features
 with torch.no_grad():
     outputs = encoder(mel)
 print(outputs[0].shape)  # (1, 35, 768) – but this time with real weights
+
+# encoder.save_pretrained("./whisper-small-encoder-only")
