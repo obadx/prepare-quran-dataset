@@ -50,6 +50,7 @@ audio2 = [0] * int(1 * 16000)
 inputs = feature_extractor(
     [audio1, audio2], sampling_rate=16000, return_tensors="pt", padding="longest"
 )
+print(inputs.keys())
 mel = inputs.input_features
 
 # 7. Forward through the loaded model

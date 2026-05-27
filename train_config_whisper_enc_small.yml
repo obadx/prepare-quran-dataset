@@ -98,3 +98,5 @@ gradient_checkpoiniting: true
 
 # Output directory for checkpoints
 output_dir: "./results-whisper-encoder-small"
+
+num_workers: 8 # becase 5060ti is slow
