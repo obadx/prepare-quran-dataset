@@ -563,6 +563,7 @@ class DataCollatorCTCWithPadding:
     moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
     augment: Augment
     special_moshaf_id_to_seg_to_moshaf_attr: dict[str, dict[str, MoshafAttributes]]
+    architecture: str = "w2v2bert"
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -578,12 +579,14 @@ class DataCollatorCTCWithPadding:
         for idx in range(len(waves)):
             waves[idx] = self.augment.apply(waves[idx])
 
-        batch = self.processor(
-            waves,
+        processor_kwargs = dict(
             sampling_rate=16000,
             padding="longest",
             return_tensors="pt",
         )
+        if self.architecture == "whisper-encoder":
+            processor_kwargs["return_attention_mask"] = True
+        batch = self.processor(waves, **processor_kwargs)
 
         # Preparing Moshaf Attributes
         moshaf_attrs = []
@@ -902,6 +905,7 @@ if __name__ == "__main__":
         moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
         augment=Augment(augment_prob=train_config.augment_prob, seed=train_config.seed),
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
+        architecture=train_config.architecture,
     )
 
     # Initialize Trainer

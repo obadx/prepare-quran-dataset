@@ -161,21 +161,19 @@ class WhisperEncoderForMultilevelCTC(WhisperPreTrainedModel):
         loss = None
         if labels is not None:
             # retrieve loss input_lengths from attention_mask
-            batch_size, seq_len = hidden_states.shape[
-                :2
-            ]  # whisper is doing downlsampling so we can not take the attention mask from the input
-            attention_mask = (
-                attention_mask
-                if attention_mask is not None
-                else torch.ones(
-                    (batch_size, seq_len),
+            if attention_mask is not None:
+                input_lengths = attention_mask.sum([-1])
+            else:
+                input_lengths = torch.full(
+                    (input_features.shape[0],),
+                    input_features.shape[-1],
                     device=input_features.device,
                     dtype=torch.long,
                 )
+            input_lengths = self._get_feat_extract_output_lengths(input_lengths)
+            input_lengths = self._get_feat_extract_output_lengths(input_lengths).to(
+                torch.long
             )
-            input_lengths = self._get_feat_extract_output_lengths(
-                attention_mask.sum([-1])
-            ).to(torch.long)
 
             loss = 0.0
             for level in labels:

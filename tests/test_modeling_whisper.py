@@ -37,7 +37,12 @@ if __name__ == "__main__":
     batch_size = 2
 
     # Test Infernce without labels
-    inputs = processor([[0] * 16000] * batch_size, return_tensors="pt", padding=False)
+    inputs = processor(
+        [[0] * 16000] * batch_size,
+        return_tensors="pt",
+        padding=False,
+        return_attention_mask=True,
+    )
     model_output = model(**inputs)
     print(model_output)
 

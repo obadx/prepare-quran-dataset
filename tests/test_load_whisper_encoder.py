@@ -44,13 +44,21 @@ loaded = WhisperEncoderForMultilevelCTC.from_pretrained(
 print("Checkpoint verified successfully!")
 
 # 6. Use feature extractor as before
-feature_extractor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
+feature_extractor = AutoFeatureExtractor.from_pretrained(
+    "openai/whisper-small",
+)
 audio1 = [0] * int(0.7 * 16000)
-audio2 = [0] * int(1 * 16000)
+audio2 = [0] * int(0.75 * 16000)
 inputs = feature_extractor(
-    [audio1, audio2], sampling_rate=16000, return_tensors="pt", padding="longest"
+    [audio1, audio2],
+    sampling_rate=16000,
+    return_tensors="pt",
+    padding="longest",
+    return_attention_mask=True,
 )
 print(inputs.keys())
+print(f"Inputs Shape: {inputs['input_features'].shape}")
+print(f"Masks Shape: {inputs['attention_mask'].shape}")
 mel = inputs.input_features
 
 # 7. Forward through the loaded model
