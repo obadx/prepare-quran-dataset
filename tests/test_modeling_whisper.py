@@ -89,3 +89,5 @@ if __name__ == "__main__":
         place_zeros_in_between=False,
     )
     print(json.dumps(decoded_outs, indent=1, ensure_ascii=False))
+
+    print(model(**inputs, labels=token_out["input_ids"]).loss)

@@ -171,9 +171,6 @@ class WhisperEncoderForMultilevelCTC(WhisperPreTrainedModel):
                     dtype=torch.long,
                 )
             input_lengths = self._get_feat_extract_output_lengths(input_lengths)
-            input_lengths = self._get_feat_extract_output_lengths(input_lengths).to(
-                torch.long
-            )
 
             loss = 0.0
             for level in labels:
