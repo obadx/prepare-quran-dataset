@@ -55,7 +55,7 @@ intermediate_size: 3072
 num_attention_heads: 12
 
 # Training parameters
-num_epochs: 3
+num_epochs: 6
 learning_rate: 5e-5
 seed: 42
 
@@ -65,7 +65,7 @@ pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.2
+save_every: 0.1
 
 # Hardware settings
 # num_workers: 4
@@ -99,4 +99,4 @@ gradient_checkpoiniting: true
 # Output directory for checkpoints
 output_dir: "./results-whisper-encoder-small"
 
-num_workers: 8 # becase 5060ti is slow
+num_workers: 4 # becase 5060ti is slow

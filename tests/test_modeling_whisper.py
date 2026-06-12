@@ -34,13 +34,13 @@ if __name__ == "__main__":
     print(model)
     processor = AutoFeatureExtractor.from_pretrained("openai/whisper-small")
     print(processor)
-    batch_size = 2
+    batch_size = 3
 
     # Test Infernce without labels
     inputs = processor(
         [[0] * 16000] * batch_size,
         return_tensors="pt",
-        padding=False,
+        padding="longest",
         return_attention_mask=True,
     )
     model_output = model(**inputs)
@@ -90,4 +90,11 @@ if __name__ == "__main__":
     )
     print(json.dumps(decoded_outs, indent=1, ensure_ascii=False))
 
+    inputs = processor(
+        [[0] * 16000, [0] * 2 * 16000, [0] * 3 * 16000],
+        return_tensors="pt",
+        padding="longest",
+        return_attention_mask=True,
+    )
+    print(f"Inputs Shape: {inputs['input_features'].shape}")
     print(model(**inputs, labels=token_out["input_ids"]).loss)
