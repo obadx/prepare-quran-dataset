@@ -36,19 +36,108 @@ def convert_input_to_chunked_for_offline(
     chunk: int = 25,
     lookback: int = 5,
 ) -> torch.Tensor:
-    """convert input from (batch, seq_len, features) to (batch, streaming_len, features)
-    where streaming_len = lookback + chunk + lookahead
+    """Convert input from `(batch, seq_len, features)` to chunked format
+    `(batch * num_chunks, lookback + chunk + lookahead, features)`.
+
+    Each output chunk is assembled as `[lookback | chunk | lookahead]` with
+    padding/overlap between consecutive chunks.
+
+    The function accepts both 3D feature tensors `(batch, seq_len, features)` and
+    2D tensors `(batch, seq_len)` — for example, an attention mask — which is
+    unsqueezed internally, chunked identically, and squeezed back to 2D on return.
+
+    Args:
+        input (torch.Tensor):
+            Input tensor of shape `(batch, seq_len)` or `(batch, seq_len, features)`.
+        lookahead (int, optional):
+            Number of frames after the chunk from the next segment. Defaults to `5`.
+        chunk (int, optional):
+            Number of frames per chunk. Defaults to `25`.
+        lookback (int, optional):
+            Number of frames before the chunk from the previous segment. Defaults to `5`.
+
+    Returns:
+        torch.Tensor: Chunked tensor of shape
+        `(batch * num_chunks, lookback + chunk + lookahead, features)`.
+        If the input was 2D, the feature dimension is squeezed away.
+
+    Raises:
+        ValueError:
+            If `input` is not 2D or 3D.
+        ValueError:
+            If `seq_len < chunk`.
+
+    Example:
+
+        >>> import torch
+        >>> input = torch.tensor([[[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12]]])
+        >>> out = convert_input_to_chunked_for_offline(input, lookback=2, chunk=5, lookahead=3)
+        >>> out.shape
+        torch.Size([3, 10, 1])
+        >>> out
+        tensor([[[ 0.],
+                 [ 0.],
+                 [ 1.],
+                 [ 2.],
+                 [ 3.],
+                 [ 4.],
+                 [ 5.],
+                 [ 6.],
+                 [ 7.],
+                 [ 8.]],
+
+                [[ 4.],
+                 [ 5.],
+                 [ 6.],
+                 [ 7.],
+                 [ 8.],
+                 [ 9.],
+                 [10.],
+                 [11.],
+                 [12.],
+                 [ 0.]],
+
+                [[ 9.],
+                 [10.],
+                 [11.],
+                 [12.],
+                 [ 0.],
+                 [ 0.],
+                 [ 0.],
+                 [ 0.],
+                 [ 0.],
+                 [ 0.]]])
+
+        2D input (e.g. attention mask):
+
+        >>> mask = torch.tensor([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]])
+        >>> out = convert_input_to_chunked_for_offline(mask, lookback=2, chunk=5, lookahead=3)
+        >>> out.shape
+        torch.Size([2, 10])
+        >>> out
+        tensor([[0., 0., 1., 1., 1., 1., 1., 0., 0., 0.],
+                [1., 1., 0., 0., 0., 0., 0., 0., 0., 0.]])
     """
-    # TODO: handel the case with attention mask
+    is_2d = False
     if len(input.shape) == 2:
         input = input.unsqueeze(dim=-1)
+        is_2d = True
     elif len(input.shape) != 3:
-        raise ValueError()
+        raise ValueError(
+            f"Input tensor must be 2D (batch, seq_len) or 3D (batch, seq_len, features), "
+            f"but got {len(input.shape)}D tensor with shape {input.shape}. "
+            "If your input is 1D, use `input.unsqueeze(0).unsqueeze(-1)` to add batch and feature dimensions."
+        )
 
     batch, seq_len, features = input.shape
     streaming_len = lookback + chunk + lookahead
 
-    assert seq_len >= chunk
+    if seq_len < chunk:
+        raise ValueError(
+            f"Sequence length ({seq_len}) must be at least chunk size ({chunk}). "
+            f"Got seq_len={seq_len} < chunk={chunk}. "
+            "Reduce `chunk`, or pad/truncate the input sequence to meet this requirement."
+        )
 
     # padd input so we can resahpe it
     last_chunk_len = seq_len % chunk
@@ -62,7 +151,9 @@ def convert_input_to_chunked_for_offline(
 
     num_chunks = padded_input.shape[1]
     output = torch.zeros(
-        (batch, num_chunks, streaming_len, features), device=input.device
+        (batch, num_chunks, streaming_len, features),
+        device=input.device,
+        dtype=padded_input.dtype,
     )
 
     output[:, :, lookback : lookback + chunk, :] = padded_input  # chunk
@@ -73,7 +164,10 @@ def convert_input_to_chunked_for_offline(
         :, 1:, :lookahead, :
     ]  # lookahead
 
-    return output.view(-1, streaming_len, features)
+    output = output.view(-1, streaming_len, features)
+    if is_2d:
+        output = output.squeeze(dim=-1)
+    return output
 
 
 class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
