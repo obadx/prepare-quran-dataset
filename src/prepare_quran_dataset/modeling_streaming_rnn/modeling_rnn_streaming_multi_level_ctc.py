@@ -1,19 +1,33 @@
 from typing import Optional, Union
+from dataclasses import dataclass
 
 from transformers.models.wav2vec2_bert.modeling_wav2vec2_bert import (
     Wav2Vec2BertPreTrainedModel,
     Wav2Vec2BertModel,
     _HIDDEN_STATES_START_POSITION,
 )
-from transformers.utils import auto_docstring
+from transformers.utils import auto_docstring, ModelOutput
 from transformers.modeling_outputs import CausalLMOutput
 import torch
 from torch import nn
-import numpy as np
 
 from .configuration_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTCConfig,
 )
+
+# TODO:
+# [ ] Add LSTM
+# [ ] Add conifigs
+# [ ] del samples < chunk
+
+
+# TODO: To be added configs:
+# max_chunk_batch= 1
+# lookback_frames= 5
+# chunk_frames= 25
+# lookahead_frames= 5
+# rnn_hidden_size = 128
+# rnn_dropout = 0.1
 
 
 @dataclass
@@ -44,21 +58,6 @@ class StreamingCTCOutput(ModelOutput):
     hidden_states: tuple[torch.FloatTensor, ...] | None = None
     rnn_history: tuple[torch.FloatTensor, torch.FloatTensor] | None = None
     attentions: tuple[torch.FloatTensor, ...] | None = None
-
-
-# TODO:
-# [ ] Add LSTM
-# [ ] Add conifigs
-# [ ] del samples < chunk
-
-
-# TODO: To be added configs:
-# max_chunk_batch= 1
-# lookback_frames= 5
-# chunk_frames= 25
-# lookahead_frames= 5
-# rnn_hidden_size = 128
-# rnn_dropout = 0.1
 
 
 def convert_input_to_chunked_for_offline(
@@ -209,7 +208,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         self.wav2vec2_bert = Wav2Vec2BertModel(config)
         self.ssl_dropout = nn.Dropout(config.final_dropout)
-        self.rnn_dropout = nn.Dropout(config.rnn_dropout)
 
         if config.level_to_vocab_size == {}:
             raise ValueError(
@@ -247,6 +245,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+
+    def _calc_max_small_batch_size(
+        self, batch_size: int, num_chunks: int, max_small_batch_size: int
+    ):
+        """returns the max_small_batch_size such that <= max_small_batch_size"""
+        return (batch_size * num_chunks) // max_small_batch_size
 
     @auto_docstring
     def forward(
@@ -309,12 +313,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         if stream_inference:
             if seq_len != self.steaming_len:
                 raise ValueError(
-                    f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.straming_len}`, got: `{input_features.shape[1]}`"
+                    f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.straming_len}`, got: `{seq_len}`"
                 )
             batched_input_features = input_features.unsqueeze(dim=0)
             batched_attenion_mask = attention_mask.unsqueeze(dim=0)
         else:
-            if seq_len < self.straming_len:
+            if seq_len < self.config.chunk_frames:
                 raise ValueError(
                     f"Sequence len have to be >= `chunk_frames` i.e <= `{self.config.chunk_frames}` but got: `{seq_len}`"
                 )
@@ -323,13 +327,22 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
-            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len, features)
+            )
+            # Calculating max small batch size to avoid divisablity issues
+            max_small_batch_size = self._calc_max_small_batch_size(
+                batch_size=batch_size,
+                num_chunks=batched_input_features.shape[1],
+                max_small_batch_size=self.config.max_chunk_batch,
+            )
+            batched_input_features = batched_input_features.view(
+                -1, max_small_batch_size, self.steaming_len, features
+            )
             batched_attenion_mask = convert_input_to_chunked_for_offline(
                 attention_mask,
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
-            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len)
+            ).reshape(-1, max_small_batch_size, self.steaming_len)
 
         # Enabling larger EFFICTIVE batch size on small GPU by controling our own gpu max_chunk_batch
         # Utlizing the fact that we we have multiple small seq_lens each of `self.streaming_len` so we are
@@ -381,10 +394,17 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
         # Keeping only the chunk and drop the lookaback and lookahead
         hidden_states = hidden_states[
-            :, :, :, self.config.lookback_frames : -self.config.lookahead_frames
+            :,
+            :,
+            :,
+            self.config.lookback_frames : self.config.lookback_frames
+            + self.config.chunk_frames,
         ]
         batched_attenion_mask = batched_attenion_mask[
-            :, :, self.config.lookback_frames : -self.config.lookahead_frames
+            :,
+            :,
+            self.config.lookback_frames : self.config.lookback_frames
+            + self.config.chunk_frames,
         ]
 
         # NOTE: that we are concatenating the lstm output with every hidden_sate
@@ -453,12 +473,14 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     )
 
         if not return_dict:
-            output = (level_to_logits, rnn_history) + outputs[
-                _HIDDEN_STATES_START_POSITION:
-            ]
+            # NOTE: Skipping returning attentions right now
+            # output = (level_to_logits, rnn_history) + outputs[
+            #     _HIDDEN_STATES_START_POSITION:
+            # ]
+            output = (level_to_logits, rnn_history, hidden_states)
             return ((loss,) + output) if loss is not None else output
 
-        return CausalLMOutput(
+        return StreamingCTCOutput(
             loss=loss,
             logits=level_to_logits,
             rnn_history=rnn_history,
