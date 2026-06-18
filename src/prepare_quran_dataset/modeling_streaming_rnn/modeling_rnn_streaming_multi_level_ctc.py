@@ -15,6 +15,37 @@ from .configuration_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTCConfig,
 )
 
+
+@dataclass
+class StreamingCTCOutput(ModelOutput):
+    """
+    Base class for causal language model (or autoregressive) outputs.
+
+    Args:
+        loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
+            Language modeling loss (for next-token prediction).
+        logits (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`):
+            Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+        hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+            Tuple of `torch.FloatTensor` (one for the output of the embeddings, if the model has an embedding layer, +
+            one for the output of each layer) of shape `(batch_size, sequence_length, hidden_size)`.
+
+            Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
+        attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+            Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+            sequence_length)`.
+
+            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+            heads.
+    """
+
+    loss: torch.FloatTensor | None = None
+    logits: torch.FloatTensor | None = None
+    hidden_states: tuple[torch.FloatTensor, ...] | None = None
+    rnn_history: tuple[torch.FloatTensor, torch.FloatTensor] | None = None
+    attentions: tuple[torch.FloatTensor, ...] | None = None
+
+
 # TODO:
 # [ ] Add LSTM
 # [ ] Add conifigs
@@ -25,7 +56,7 @@ from .configuration_rnn_streaming_multi_level_ctc import (
 # max_chunk_batch= 1
 # lookback_frames= 5
 # chunk_frames= 25
-# loopahead_frames= 5
+# lookahead_frames= 5
 # rnn_hidden_size = 128
 # rnn_dropout = 0.1
 
@@ -194,7 +225,9 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
         self.level_to_lm_head = nn.ModuleDict(
             {
-                level: nn.Linear(output_hidden_size, vocab_size)
+                level: nn.Linear(
+                    output_hidden_size + config.rnn_hidden_size, vocab_size
+                )
                 for level, vocab_size in config.level_to_vocab_size.items()
             }
         )
@@ -204,7 +237,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             hidden_size=config.rnn_hidden_size,
             num_layers=1,
             batch_first=True,
-            dropout=config.runn_dropout,
+            dropout=config.rnn_dropout,
             bidirectional=False,
         )
 
@@ -263,7 +296,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             else:
                 if (
                     rnn_history[0].shape != valid_rnn_history_shape
-                    or rnn_history[1] != valid_rnn_history_shape
+                    or rnn_history[1].shape != valid_rnn_history_shape
                 ):
                     raise ValueError(rnn_history_err_msg)
         else:
@@ -279,7 +312,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.straming_len}`, got: `{input_features.shape[1]}`"
                 )
             batched_input_features = input_features.unsqueeze(dim=0)
-            batched_attenion_mask = input_features.unsqueeze(dim=0)
+            batched_attenion_mask = attention_mask.unsqueeze(dim=0)
         else:
             if seq_len < self.straming_len:
                 raise ValueError(
@@ -299,9 +332,14 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             ).reshape(-1, self.config.max_chunk_batch, self.steaming_len)
 
         # Enabling larger EFFICTIVE batch size on small GPU by controling our own gpu max_chunk_batch
+        # Utlizing the fact that we we have multiple small seq_lens each of `self.streaming_len` so we are
+        # introducing a self.config.max_chunk_batch_size to making the most use of GPU and sequantilly inference over
+        # the num_small_batches enabling training on relativly larger batch_size
         num_small_batches, small_batch_size, padded_seq_len = (
             batched_input_features.shape[0:3]
         )
+
+        # Intializating hidden_states for future concatenation with the rnn output
         # hidden sates are the concatenation of the ssl output and the rnn outputs
         hidden_states = torch.zeros(
             (
@@ -335,13 +373,21 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         hidden_states = self.ssl_dropout(hidden_states)
 
         # RNN  Inference Looping for the chunks (dim=1) we have for every input
-        # NOTE: that we are concatenating the lstm output with every hidden_sate
         rnn_output, rnn_history = self.rnn(
             hidden_states[
                 :, :, 0, : self.config.hidden_size
-            ],  # taking the firt token(0) to to rnn
+            ],  # taking the firt token(0) to to rnn as feedback
             rnn_history,
         )
+        # Keeping only the chunk and drop the lookaback and lookahead
+        hidden_states = hidden_states[
+            :, :, :, self.config.lookback_frames : -self.config.lookahead_frames
+        ]
+        batched_attenion_mask = batched_attenion_mask[
+            :, :, self.config.lookback_frames : -self.config.lookahead_frames
+        ]
+
+        # NOTE: that we are concatenating the lstm output with every hidden_sate
         # Concatenation the output for the rnn of shape (batch_size, num_chunks, rnn_hidden_size) to the hidden states
         hidden_states[:, :, :, self.config.hidden_size :] = rnn_output.unsqueeze(dim=2)
 
@@ -364,7 +410,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 )
             else:
                 for level in labels:
-                    if labels_mask[level].shape == labels[level].shape:
+                    if labels_mask[level].shape != labels[level].shape:
                         raise ValueError(
                             f"`labels_masks` has to be input to calculate CTC loss properly with shape of `batch_size, target_seq_len` ({labels[level].shape}) for level: `{level}` got: `{labels_mask[level].shape}`"
                         )
@@ -407,14 +453,17 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     )
 
         if not return_dict:
-            output = (level_to_logits,) + outputs[_HIDDEN_STATES_START_POSITION:]
+            output = (level_to_logits, rnn_history) + outputs[
+                _HIDDEN_STATES_START_POSITION:
+            ]
             return ((loss,) + output) if loss is not None else output
 
         return CausalLMOutput(
             loss=loss,
             logits=level_to_logits,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
+            rnn_history=rnn_history,
+            hidden_states=hidden_states,
+            attentions=None,  # Make it `None` for now
         )
 
 
