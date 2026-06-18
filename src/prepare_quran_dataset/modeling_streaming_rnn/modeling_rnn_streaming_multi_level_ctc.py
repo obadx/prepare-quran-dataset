@@ -342,8 +342,8 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             ],  # taking the firt token(0) to to rnn
             rnn_history,
         )
-        # BUG: fix repeating or expaing rnn_output to fit in in the hidden state
-        hidden_states[:, :, :, self.config.hidden_size :] = rnn_output
+        # Concatenation the output for the rnn of shape (batch_size, num_chunks, rnn_hidden_size) to the hidden states
+        hidden_states[:, :, :, self.config.hidden_size :] = rnn_output.unsqueeze(dim=2)
 
         # Flatting hidden sizes as exepcted without streaming
         hidden_states = hidden_states.view(
