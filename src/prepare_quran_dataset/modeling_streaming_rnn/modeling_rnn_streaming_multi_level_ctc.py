@@ -57,6 +57,11 @@ def convert_input_to_chunked_for_offline(
             Number of frames per chunk. Defaults to `25`.
         lookback (int, optional):
             Number of frames before the chunk from the previous segment. Defaults to `5`.
+        max_chunk_batch_size (int, optional):
+            If > 1, extra zero-padded chunks are appended so the total number
+            of chunks per batch is divisible by this value, enabling reshaping
+            to `(-1, max_chunk_batch_size, ...)`. Must be `1` or a multiple of
+            `batch`. Defaults to `1`.
 
     Returns:
         torch.Tensor: Chunked tensor of shape
@@ -68,6 +73,8 @@ def convert_input_to_chunked_for_offline(
             If `input` is not 2D or 3D.
         ValueError:
             If `seq_len < chunk`.
+        ValueError:
+            If `max_chunk_batch_size` is not `1` and not a multiple of `batch`.
 
     Example:
 
@@ -145,13 +152,11 @@ def convert_input_to_chunked_for_offline(
             "Reduce `chunk`, or pad/truncate the input sequence to meet this requirement."
         )
 
-    # Computing the padding to the  last input chunk such that every chunk has length of `chunk + lookback + lookahead`
+    # Pad the last incomplete chunk so seq_len is divisible by chunk
     last_chunk_pad_len = 0
     last_chunk_len = seq_len % chunk
     if last_chunk_len > 0:
         last_chunk_pad_len = chunk - last_chunk_len
-
-    # WARN: Needs rethinking about padding + concatenation we can get rid of padding I think
     padded_input = input
     if last_chunk_pad_len > 0:
         padded_input = nn.functional.pad(input, (0, 0, 0, last_chunk_pad_len), value=0)
@@ -159,10 +164,10 @@ def convert_input_to_chunked_for_offline(
 
     num_chunks = (seq_len + last_chunk_pad_len) // chunk  # num_chunks for every batch
 
-    # Computing num_padded_chunks for max_chunk_batch_size such that: we can partiion the input to
-    # (-1, max_chunk_batch_size, streaming_len, features
-    # NOTE: num_chunks is diffrent from padded_num_chunks as the later may be padded with sparse chunks
-    # to acomidiate max_chunk_batch_size
+    # Compute padded_num_chunks so the total chunks can be partitioned into
+    # (-1, max_chunk_batch_size, streaming_len, features)
+    # NOTE: num_chunks is different from padded_num_chunks; the latter may be padded
+    # with sparse zero-chunks to accommodate max_chunk_batch_size
     padded_num_chunks = (
         ceil(num_chunks * batch / max_chunk_batch_size) * max_chunk_batch_size // batch
     )

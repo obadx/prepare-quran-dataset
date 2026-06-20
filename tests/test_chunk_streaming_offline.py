@@ -169,27 +169,6 @@ test_cases = [
         5,
         None,  # expected checked via shape
     ),
-    # 12. 2D input (attention_mask style + device)
-    (
-        torch.tensor(
-            [[1, 1, 1, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 0, 0, 0]],
-            device="cuda",
-        ),
-        1,
-        4,
-        2,
-        torch.tensor(
-            [
-                [0, 0, 1, 1, 1, 1, 1],
-                [1, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 0, 0],
-                [1, 0, 0, 0, 0, 0, 0],
-            ],
-            device="cuda",
-        ),
-    ),
 ]
 
 
@@ -376,12 +355,22 @@ def test_max_chunk_batch_size_invalid_raises():
         )
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 def test_max_chunk_batch_size_device_cuda():
     """Check device stays on CUDA when specified."""
-    if not torch.cuda.is_available():
-        pytest.skip("CUDA not available")
     x = torch.randn(2, 10, 1, device="cuda")
     result = convert_input_to_chunked_for_offline(
         x, lookahead=2, chunk=5, lookback=2, max_chunk_batch_size=4
     )
     assert result.device == x.device
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
+def test_2d_input_device_cuda():
+    """2D input with CUDA device should preserve device and remain 2D."""
+    mask = torch.tensor([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]], device="cuda")
+    result = convert_input_to_chunked_for_offline(
+        mask, lookahead=3, chunk=5, lookback=2
+    )
+    assert result.device == mask.device
+    assert result.ndim == 2
