@@ -18,7 +18,7 @@ from .configuration_rnn_streaming_multi_level_ctc import (
 
 # TODO:
 # [ ] Add LSTM
-# [ ] Add conifigs
+# [ ] Add configs
 # [ ] del samples < chunk
 
 
@@ -226,24 +226,46 @@ class StreamingCTCOutput(ModelOutput):
 
 
 class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
+    """Wav2Vec2-BERT model with a streaming RNN and multi-level CTC heads.
+
+    This model splits long audio sequences into overlapping chunks
+    (lookback / chunk / lookahead), runs each chunk through the Wav2Vec2-BERT
+    encoder, and uses a unidirectional LSTM to condition each chunk on the
+    temporal history by taking the first frame only as summary for every chunk.
+    A separate linear CTC head is applied per output level. the CTC lenaer heads
+    input is: [chunk | lstm output]
+    (e.g. phonemes, hams_or_jahr, …).
+
+    During streaming inference (`stream_inference=True`) the caller supplies
+    exactly one chunk at a time together with the previous LSTM state, enabling
+    online / low-latency operation.
+    """
+
     config_class = Wav2Vec2BertForRNNStreamingMultilevelCTCConfig
 
     def __init__(self, config):
+        """Initialise the streaming RNN + multi-level CTC model.
+
+        Args:
+            config (`Wav2Vec2BertForRNNStreamingMultilevelCTCConfig`):
+                Model configuration, including chunking parameters, RNN hidden size,
+                and the per-level vocabulary sizes.
+        """
         super().__init__(config)
 
         self.wav2vec2_bert = Wav2Vec2BertModel(config)
         self.ssl_dropout = nn.Dropout(config.final_dropout)
-        # as we have a single layer LSTM so the internal droput is not applied
+        # as we have a single layer LSTM so the internal dropout is not applied
         self.rnn_dropout = nn.Dropout(config.rnn_dropout)
 
         if config.level_to_vocab_size == {}:
             raise ValueError(
                 f"You are trying to instantiate {self.__class__} with a configuration that "
-                "does not define the vocabulary size of the language model head. Please "
+                "does not define the vocabulary size of the CTC head. Please "
                 "instantiate the model as follows: `Wav2Vec2BertForCTC.from_pretrained(..., level_to_vocab_size=level_to_vocab_size)`. "
                 "or define `level_to_vocab_size` of your model's configuration."
             )
-        # WARN: Ignoreing Adapter logic for now
+        # WARN: Ignoring Adapter logic for now
         output_hidden_size = (
             config.output_hidden_size
             if hasattr(config, "add_adapter") and config.add_adapter
@@ -349,18 +371,46 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         labels_mask: Optional[dict[str, torch.Tensor]] = None,
     ) -> Union[tuple, CausalLMOutput]:
         r"""
-        labels (dict[`str`, `torch.LongTensor`] level_name to its labels of shape `(batch_size, target_length)`, *optional*):
-            Labels for connectionist temporal classification. Note that `target_length` has to be smaller or equal to
-            the sequence length of the output logits. Indices are selected in `[-100, 0, ..., config.vocab_size - 1]`.
-            All labels set to `-100` are ignored (masked), the loss is only computed for labels in `[0, ...,
-            config.vocab_size - 1]`.
+        input_features (`torch.Tensor` of shape `(batch_size, seq_len, feature_size)`):
+            Input features to the Wav2Vec2-BERT model.
+            If `stream_inference` is `True`,
+            the input is of shape (batch_size, (lookback + chunk + lookahead), feature_size)
+            `lookback + chunk + lookahead`, and no chunking is applied.
+        attention_mask (`torch.Tensor` of shape `(batch_size, seq_len)`):
+            Attention mask indicating padded positions with 0.
+            If `stream_inference` is `True`,
+            the input is of shape (batch_size, (lookback + chunk + lookahead))
+        rnn_history (`tuple[torch.FloatTensor, torch.FloatTensor]`, *optional*):
+            Tuple of `(h_0, c_0)` LSTM states, each of shape `(1, batch_size, config.rnn_hidden_size)`.
+            If `None`, zero states are initialised internally.
+        output_attentions (`bool`, *optional*):
+            Whether to return attention weights of the SSL encoder.
+        output_hidden_states (`bool`, *optional*):
+            Whether to return hidden states of the SSL encoder.
+        return_dict (`bool`, *optional*):
+            Whether to return a [`StreamingCTCOutput`] instead of a tuple.
+        stream_inference (`bool`, *optional*, defaults to `False`):
+            If `True`, the input is treated as a single streaming chunk of length
+            `lookback + chunk + lookahead`, and no chunking is applied.
+        labels (`dict[str, torch.LongTensor]`, *optional*):
+            Dictionary mapping level names to their CTC targets of shape
+            `(batch_size, target_length)`. Indices are selected in `[-100, 0, ..., config.vocab_size - 1]`.
+            `-100` is ignored (masked), the loss is only computed for labels in `[0, ..., vocab_size - 1]`.
+        labels_mask (`dict[str, torch.Tensor]`, *optional*):
+            Dictionary mapping level names to their target masks of shape
+            `(batch_size, target_length)`. 1 indicates a valid target, 0 indicates padding.
+
+        Returns:
+            `Union[tuple, StreamingCTCOutput]`:
+                When `return_dict=False`, a tuple `(loss, logits, rnn_history, hidden_states)`.
+                When `return_dict=True`, a [`StreamingCTCOutput`] with typed fields.
         """
 
         # Level to Labels validation
         if labels is not None:
             if not isinstance(labels, dict):
                 raise ValueError(
-                    f"Label has to be a dict for level to its tartget labels got `{type(labels)}`"
+                    f"Label has to be a dict for level to its target labels got `{type(labels)}`"
                 )
             for level in labels:
                 if labels[level].max() >= self.config.level_to_vocab_size[level]:
@@ -384,19 +434,19 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         if labels is not None:
             if labels_mask is None:
                 raise ValueError(
-                    "`labels_masks` has to be input to calculate CTC loss properly with a dict of tensors of shape of `batch_size, target_seq_len`"
+                    "`labels_mask` has to be input to calculate CTC loss properly with a dict of tensors of shape of `batch_size, target_seq_len`"
                 )
             else:
                 for level in labels:
                     if labels_mask[level].shape != labels[level].shape:
                         raise ValueError(
-                            f"`labels_masks` has to be input to calculate CTC loss properly with shape of `batch_size, target_seq_len` ({labels[level].shape}) for level: `{level}` got: `{labels_mask[level].shape}`"
+                            f"`labels_mask` has to be input to calculate CTC loss properly with shape of `batch_size, target_seq_len` ({labels[level].shape}) for level: `{level}` got: `{labels_mask[level].shape}`"
                         )
 
         # LSTM history, (c0, h0) validation
         valid_rnn_history_shape = (1, batch_size, self.config.rnn_hidden_size)
         if rnn_history is not None:
-            rnn_history_err_msg = f"Invlaid input shape for `rnn_history`. `rnn_history` has of 2d tuple of float tensor of shape: {valid_rnn_history_shape}"
+            rnn_history_err_msg = f"Invalid input shape for `rnn_history`. `rnn_history` has of 2d tuple of float tensor of shape: {valid_rnn_history_shape}"
             if len(rnn_history) != 2:
                 raise ValueError(rnn_history_err_msg)
             else:
@@ -411,16 +461,16 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 torch.zeros(valid_rnn_history_shape, device=input_features.device),
             )
 
-        # Reshping input from (batch_size, seq_len), feature_size to (batch_size, num_chunks, streaming_len, feature_size)
+        # Reshaping input from (batch_size, seq_len), feature_size to (batch_size, num_chunks, streaming_len, feature_size)
         # For attention_mask the output shape: (batch_size, num_chunks, streaming_len)
         if stream_inference:
             if seq_len != self.streaming_len:
                 raise ValueError(
                     f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.streaming_len}`, got: `{seq_len}`"
                 )
-            # Expaning dimention for the number of chunks
+            # Expanding dimension for the number of chunks
             batched_input_features = input_features.unsqueeze(dim=1)
-            batched_attenion_mask = attention_mask.unsqueeze(dim=1)
+            batched_attention_mask = attention_mask.unsqueeze(dim=1)
         else:
             if seq_len < self.config.chunk_frames:
                 raise ValueError(
@@ -433,7 +483,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 lookahead=self.config.lookahead_frames,
                 max_chunk_batch_size=self.config.max_chunk_batch,
             ).reshape(-1, self.config.max_chunk_batch, self.streaming_len, features)
-            batched_attenion_mask = convert_input_to_chunked_for_offline(
+            batched_attention_mask = convert_input_to_chunked_for_offline(
                 attention_mask,
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
@@ -441,13 +491,13 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 max_chunk_batch_size=self.config.max_chunk_batch,
             ).reshape(-1, self.config.max_chunk_batch, self.streaming_len)
 
-        # Enabling larger EFFICTIVE batch size on small GPU by controling our own gpu max_chunk_batch
-        # Utlizing the fact that we we have multiple small seq_lens each of `self.streaming_len` so we are
-        # introducing a self.config.max_chunk_batch_size to making the most use of GPU and sequantilly inference over
-        # the num_small_batches enabling training on relativly larger batch_size
+        # Enabling larger effective batch size on small GPU by controlling our own gpu max_chunk_batch
+        # Utilizing the fact that we have multiple small seq_lens each of `self.streaming_len` so we are
+        # introducing self.config.max_chunk_batch to make the most use of GPU and sequentially inference over
+        # the num_small_batches enabling training on relatively larger batch_size
 
-        # Intializating hidden_states for future concatenation with the rnn output
-        # hidden sates are the concatenation of the ssl output and the rnn outputs
+        # Initializing hidden_states for future concatenation with the rnn output
+        # hidden states are the concatenation of the ssl output and the rnn outputs
         hidden_states = torch.zeros(
             (
                 batched_input_features.shape[0],
@@ -458,11 +508,11 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             device=batched_input_features.device,
             dtype=batched_input_features.dtype,
         )
-        for idx, (small_input_featrues, small_attention_mask) in enumerate(
-            zip(batched_input_features, batched_attenion_mask)
+        for idx, (small_input_features, small_attention_mask) in enumerate(
+            zip(batched_input_features, batched_attention_mask)
         ):
             hidden_states[idx, :, :, : self.config.hidden_size] = self.wav2vec2_bert(
-                small_input_featrues,
+                small_input_features,
                 attention_mask=small_attention_mask,
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
@@ -476,49 +526,49 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             self.streaming_len,
             self.config.hidden_size + self.config.rnn_hidden_size,
         )
-        batched_attenion_mask = batched_attenion_mask.view(
+        batched_attention_mask = batched_attention_mask.view(
             batch_size, -1, self.streaming_len
         )
         hidden_states = self.ssl_dropout(hidden_states)
 
-        # RNN  Inference Looping for the chunks (dim=1) we have for every input
-        # Computing masks for chunks as not all chunks has valid input some with (all zero input)
-        num_chunks_mask = (batched_attenion_mask.sum(dim=-1) != 0).to(torch.long)
+        # RNN inference loop over the chunk dimension (dim=1)
+        # Computing masks for chunks; not all chunks have valid input, some are all-zero padding
+        num_chunks_mask = (batched_attention_mask.sum(dim=-1) != 0).to(torch.long)
         rnn_output, rnn_history = self.rnn_forward(
             hidden_states[
                 :, :, 0, : self.config.hidden_size
-            ],  # taking the firt token(0) to to rnn as feedback
+            ],  # taking the first token(0) to the rnn as feedback
             rnn_history,
             num_chunks_mask=num_chunks_mask,
         )
         rnn_output = self.rnn_dropout(rnn_output)
 
-        # Keeping only the chunk and drop the lookaback and lookahead
+        # Keeping only the chunk and drop the lookback and lookahead
         hidden_states = hidden_states[
             :,
             :,
-            :,
             self.config.lookback_frames : self.config.lookback_frames
             + self.config.chunk_frames,
+            :,
         ]
-        batched_attenion_mask = batched_attenion_mask[
+        batched_attention_mask = batched_attention_mask[
             :,
             :,
             self.config.lookback_frames : self.config.lookback_frames
             + self.config.chunk_frames,
         ]
 
-        # NOTE: that we are concatenating the lstm output with every hidden_sate
-        # Concatenation the output for the rnn of shape (batch_size, num_chunks, rnn_hidden_size) to the hidden states
+        # NOTE: we are concatenating the lstm output with every hidden_state
+        # Concatenating the output of the rnn of shape (batch_size, num_chunks, rnn_hidden_size) to the hidden states
         hidden_states[:, :, :, self.config.hidden_size :] = rnn_output.unsqueeze(dim=2)
 
-        # Flatting hidden sizes as exepcted without streaming
-        hidden_states = hidden_states.view(
+        # Flattening hidden sizes as expected without streaming
+        hidden_states = hidden_states.reshape(
             batch_size, -1, self.config.hidden_size + self.config.rnn_hidden_size
         )
-        attention_mask = batched_attenion_mask.view(batch_size, -1)
+        attention_mask = batched_attention_mask.reshape(batch_size, -1)
 
-        # Appling CTC Linear Heads for every level
+        # Applying CTC Linear Heads for every level
         level_to_logits = {}
         for level in self.level_to_lm_head:
             level_to_logits[level] = self.level_to_lm_head[level](hidden_states)
@@ -526,15 +576,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         loss = None
         if labels is not None:
             # retrieve loss input_lengths from attention_mask
-            attention_mask = (
-                attention_mask
-                if attention_mask is not None
-                else torch.ones(
-                    input_features.shape[:2],
-                    device=input_features.device,
-                    dtype=torch.long,
-                )
-            )
             input_lengths = self._get_feat_extract_output_lengths(
                 attention_mask.sum([-1])
             ).to(torch.long)
@@ -542,7 +583,9 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             loss = 0.0
             for level in labels:
                 target_lengths = labels_mask[level].sum(-1)
-                flattened_targets = labels[level].masked_select(labels_mask[level])
+                flattened_targets = labels[level].masked_select(
+                    labels_mask[level].to(torch.bool)
+                )
 
                 # ctc_loss doesn't support fp16
                 log_probs = nn.functional.log_softmax(
@@ -563,7 +606,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     )
 
         if not return_dict:
-            # NOTE: Skipping returning attentions right now
+            # NOTE: Skipping attention return for now
             # output = (level_to_logits, rnn_history) + outputs[
             #     _HIDDEN_STATES_START_POSITION:
             # ]

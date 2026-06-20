@@ -20,9 +20,25 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(PretrainedConfig):
             represented by the `inputs_ids` passed when calling [`Wav2Vec2BertModel`]. Vocabulary size of the
             model. Defines the different tokens that can be represented by the *inputs_ids* passed to the forward
             method of [`Wav2Vec2BertModel`].
-        level_to_loss_weigth (`dict[str, int]`, *optional*):
-            Every level has its own loss weigth such that the sum of all levels adds to 1:
-            If you supply only one level: the rest of the level will have loss weigth of (1-given_loss_weigth) / nmber of rest of levels
+        level_to_loss_weight (`dict[str, int]`, *optional*):
+            Every level has its own loss weight such that the sum of all levels adds to 1:
+            If you supply only one level: the rest of the level will have loss weight of (1-given_loss_weight) / number of rest of levels
+        max_chunk_batch (`int`, *optional*, defaults to 1):
+            Maximum number of chunks to process in a single forward pass through the SSL encoder.
+            Must be `1` or a multiple of the batch size. Enables larger effective batch sizes
+            on memory-constrained hardware.
+        lookback_frames (`int`, *optional*, defaults to 5):
+            Number of frames from the previous chunk prepended as context for each chunk.
+        chunk_frames (`int`, *optional*, defaults to 25):
+            Number of frames per chunk — the granularity of the streaming split.
+        lookahead_frames (`int`, *optional*, defaults to 5):
+            Number of frames from the next chunk appended as future context for each chunk.
+        rnn_hidden_size (`int`, *optional*, defaults to 256):
+            Hidden size of the single-layer unidirectional LSTM that provides temporal
+            conditioning across chunks.
+        rnn_dropout (`float`, *optional*, defaults to 0.0):
+            Dropout probability applied after the LSTM output. Note that the internal
+            dropout of the LSTM layer is not used since `num_layers=1`.
 
         hidden_size (`int`, *optional*, defaults to 1024):
             Dimensionality of the encoder layers and the pooler layer.
@@ -214,6 +230,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(PretrainedConfig):
         right_max_position_embeddings=8,
         conv_depthwise_kernel_size=31,
         conformer_conv_dropout=0.1,
+        max_chunk_batch=1,
+        lookback_frames=5,
+        chunk_frames=25,
+        lookahead_frames=5,
+        rnn_hidden_size=256,
+        rnn_dropout=0.0,
         **kwargs,
     ):
         super().__init__(
@@ -239,6 +261,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(PretrainedConfig):
         self.level_to_vocab_size = level_to_vocab_size
         self.use_weighted_layer_sum = use_weighted_layer_sum
         self.max_source_positions = max_source_positions
+        self.max_chunk_batch = max_chunk_batch
+        self.lookback_frames = lookback_frames
+        self.chunk_frames = chunk_frames
+        self.lookahead_frames = lookahead_frames
+        self.rnn_hidden_size = rnn_hidden_size
+        self.rnn_dropout = rnn_dropout
 
         loss_weights_sum = sum(level_to_loss_weight.values())
         if loss_weights_sum > 1:
@@ -254,6 +282,17 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(PretrainedConfig):
                     1 - loss_weights_sum
                 ) / unmentioned_loss_levels_count
         self.level_to_loss_weight = level_to_loss_weight
+
+        if chunk_frames <= 0:
+            raise ValueError(f"`chunk_frames` must be positive, got {chunk_frames}")
+        if lookback_frames < 0:
+            raise ValueError(f"`lookback_frames` must be non-negative, got {lookback_frames}")
+        if lookahead_frames < 0:
+            raise ValueError(f"`lookahead_frames` must be non-negative, got {lookahead_frames}")
+        if rnn_hidden_size <= 0:
+            raise ValueError(f"`rnn_hidden_size` must be positive, got {rnn_hidden_size}")
+        if max_chunk_batch < 1:
+            raise ValueError(f"`max_chunk_batch` must be >= 1, got {max_chunk_batch}")
 
         if position_embeddings_type is not None and position_embeddings_type not in [
             "rotary",
