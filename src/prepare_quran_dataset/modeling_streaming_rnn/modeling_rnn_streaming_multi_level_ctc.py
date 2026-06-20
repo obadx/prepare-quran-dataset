@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from dataclasses import dataclass
+from math import ceil
 
 from transformers.models.wav2vec2_bert.modeling_wav2vec2_bert import (
     Wav2Vec2BertPreTrainedModel,
@@ -30,41 +31,12 @@ from .configuration_rnn_streaming_multi_level_ctc import (
 # rnn_dropout = 0.1
 
 
-@dataclass
-class StreamingCTCOutput(ModelOutput):
-    """
-    Base class for causal language model (or autoregressive) outputs.
-
-    Args:
-        loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
-            Language modeling loss (for next-token prediction).
-        logits (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`):
-            Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
-        hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
-            Tuple of `torch.FloatTensor` (one for the output of the embeddings, if the model has an embedding layer, +
-            one for the output of each layer) of shape `(batch_size, sequence_length, hidden_size)`.
-
-            Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
-        attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
-            Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
-            sequence_length)`.
-
-            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
-            heads.
-    """
-
-    loss: torch.FloatTensor | None = None
-    logits: torch.FloatTensor | None = None
-    hidden_states: tuple[torch.FloatTensor, ...] | None = None
-    rnn_history: tuple[torch.FloatTensor, torch.FloatTensor] | None = None
-    attentions: tuple[torch.FloatTensor, ...] | None = None
-
-
 def convert_input_to_chunked_for_offline(
     input: torch.Tensor,
     lookahead: int = 5,
     chunk: int = 25,
     lookback: int = 5,
+    max_chunk_batch_size=1,
 ) -> torch.Tensor:
     """Convert input from `(batch, seq_len, features)` to chunked format
     `(batch * num_chunks, lookback + chunk + lookahead, features)`.
@@ -160,6 +132,10 @@ def convert_input_to_chunked_for_offline(
         )
 
     batch, seq_len, features = input.shape
+    if max_chunk_batch_size != 1 and max_chunk_batch_size % batch != 0:
+        raise ValueError(
+            f"`max_chunk_batch_size` has either to be 1 or be multiple of `batch_size`: You input `max_chunk_batch_size`={max_chunk_batch_size}, and the `batch_size` is {batch}"
+        )
     streaming_len = lookback + chunk + lookahead
 
     if seq_len < chunk:
@@ -169,35 +145,79 @@ def convert_input_to_chunked_for_offline(
             "Reduce `chunk`, or pad/truncate the input sequence to meet this requirement."
         )
 
-    # padd input so we can resahpe it
+    # Computing the padding to the  last input chunk such that every chunk has length of `chunk + lookback + lookahead`
+    last_chunk_pad_len = 0
     last_chunk_len = seq_len % chunk
     if last_chunk_len > 0:
-        pad_len = chunk - last_chunk_len
-        padded_input = nn.functional.pad(input, (0, 0, 0, pad_len), value=0).reshape(
-            batch, -1, chunk, features
-        )
-    else:
-        padded_input = input.view(batch, -1, chunk, features)
+        last_chunk_pad_len = chunk - last_chunk_len
 
-    num_chunks = padded_input.shape[1]
+    # WARN: Needs rethinking about padding + concatenation we can get rid of padding I think
+    padded_input = input
+    if last_chunk_pad_len > 0:
+        padded_input = nn.functional.pad(input, (0, 0, 0, last_chunk_pad_len), value=0)
+    padded_input = padded_input.view(batch, -1, chunk, features)
+
+    num_chunks = (seq_len + last_chunk_pad_len) // chunk  # num_chunks for every batch
+
+    # Computing num_padded_chunks for max_chunk_batch_size such that: we can partiion the input to
+    # (-1, max_chunk_batch_size, streaming_len, features
+    # NOTE: num_chunks is diffrent from padded_num_chunks as the later may be padded with sparse chunks
+    # to acomidiate max_chunk_batch_size
+    padded_num_chunks = (
+        ceil(num_chunks * batch / max_chunk_batch_size) * max_chunk_batch_size // batch
+    )
+
     output = torch.zeros(
-        (batch, num_chunks, streaming_len, features),
+        (batch, padded_num_chunks, streaming_len, features),
         device=input.device,
         dtype=padded_input.dtype,
     )
 
-    output[:, :, lookback : lookback + chunk, :] = padded_input  # chunk
-    output[:, 1:, :lookback, :] = padded_input[
-        :, :-1, chunk - lookback :, :
-    ]  # lookback
-    output[:, :-1, lookback + chunk :, :] = padded_input[
-        :, 1:, :lookahead, :
-    ]  # lookahead
+    # chunk
+    output[:, :num_chunks, lookback : lookback + chunk, :] = padded_input
+    # lookback
+    output[:, 1:num_chunks, :lookback, :] = padded_input[
+        :, : num_chunks - 1, chunk - lookback :, :
+    ]
+    # lookahead
+    output[:, : num_chunks - 1, lookback + chunk :, :] = padded_input[
+        :, 1:num_chunks, :lookahead, :
+    ]
 
     output = output.view(-1, streaming_len, features)
     if is_2d:
         output = output.squeeze(dim=-1)
     return output
+
+
+@dataclass
+class StreamingCTCOutput(ModelOutput):
+    """
+    Base class for causal language model (or autoregressive) outputs.
+
+    Args:
+        loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
+            Language modeling loss (for next-token prediction).
+        logits (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`):
+            Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+        hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+            Tuple of `torch.FloatTensor` (one for the output of the embeddings, if the model has an embedding layer, +
+            one for the output of each layer) of shape `(batch_size, sequence_length, hidden_size)`.
+
+            Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
+        attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+            Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+            sequence_length)`.
+
+            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+            heads.
+    """
+
+    loss: torch.FloatTensor | None = None
+    logits: torch.FloatTensor | None = None
+    hidden_states: tuple[torch.FloatTensor, ...] | None = None
+    rnn_history: tuple[torch.FloatTensor, torch.FloatTensor] | None = None
+    attentions: tuple[torch.FloatTensor, ...] | None = None
 
 
 class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
@@ -246,12 +266,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    def _calc_max_small_batch_size(
-        self, batch_size: int, num_chunks: int, max_small_batch_size: int
-    ):
-        """returns the max_small_batch_size such that <= max_small_batch_size"""
-        return (batch_size * num_chunks) // max_small_batch_size
-
     @auto_docstring
     def forward(
         self,
@@ -290,7 +304,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
         batch_size, seq_len, features = input_features.shape
 
-        # TODO: add proper error handeling and intialization for rnn_history
         # LSTM history, (c0, h0) validation
         valid_rnn_history_shape = (1, batch_size, self.config.rnn_hidden_size)
         if rnn_history is not None:
@@ -327,22 +340,15 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
-            )
-            # Calculating max small batch size to avoid divisablity issues
-            max_small_batch_size = self._calc_max_small_batch_size(
-                batch_size=batch_size,
-                num_chunks=batched_input_features.shape[1],
-                max_small_batch_size=self.config.max_chunk_batch,
-            )
-            batched_input_features = batched_input_features.view(
-                -1, max_small_batch_size, self.steaming_len, features
-            )
+                max_chunk_batch_size=self.config.max_chunk_batch,
+            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len, features)
             batched_attenion_mask = convert_input_to_chunked_for_offline(
                 attention_mask,
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
-            ).reshape(-1, max_small_batch_size, self.steaming_len)
+                max_chunk_batch_size=self.config.max_chunk_batch,
+            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len)
 
         # Enabling larger EFFICTIVE batch size on small GPU by controling our own gpu max_chunk_batch
         # Utlizing the fact that we we have multiple small seq_lens each of `self.streaming_len` so we are
@@ -386,6 +392,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         hidden_states = self.ssl_dropout(hidden_states)
 
         # RNN  Inference Looping for the chunks (dim=1) we have for every input
+        # BUG: chunk_mask
         rnn_output, rnn_history = self.rnn(
             hidden_states[
                 :, :, 0, : self.config.hidden_size
