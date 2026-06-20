@@ -266,7 +266,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             bidirectional=False,
         )
 
-        self.straming_len = (
+        self.streaming_len = (
             config.chunk_frames + config.lookback_frames + config.lookahead_frames
         )
 
@@ -372,7 +372,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
         batch_size, seq_len, features = input_features.shape
 
-        if (
+        if self.config.max_chunk_batch == 0 or (
             self.config.max_chunk_batch != 1
             and self.config.max_chunk_batch % batch_size != 0
         ):
@@ -413,9 +413,9 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         # Reshping input from (batch_size, seq_len), feature_size to (batch_size, num_chunks, streaming_len, feature_size)
         # For attention_mask the output shape: (batch_size, num_chunks, streaming_len)
         if stream_inference:
-            if seq_len != self.steaming_len:
+            if seq_len != self.streaming_len:
                 raise ValueError(
-                    f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.straming_len}`, got: `{seq_len}`"
+                    f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.streaming_len}`, got: `{seq_len}`"
                 )
             # Expaning dimention for the number of chunks
             batched_input_features = input_features.unsqueeze(dim=1)
@@ -423,7 +423,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         else:
             if seq_len < self.config.chunk_frames:
                 raise ValueError(
-                    f"Sequence len have to be >= `chunk_frames` i.e <= `{self.config.chunk_frames}` but got: `{seq_len}`"
+                    f"Sequence len have to be >= `chunk_frames` which is `{self.config.chunk_frames}` but got: `{seq_len}`"
                 )
             batched_input_features = convert_input_to_chunked_for_offline(
                 input_features,
@@ -431,30 +431,27 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
                 max_chunk_batch_size=self.config.max_chunk_batch,
-            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len, features)
+            ).reshape(-1, self.config.max_chunk_batch, self.streaming_len, features)
             batched_attenion_mask = convert_input_to_chunked_for_offline(
                 attention_mask,
                 chunk=self.config.chunk_frames,
                 lookback=self.config.lookback_frames,
                 lookahead=self.config.lookahead_frames,
                 max_chunk_batch_size=self.config.max_chunk_batch,
-            ).reshape(-1, self.config.max_chunk_batch, self.steaming_len)
+            ).reshape(-1, self.config.max_chunk_batch, self.streaming_len)
 
         # Enabling larger EFFICTIVE batch size on small GPU by controling our own gpu max_chunk_batch
         # Utlizing the fact that we we have multiple small seq_lens each of `self.streaming_len` so we are
         # introducing a self.config.max_chunk_batch_size to making the most use of GPU and sequantilly inference over
         # the num_small_batches enabling training on relativly larger batch_size
-        num_small_batches, small_batch_size, padded_seq_len = (
-            batched_input_features.shape[0:3]
-        )
 
         # Intializating hidden_states for future concatenation with the rnn output
         # hidden sates are the concatenation of the ssl output and the rnn outputs
         hidden_states = torch.zeros(
             (
-                num_small_batches,
-                small_batch_size,
-                padded_seq_len,
+                batched_input_features.shape[0],
+                self.config.max_chunk_batch,
+                self.streaming_len,
                 self.config.hidden_size + self.config.rnn_hidden_size,
             ),
             device=batched_input_features.device,
@@ -471,12 +468,15 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 return_dict=return_dict,
             )[0]
 
-        # Back to the same original input shape as original_batch_size, num_of_chunks, padded_seq_len, hidden_size)
+        # Back to the same original input shape as original_batch_size, num_of_chunks, self.streaming_len, hidden_size)
         hidden_states = hidden_states.view(
-            batch_size, -1, padded_seq_len, self.config.hidden_size
+            batch_size,
+            -1,
+            self.streaming_len,
+            self.config.hidden_size + self.config.rnn_hidden_size,
         )
         batched_attenion_mask = batched_attenion_mask.view(
-            batch_size, -1, padded_seq_len
+            batch_size, -1, self.streaming_len
         )
         hidden_states = self.ssl_dropout(hidden_states)
 
@@ -578,4 +578,4 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
 
 
-__all__ = ["Wav2Vec2BertForMultilevelCTC"]
+__all__ = ["Wav2Vec2BertForRNNStreamingMultilevelCTC"]
