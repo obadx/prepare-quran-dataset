@@ -27,7 +27,7 @@ from .configuration_rnn_streaming_multi_level_ctc import (
 # lookback_frames= 5
 # chunk_frames= 25
 # lookahead_frames= 5
-# rnn_hidden_size = 128
+# rnn_hidden_size = 256
 # rnn_dropout = 0.1
 
 
@@ -243,6 +243,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 "instantiate the model as follows: `Wav2Vec2BertForCTC.from_pretrained(..., level_to_vocab_size=level_to_vocab_size)`. "
                 "or define `level_to_vocab_size` of your model's configuration."
             )
+        # WARN: Ignoreing Adapter logic for now
         output_hidden_size = (
             config.output_hidden_size
             if hasattr(config, "add_adapter") and config.add_adapter
