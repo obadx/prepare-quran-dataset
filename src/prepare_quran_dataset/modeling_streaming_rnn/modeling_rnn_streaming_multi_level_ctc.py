@@ -233,6 +233,8 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         self.wav2vec2_bert = Wav2Vec2BertModel(config)
         self.ssl_dropout = nn.Dropout(config.final_dropout)
+        # as we have a single layer LSTM so the internal droput is not applied
+        self.rnn_dropout = nn.Dropout(config.rnn_dropout)
 
         if config.level_to_vocab_size == {}:
             raise ValueError(
@@ -270,6 +272,67 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+
+    def rnn_forward(
+        self,
+        rnn_input: torch.FloatTensor,  # (batch, num_chunks, input_size)
+        rnn_history: tuple[
+            torch.FloatTensor, torch.FloatTensor
+        ],  # (h0, c0) each (num_layers, batch, hidden)
+        num_chunks_mask: torch.Tensor,  # (batch, num_chunks) – 1 for real chunk, 0 for padding
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor]]:
+        """
+        Run the LSTM over the chunk dimension, skipping padded chunks.
+
+        Args:
+            rnn_input: first frame of each chunk, shape (batch, num_chunks, input_size)
+            rnn_history: initial hidden/cell states (h0, c0)
+            num_chunks_mask: binary mask, shape (batch, num_chunks). 1 = real chunk, 0 = padding.
+
+        Returns:
+            rnn_output: LSTM output, same shape as rnn_input (padded positions are 0)
+            (h_n, c_n): final hidden/cell states
+        """
+        # 1. Sequence lengths = number of real chunks per example
+        lengths = num_chunks_mask.sum(dim=1)  # (batch,)
+
+        # 2. Sort lengths in descending order (required by enforce_sorted=True)
+        sorted_lengths, sort_indices = lengths.sort(descending=True)
+        # Inverse permutation to restore order later
+        _, unsort_indices = sort_indices.sort()
+
+        # 3. Reorder the input and the hidden states to match the sorted batch
+        sorted_input = rnn_input[sort_indices]  # (batch, num_chunks, input_size)
+        # h0, c0 have shape (num_layers, batch, hidden); we sort along dim=1
+        sorted_h0 = rnn_history[0][:, sort_indices, :]
+        sorted_c0 = rnn_history[1][:, sort_indices, :]
+
+        # 4. Pack sorted sequences (enforce_sorted=True is now safe) and for onnx export later
+        packed_input = nn.utils.rnn.pack_padded_sequence(
+            sorted_input,
+            sorted_lengths.cpu(),
+            batch_first=True,
+            enforce_sorted=True,
+        )
+
+        # 5. Run LSTM
+        packed_output, (h_n_sorted, c_n_sorted) = self.rnn(
+            packed_input, (sorted_h0, sorted_c0)
+        )
+
+        # 6. Unpack to a padded tensor of original shape
+        rnn_output_sorted, _ = nn.utils.rnn.pad_packed_sequence(
+            packed_output,
+            batch_first=True,
+            total_length=rnn_input.size(1),  # number of chunks (including padding)
+        )
+
+        # 7. Restore original batch order
+        rnn_output = rnn_output_sorted[unsort_indices]
+        h_n = h_n_sorted[:, unsort_indices, :]
+        c_n = c_n_sorted[:, unsort_indices, :]
+
+        return rnn_output, (h_n, c_n)
 
     @auto_docstring
     def forward(
@@ -309,6 +372,26 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         )
         batch_size, seq_len, features = input_features.shape
 
+        if (
+            self.config.max_chunk_batch != 1
+            and self.config.max_chunk_batch % batch_size != 0
+        ):
+            raise ValueError(
+                f"`config.max_chunk_batch` has either to be 1 or be multiple of `batch_size`: You input `config.max_chunk_batch`={self.config.max_chunk_batch}, and the `batch_size` is {batch_size}"
+            )
+
+        if labels is not None:
+            if labels_mask is None:
+                raise ValueError(
+                    "`labels_masks` has to be input to calculate CTC loss properly with a dict of tensors of shape of `batch_size, target_seq_len`"
+                )
+            else:
+                for level in labels:
+                    if labels_mask[level].shape != labels[level].shape:
+                        raise ValueError(
+                            f"`labels_masks` has to be input to calculate CTC loss properly with shape of `batch_size, target_seq_len` ({labels[level].shape}) for level: `{level}` got: `{labels_mask[level].shape}`"
+                        )
+
         # LSTM history, (c0, h0) validation
         valid_rnn_history_shape = (1, batch_size, self.config.rnn_hidden_size)
         if rnn_history is not None:
@@ -327,14 +410,16 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 torch.zeros(valid_rnn_history_shape, device=input_features.device),
             )
 
-        # Reshping input from batch, seq_len, feature_size to batch, chunk_batch_size,k
+        # Reshping input from (batch_size, seq_len), feature_size to (batch_size, num_chunks, streaming_len, feature_size)
+        # For attention_mask the output shape: (batch_size, num_chunks, streaming_len)
         if stream_inference:
             if seq_len != self.steaming_len:
                 raise ValueError(
                     f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.straming_len}`, got: `{seq_len}`"
                 )
-            batched_input_features = input_features.unsqueeze(dim=0)
-            batched_attenion_mask = attention_mask.unsqueeze(dim=0)
+            # Expaning dimention for the number of chunks
+            batched_input_features = input_features.unsqueeze(dim=1)
+            batched_attenion_mask = attention_mask.unsqueeze(dim=1)
         else:
             if seq_len < self.config.chunk_frames:
                 raise ValueError(
@@ -393,17 +478,20 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         batched_attenion_mask = batched_attenion_mask.view(
             batch_size, -1, padded_seq_len
         )
-        # TODO: How to apply dorpout
         hidden_states = self.ssl_dropout(hidden_states)
 
         # RNN  Inference Looping for the chunks (dim=1) we have for every input
-        # BUG: chunk_mask
-        rnn_output, rnn_history = self.rnn(
+        # Computing masks for chunks as not all chunks has valid input some with (all zero input)
+        num_chunks_mask = (batched_attenion_mask.sum(dim=-1) != 0).to(torch.long)
+        rnn_output, rnn_history = self.rnn_forward(
             hidden_states[
                 :, :, 0, : self.config.hidden_size
             ],  # taking the firt token(0) to to rnn as feedback
             rnn_history,
+            num_chunks_mask=num_chunks_mask,
         )
+        rnn_output = self.rnn_dropout(rnn_output)
+
         # Keeping only the chunk and drop the lookaback and lookahead
         hidden_states = hidden_states[
             :,
@@ -436,17 +524,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         loss = None
         if labels is not None:
-            if labels_mask is None:
-                raise ValueError(
-                    "`labels_masks` has to be input to calculate CTC loss properly with a dict of tensors of shape of `batch_size, target_seq_len`"
-                )
-            else:
-                for level in labels:
-                    if labels_mask[level].shape != labels[level].shape:
-                        raise ValueError(
-                            f"`labels_masks` has to be input to calculate CTC loss properly with shape of `batch_size, target_seq_len` ({labels[level].shape}) for level: `{level}` got: `{labels_mask[level].shape}`"
-                        )
-
             # retrieve loss input_lengths from attention_mask
             attention_mask = (
                 attention_mask
