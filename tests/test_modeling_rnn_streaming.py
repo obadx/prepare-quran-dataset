@@ -23,6 +23,7 @@ if __name__ == "__main__":
     config = Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(
         level_to_vocab_size=level_to_vocab_size,
         hidden_size=512,
+        num_attention_heads=8,
         intermediate_size=2048,
         num_hidden_layers=16,
         rnn_hidden_size=128,
