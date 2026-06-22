@@ -255,6 +255,14 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         self.wav2vec2_bert = Wav2Vec2BertModel(config)
         self.ssl_dropout = nn.Dropout(config.final_dropout)
+        self.rnn = nn.LSTM(
+            input_size=config.output_hidden_size,
+            hidden_size=config.rnn_hidden_size,
+            num_layers=1,
+            batch_first=True,
+            dropout=config.rnn_dropout,
+            bidirectional=False,
+        )
         # as we have a single layer LSTM so the internal dropout is not applied
         self.rnn_dropout = nn.Dropout(config.rnn_dropout)
 
@@ -280,21 +288,40 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
             }
         )
 
-        self.rnn = nn.LSTM(
-            input_size=config.output_hidden_size,
-            hidden_size=config.rnn_hidden_size,
-            num_layers=1,
-            batch_first=True,
-            dropout=config.rnn_dropout,
-            bidirectional=False,
-        )
-
         self.streaming_len = (
             config.chunk_frames + config.lookback_frames + config.lookahead_frames
         )
 
         # Initialize weights and apply final processing
         self.post_init()
+
+    def initialize_weights(self):
+        """
+        Initialize all weights, then re-initialize nn.Embedding modules that
+        HuggingFace's smart_apply skips inside child PreTrainedModel submodules.
+
+        The parent Wav2Vec2BertPreTrainedModel._init_weights does not handle
+        nn.Embedding, so distance_embedding (nn.Embedding(73, head_size)) in each
+        attention layer is left with PyTorch's default uniform(-1, 1) init.
+
+        When loaded with ignore_mismatched_sizes=True, the checkpoint's
+        distance_embedding.weight shape [73, 64] does not match the model's
+        [73, head_size], so the weight is not overwritten and the uniform init
+        persists.  Vectors with norm ≈ √(head_size/3) ≈ 3.3 for head_size=32
+        cause the relative position dot product (einsum Q·pos_emb) to exceed
+        float32 range, producing NaN.
+
+        This override is called both during post_init() (model construction) and
+        after checkpoint loading by _initialize_missing_keys, ensuring it catches
+        the two-pass HuggingFace weight init pattern.
+        The debugging was done using `tests/debug_explosion_modeling_streaming.py`
+        """
+        super().initialize_weights()
+        for module in self.modules():
+            if isinstance(module, nn.Embedding):
+                nn.init.normal_(
+                    module.weight, mean=0.0, std=self.config.initializer_range
+                )
 
     def rnn_forward(
         self,
@@ -405,7 +432,6 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 When `return_dict=False`, a tuple `(loss, logits, rnn_history, hidden_states)`.
                 When `return_dict=True`, a [`StreamingCTCOutput`] with typed fields.
         """
-
         # Level to Labels validation
         if labels is not None:
             if not isinstance(labels, dict):
@@ -457,8 +483,16 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                     raise ValueError(rnn_history_err_msg)
         else:
             rnn_history = (
-                torch.zeros(valid_rnn_history_shape, device=input_features.device),
-                torch.zeros(valid_rnn_history_shape, device=input_features.device),
+                torch.zeros(
+                    valid_rnn_history_shape,
+                    device=input_features.device,
+                    dtype=input_features.dtype,
+                ),
+                torch.zeros(
+                    valid_rnn_history_shape,
+                    device=input_features.device,
+                    dtype=input_features.dtype,
+                ),
             )
 
         # Reshaping input from (batch_size, seq_len), feature_size to (batch_size, num_chunks, streaming_len, feature_size)
@@ -498,6 +532,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         # Initializing hidden_states for future concatenation with the rnn output
         # hidden states are the concatenation of the ssl output and the rnn outputs
+
         hidden_states = torch.zeros(
             (
                 batched_input_features.shape[0],
