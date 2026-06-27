@@ -192,7 +192,7 @@ def main(args):
     reciter_pool = ReciterPool(args.dataset_dir / "reciter_pool.jsonl")
     moshaf_pool = MoshafPool(reciter_pool, args.dataset_dir)
 
-    trunc_conifg = TruncationConfig.from_yaml("./truncation_config.yml")
+    trunc_conifg = TruncationConfig.from_yaml("./configs/truncation/truncation_config.yml")
     moshaf_id_to_moshaf_trunc_conifg = {m.id: m for m in trunc_conifg.items}
 
     # Configure Slurm

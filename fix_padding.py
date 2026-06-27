@@ -173,7 +173,7 @@ def main(args):
     out_path = Path(args.dataset_dir) / "dataset"
     out_path.mkdir(exist_ok=True, parents=True)
 
-    trunc_conifg = TruncationConfig.from_yaml("./truncation_config.yml")
+    trunc_conifg = TruncationConfig.from_yaml("./configs/truncation/truncation_config.yml")
 
     # Configure Slurm
     executor = submitit.AutoExecutor(folder="logs")

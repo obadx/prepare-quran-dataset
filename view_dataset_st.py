@@ -1041,7 +1041,7 @@ if __name__ == "__main__":
     # original_quran_dataset_path = "../quran-dataset"
     # update_wave_files_path = "../moshaf-fixes/"
 
-    edit_config_path = "./edit_config.yml"
+    edit_config_path = "./configs/edit/edit_config.yml"
 
     if "edit_config" not in st.session_state:
         st.session_state.edit_config = EditConfig.from_yaml(edit_config_path)

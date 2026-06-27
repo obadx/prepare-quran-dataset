@@ -220,8 +220,8 @@ if __name__ == "__main__":
     download_path = "/home/abdullah/Downloads/4_0_missing/"
     ds_path = "/cluster/users/shams035u1/data/mualem-recitations-annotated"
     moshaf_id = "4.0"
-    moshaf_edit_config_path = f"./edit_config_{moshaf_id}.yml"
-    edit_config_path = "./edit_config.yml"
+    moshaf_edit_config_path = f"./configs/edit/edit_config_{moshaf_id}.yml"
+    edit_config_path = "./configs/edit/edit_config.yml"
     fixes_path = Path(ds_path) / f"moshaf-fixes/{moshaf_id}"
     cache_dir = f".fix_{moshaf_id}_cache"
     batch_size = 8

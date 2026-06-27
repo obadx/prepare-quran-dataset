@@ -56,7 +56,7 @@ def main(args):
     out_path = Path(args.dataset_dir) / "dataset"
     out_path.mkdir(exist_ok=True, parents=True)
 
-    edit_cofig = EditConfig.from_yaml("./edit_config.yml")
+    edit_cofig = EditConfig.from_yaml(args.edit_config)
 
     # Configure Slurm
     executor = submitit.AutoExecutor(folder="logs")
@@ -146,6 +146,12 @@ if __name__ == "__main__":
         "--new-audiofile-base-path",
         type=Path,
         required=True,
+    )
+    parser.add_argument(
+        "--edit-config",
+        type=str,
+        default="./configs/edit/edit_config.yml",
+        help="Path to edit config YAML",
     )
     parser.add_argument(
         "--slurm", action="store_true", help="Use SLURM for distributed processing"

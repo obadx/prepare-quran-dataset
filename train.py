@@ -788,7 +788,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="./train_config.yml",
+        default="./configs/train/offline/train_config.yml",
         help="Path to training config YAML",
     )
     parser.add_argument(
