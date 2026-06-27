@@ -37,15 +37,20 @@ SIFAT_ATTR_TO_ENGLISH = {v: k for k, v in SIFAT_ATTR_TO_ARABIC.items()}
 PAD_TOKEN = "[PAD]"
 PAD_TOKEN_IDX = 0
 
+EOS_TOKEN = "[EOS]"
+EOS_TOKEN_IDX = 1
+
+_RESERVED_IDXS = {PAD_TOKEN_IDX, EOS_TOKEN_IDX}
+
 
 def build_quran_phoneme_script_vocab(path: str):
     level_to_token_to_idx = {}
     # Phonemes level
     phonemes = list(asdict(alph.phonetics).values())
-    level_to_token_to_idx["phonemes"] = {PAD_TOKEN: PAD_TOKEN_IDX}
+    level_to_token_to_idx["phonemes"] = {PAD_TOKEN: PAD_TOKEN_IDX, EOS_TOKEN: EOS_TOKEN_IDX}
     idx = 0
     for p in phonemes:
-        if idx == PAD_TOKEN_IDX:
+        while idx in _RESERVED_IDXS:
             idx += 1
         level_to_token_to_idx["phonemes"][p] = idx
         idx += 1
@@ -55,10 +60,10 @@ def build_quran_phoneme_script_vocab(path: str):
             level = field_name
             phonemes = get_args(fieldinfo.annotation)
             phonemes = [SIFAT_ATTR_TO_ARABIC[p] for p in phonemes]
-            level_to_token_to_idx[level] = {PAD_TOKEN: PAD_TOKEN_IDX}
+            level_to_token_to_idx[level] = {PAD_TOKEN: PAD_TOKEN_IDX, EOS_TOKEN: EOS_TOKEN_IDX}
             idx = 0
             for p in phonemes:
-                if idx == PAD_TOKEN_IDX:
+                while idx in _RESERVED_IDXS:
                     idx += 1
                 level_to_token_to_idx[level][p] = idx
                 idx += 1
