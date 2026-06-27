@@ -178,7 +178,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(PretrainedConfig):
     >>> configuration = model.config
     ```"""
 
-    model_type = "multi_level_ctc"
+    model_type = "w2v2bert-streaming-rnn"
 
     def __init__(
         self,

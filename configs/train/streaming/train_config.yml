@@ -41,7 +41,7 @@ loss_weights:
 
 # Augmentaion
 augment_prob: 0.4
-max_audio_seconds: 30.0
+max_audio_seconds: null
 
 # Model dropout
 dropout: 0.1
@@ -68,7 +68,7 @@ lookback_frames: 5
 lookahead_frames: 5
 rnn_hidden_size: 128
 rnn_dropout: 0.05
-max_chunk_batch: 64
+max_chunk_batch: 128
 conv_depthwise_kernel_size: 7
 
 # Training parameters
@@ -82,8 +82,7 @@ pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.2
-
+save_every: 0.05
 # Hardware settings
 # num_workers: 4
 

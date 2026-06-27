@@ -16,20 +16,6 @@ from .configuration_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTCConfig,
 )
 
-# TODO:
-# [ ] Add LSTM
-# [ ] Add configs
-# [ ] del samples < chunk
-
-
-# TODO: To be added configs:
-# max_chunk_batch= 1
-# lookback_frames= 5
-# chunk_frames= 25
-# lookahead_frames= 5
-# rnn_hidden_size = 256
-# rnn_dropout = 0.1
-
 
 def convert_input_to_chunked_for_offline(
     input: torch.Tensor,

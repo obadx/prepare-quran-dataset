@@ -55,7 +55,7 @@ class TrainConfig(BaseModel):
     test_moshaf_ids: list[str] | None = None
     augment_prob: float = 0.4
     loss_weights: dict[str, float] = {"phonemes": 0.4}
-    max_audio_seconds: float = 35.0
+    max_audio_seconds: float | None = 35.0
     dropout: float = 0.1
     num_epochs: int = 1
     num_hidden_layers: int = 24
@@ -384,18 +384,19 @@ def prepare_dataset(
     # disable torchcodec decoding, use liborsa instead
     ds = ds.cast_column("audio", Audio(decode=False))
 
-    # removihg long samples
-    max_samples = int(train_config.max_audio_seconds * sample_rate)
-
     def _audio_len(audio_dict):
         src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
         wav, _ = librosa.load(src, sr=16000, mono=True)
         return len(wav)
 
-    ds = ds.filter(
-        lambda ex: _audio_len(ex["audio"]) <= max_samples,
-        num_proc=train_config.num_workers,
-    )
+    if train_config.max_audio_seconds is not None:
+        # removihg long samples
+        max_samples = int(train_config.max_audio_seconds * sample_rate)
+
+        ds = ds.filter(
+            lambda ex: _audio_len(ex["audio"]) <= max_samples,
+            num_proc=train_config.num_workers,
+        )
 
     if is_testset:
         return DatasetDict({"test": ds})
