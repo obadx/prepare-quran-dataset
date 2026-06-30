@@ -281,33 +281,33 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    def initialize_weights(self):
-        """
-        Initialize all weights, then re-initialize nn.Embedding modules that
-        HuggingFace's smart_apply skips inside child PreTrainedModel submodules.
-
-        The parent Wav2Vec2BertPreTrainedModel._init_weights does not handle
-        nn.Embedding, so distance_embedding (nn.Embedding(73, head_size)) in each
-        attention layer is left with PyTorch's default uniform(-1, 1) init.
-
-        When loaded with ignore_mismatched_sizes=True, the checkpoint's
-        distance_embedding.weight shape [73, 64] does not match the model's
-        [73, head_size], so the weight is not overwritten and the uniform init
-        persists.  Vectors with norm ≈ √(head_size/3) ≈ 3.3 for head_size=32
-        cause the relative position dot product (einsum Q·pos_emb) to exceed
-        float32 range, producing NaN.
-
-        This override is called both during post_init() (model construction) and
-        after checkpoint loading by _initialize_missing_keys, ensuring it catches
-        the two-pass HuggingFace weight init pattern.
-        The debugging was done using `tests/debug_explosion_modeling_streaming.py`
-        """
-        super().initialize_weights()
-        for module in self.modules():
-            if isinstance(module, nn.Embedding):
-                nn.init.normal_(
-                    module.weight, mean=0.0, std=self.config.initializer_range
-                )
+    # def initialize_weights(self):
+    #     """
+    #     Initialize all weights, then re-initialize nn.Embedding modules that
+    #     HuggingFace's smart_apply skips inside child PreTrainedModel submodules.
+    #
+    #     The parent Wav2Vec2BertPreTrainedModel._init_weights does not handle
+    #     nn.Embedding, so distance_embedding (nn.Embedding(73, head_size)) in each
+    #     attention layer is left with PyTorch's default uniform(-1, 1) init.
+    #
+    #     When loaded with ignore_mismatched_sizes=True, the checkpoint's
+    #     distance_embedding.weight shape [73, 64] does not match the model's
+    #     [73, head_size], so the weight is not overwritten and the uniform init
+    #     persists.  Vectors with norm ≈ √(head_size/3) ≈ 3.3 for head_size=32
+    #     cause the relative position dot product (einsum Q·pos_emb) to exceed
+    #     float32 range, producing NaN.
+    #
+    #     This override is called both during post_init() (model construction) and
+    #     after checkpoint loading by _initialize_missing_keys, ensuring it catches
+    #     the two-pass HuggingFace weight init pattern.
+    #     The debugging was done using `tests/debug_explosion_modeling_streaming.py`
+    #     """
+    #     super().initialize_weights()
+    #     for module in self.modules():
+    #         if isinstance(module, nn.Embedding):
+    #             nn.init.normal_(
+    #                 module.weight, mean=0.0, std=self.config.initializer_range
+    #             )
 
     def rnn_forward(
         self,

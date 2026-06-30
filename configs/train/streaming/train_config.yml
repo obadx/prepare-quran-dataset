@@ -72,9 +72,9 @@ max_chunk_batch: 128
 conv_depthwise_kernel_size: 7
 
 # Training parameters
-num_epochs: 1
+num_epochs: 5
 learning_rate: 5e-5
-seed: 42
+seed: 10
 
 # Batch sizes
 per_device_train_batch_size: 64
@@ -82,7 +82,8 @@ pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.05
+save_every: 0.1
+save_every: 0.1
 # Hardware settings
 # num_workers: 4
 
@@ -105,3 +106,5 @@ gradient_checkpoiniting: true
 
 # Output directory for checkpoints
 output_dir: "./results-streaming-rnn-v0"
+
+num_workers: 4

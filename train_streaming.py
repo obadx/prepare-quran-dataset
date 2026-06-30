@@ -203,9 +203,11 @@ def sequence_to_chars(labels) -> str:
     return t
 
 
-def compute_per_level(predictions: list[str], references: list[str], pad_token_idx=0):
+def compute_per_level_stats(predictions, references, pad_token_idx=0):
     """
-    Compute Phoneme Error Rate using Levenshtein distance.
+    Compute raw Levenshtein distance and total length for a batch.
+
+    Returns (total_distance, total_length) for incremental accumulation.
     """
     total_distance = 0
     total_length = 0
@@ -220,55 +222,74 @@ def compute_per_level(predictions: list[str], references: list[str], pad_token_i
     for pred, ref in zip(pred_ids_list, ref_ids_list):
         pred_str = sequence_to_chars(pred)
         ref_str = sequence_to_chars(ref)
-        # Compute Levenshtein distance
         distance = min(Levenshtein.distance(pred_str, ref_str), len(ref_str))
         total_distance += distance
         total_length += len(ref_str)
 
-    return total_distance / total_length if total_length > 0 else 0.0
+    return total_distance, total_length
 
 
-def compute_metrics(eval_pred, pad_token_idx=0):
+class IncrementalMetrics:
     """
-    Compute PER metrics for multi-level predictions.
+    Callable compute_metrics for batch_eval_metrics=True mode.
 
-    Args:
-        eval_pred: Tuple of (predictions, labels) where both are dictionaries
-        multi_level_tokenizer: MultiLevelTokenizer instance for decoding
-
-    Returns:
-        Dictionary with PER metrics for each level and average
+    Accumulates PER stats per batch and only computes final metrics
+    when compute_result=True (last eval batch), avoiding ever storing
+    the full eval set predictions in memory.
     """
-    predictions_dict, labels_dict = eval_pred
-    metrics = {}
 
-    # remove -100 id
-    for level in labels_dict:
-        mask = labels_dict[level] < 0
-        labels_dict[level][mask] = pad_token_idx
+    def __init__(self, pad_token_idx=0):
+        self.pad_token_idx = pad_token_idx
+        self._running = {}
 
-    pred_labels = {
-        level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
-    }
+    def __call__(self, eval_pred, compute_result=False):
+        predictions = eval_pred.predictions
+        labels = eval_pred.label_ids
 
-    for level in labels_dict:
-        metrics[f"per_{level}"] = compute_per_level(
-            pred_labels[level],
-            labels_dict[level],
-            pad_token_idx=pad_token_idx,
-        )
+        if isinstance(predictions, (tuple, list)):
+            predictions = predictions[0]
+        if isinstance(labels, (tuple, list)):
+            labels = labels[0]
 
-    # computing average per
-    total_per = 0.0
-    N = 0
-    for key in metrics:
-        total_per += metrics[key]
-        N += 1
+        predictions_dict = {
+            level: p.detach().cpu().numpy() for level, p in predictions.items()
+        }
+        labels_dict = {level: l.detach().cpu().numpy() for level, l in labels.items()}
 
-    metrics["average_per"] = total_per / N
+        for level in labels_dict:
+            labels_dict[level][labels_dict[level] < 0] = self.pad_token_idx
 
-    # Compute PER for each leve
-    return metrics
+        pred_labels = {
+            level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
+        }
+
+        for level in labels_dict:
+            if level not in self._running:
+                self._running[level] = {"distance": 0, "length": 0}
+            d, l = compute_per_level_stats(
+                pred_labels[level],
+                labels_dict[level],
+                pad_token_idx=self.pad_token_idx,
+            )
+            self._running[level]["distance"] += d
+            self._running[level]["length"] += l
+
+        if compute_result:
+            metrics = {}
+            n = 0
+            total_per = 0.0
+            for level, stats in self._running.items():
+                per = (
+                    stats["distance"] / stats["length"] if stats["length"] > 0 else 0.0
+                )
+                metrics[f"per_{level}"] = per
+                total_per += per
+                n += 1
+            metrics["average_per"] = total_per / n if n > 0 else 0.0
+            self._running = {}
+            return metrics
+
+        return {}
 
 
 def build_audiomentations_augs(p=0.4, seed=42, all=False):
@@ -791,7 +812,7 @@ if __name__ == "__main__":
         save_total_limit=3,
         hub_strategy="all_checkpoints",  # pushes all checkpoints to the Hub with one checkpoint per subfolder in your model repository
         remove_unused_columns=False,
-        eval_accumulation_steps=128,  # offload eval logits to CPU each step to prevent GPU OOM from accumulated predictions
+        batch_eval_metrics=True,
     )
     print(training_args)
 
@@ -810,7 +831,7 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["validation"],
-        compute_metrics=compute_metrics,
+        compute_metrics=IncrementalMetrics(pad_token_idx=PAD_TOKEN_IDX),
         data_collator=data_collector,
     )
 
