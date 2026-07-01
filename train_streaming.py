@@ -378,6 +378,13 @@ class Augment(object):
         return item
 
 
+def fix_dataset_len(ds: Dataset, batch_size: int) -> Dataset:
+    """Fix dataset len to be multiple of batch_size as the model
+    config asserts that config.max_chunk_batch be mutliple of batch_size"""
+    ds_len = (len(ds) // batch_size) * batch_size
+    return ds.select(range(ds_len))
+
+
 def prepare_dataset(
     train_config: TrainConfig,
     processor,
@@ -420,7 +427,9 @@ def prepare_dataset(
         )
 
     if is_testset:
-        return DatasetDict({"test": ds})
+        return DatasetDict(
+            {"test": fix_dataset_len(ds, train_config.pre_device_eval_batch_size)}
+        )
 
     else:
         # split train / validation
@@ -429,7 +438,16 @@ def prepare_dataset(
             generator=np.random.default_rng(train_config.seed),
         )
 
-        return DatasetDict({"train": ds["train"], "validation": ds["test"]})
+        return DatasetDict(
+            {
+                "train": fix_dataset_len(
+                    ds["train"], train_config.per_device_train_batch_size
+                ),
+                "validation": fix_dataset_len(
+                    ds["test"], train_config.pre_device_eval_batch_size
+                ),
+            }
+        )
 
 
 def build_model_components(
@@ -586,7 +604,7 @@ def run_qdat_bench_test(
     vocab,
     device,
     dtype,
-    batch_size=64,
+    batch_size=1,
 ):
     """
     Run inference + evaluation on the qdat_bench dataset.
@@ -889,7 +907,7 @@ if __name__ == "__main__":
             vocab=vocab,
             device=device,
             dtype=dtype,
-            batch_size=train_config.pre_device_eval_batch_size,
+            batch_size=1,
         )
 
     # [optional] finish the wandb run, necessary in notebooks
