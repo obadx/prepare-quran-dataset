@@ -605,6 +605,7 @@ def run_qdat_bench_test(
     device,
     dtype,
     batch_size=1,
+    model_suffix="",
 ):
     """
     Run inference + evaluation on the qdat_bench dataset.
@@ -702,7 +703,7 @@ def run_qdat_bench_test(
                     }
                 )
 
-    pred_path = Path(output_dir) / "qdat_bench_predictions.jsonl"
+    pred_path = Path(output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl" if model_suffix else Path(output_dir) / "qdat_bench_predictions.jsonl"
     with open(pred_path, "w") as f:
         for r in results:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
@@ -715,7 +716,7 @@ def run_qdat_bench_test(
         bootstrap=False,
     )
 
-    results_path = Path(output_dir) / "qdat_bench_test_results.json"
+    results_path = Path(output_dir) / f"qdat_bench_test_results_{model_suffix}.json" if model_suffix else Path(output_dir) / "qdat_bench_test_results.json"
     with open(results_path, "w") as f:
         json.dump(metrics, f, indent=4, ensure_ascii=False)
     print(f"QDAT benchmark results saved to {results_path}")
@@ -750,7 +751,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Force re-run qdat_bench inference + evaluation even if results exist",
     )
+    parser.add_argument(
+        "--load-last-model",
+        action="store_true",
+        default=False,
+        help="Use the last saved checkpoint instead of the best model when running test set evaluation, qdat_bench, and pushing to the Hub (default: best model)",
+    )
     args = parser.parse_args()
+    load_best_model_at_end = not args.load_last_model
+    model_suffix = "last" if args.load_last_model else "best"
 
     # loading wandb tokens and HF login
     load_secrets()
@@ -823,7 +832,7 @@ if __name__ == "__main__":
         dataloader_num_workers=train_config.num_workers,
         weight_decay=train_config.weight_decay,
         logging_dir=str(Path(train_config.output_dir) / "logs"),
-        load_best_model_at_end=False,
+        load_best_model_at_end=load_best_model_at_end,
         metric_for_best_model=train_config.metric_for_bet_model,
         greater_is_better=train_config.greater_is_better,
         # push_to_hub=True,  # this pushed every checkpoint to the hup we want to push the best model only
@@ -868,7 +877,7 @@ if __name__ == "__main__":
         trainer.train()
 
     # Final evaluation on test set
-    test_results_path = Path(train_config.output_dir) / "test_results.json"
+    test_results_path = Path(train_config.output_dir) / f"test_results_{model_suffix}.json"
     if train_config.test_moshaf_ids is not None:
         if test_results_path.exists() and not args.rerun_testset:
             print(
@@ -886,8 +895,8 @@ if __name__ == "__main__":
     # QDAT benchmark evaluation
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.bfloat16
-    qdat_pred_path = Path(train_config.output_dir) / "qdat_bench_predictions.jsonl"
-    qdat_results_path = Path(train_config.output_dir) / "qdat_bench_test_results.json"
+    qdat_pred_path = Path(train_config.output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
+    qdat_results_path = Path(train_config.output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
 
     if qdat_results_path.exists() and not args.rerun_qdat_bench:
         print(
@@ -915,6 +924,7 @@ if __name__ == "__main__":
             device=device,
             dtype=dtype,
             batch_size=1,
+            model_suffix=model_suffix,
         )
 
     # [optional] finish the wandb run, necessary in notebooks
@@ -925,7 +935,7 @@ if __name__ == "__main__":
         trainer.push_to_hub()
 
         api = HfApi()
-        for fname in ["test_results.json", "qdat_bench_test_results.json"]:
+        for fname in [f"test_results_{model_suffix}.json", f"qdat_bench_test_results_{model_suffix}.json"]:
             fpath = Path(train_config.output_dir) / fname
             if fpath.exists():
                 api.upload_file(
