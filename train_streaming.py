@@ -667,6 +667,13 @@ def run_qdat_bench_test(
                 labels = level_to_logits[level].argmax(dim=-1).cpu().numpy()
                 level_to_labels[level] = ctc_decode(labels)
 
+            special_ids = set(multi_level_tokenizer.special_tokens)
+            for level in level_to_labels:
+                level_to_labels[level] = [
+                    [t for t in seq if t not in special_ids]
+                    for seq in level_to_labels[level]
+                ]
+
             level_to_batch_to_script = {}
             for level in vocab:
                 ids_to_ph = {idx: label for label, idx in vocab[level].items()}
@@ -816,7 +823,7 @@ if __name__ == "__main__":
         dataloader_num_workers=train_config.num_workers,
         weight_decay=train_config.weight_decay,
         logging_dir=str(Path(train_config.output_dir) / "logs"),
-        load_best_model_at_end=True,
+        load_best_model_at_end=False,
         metric_for_best_model=train_config.metric_for_bet_model,
         greater_is_better=train_config.greater_is_better,
         # push_to_hub=True,  # this pushed every checkpoint to the hup we want to push the best model only

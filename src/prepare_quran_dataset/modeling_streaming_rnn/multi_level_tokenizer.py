@@ -56,6 +56,10 @@ class MultiLevelTokenizer:
     def sifat_to_en_vocab(self):
         return self.sifat_level_to_id_to_en_vocab
 
+    @property
+    def special_tokens(self) -> list[int]:
+        return [PAD_TOKEN_IDX, EOS_TOKEN_IDX]
+
     def tokenize(
         self,
         phonetic_script: list[str] | str,
