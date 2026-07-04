@@ -91,6 +91,7 @@ class TrainConfig(BaseModel):
     rnn_dropout: float = 0.1
     max_chunk_batch: int = 1
     conv_depthwise_kernel_size: int = 31
+    max_noise_input_seconds: float = 40.0
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "TrainConfig":
@@ -238,9 +239,13 @@ class IncrementalMetrics:
     the full eval set predictions in memory.
     """
 
-    def __init__(self, pad_token_idx=0):
+    def __init__(
+        self, pad_token_idx=0, data_collator: "DataCollatorCTCWithPadding | None" = None
+    ):
         self.pad_token_idx = pad_token_idx
         self._running = {}
+        self._silence_running = {"errors": 0, "total": 0}
+        self.data_collator = data_collator
 
     def __call__(self, eval_pred, compute_result=False):
         predictions = eval_pred.predictions
@@ -263,16 +268,43 @@ class IncrementalMetrics:
             level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
         }
 
-        for level in labels_dict:
-            if level not in self._running:
-                self._running[level] = {"distance": 0, "length": 0}
-            d, l = compute_per_level_stats(
-                pred_labels[level],
-                labels_dict[level],
-                pad_token_idx=self.pad_token_idx,
-            )
-            self._running[level]["distance"] += d
-            self._running[level]["length"] += l
+        batch_input_types = (
+            getattr(self.data_collator, "_batch_input_types", None)
+            if self.data_collator
+            else None
+        )
+
+        if batch_input_types:
+            speech_indices = [
+                i for i, t in enumerate(batch_input_types) if t == "speech"
+            ]
+            silence_indices = [
+                i for i, t in enumerate(batch_input_types) if t == "silence"
+            ]
+        else:
+            speech_indices = list(range(len(next(iter(predictions_dict.values())))))
+            silence_indices = []
+
+        # Speech: normal PER computation per level
+        if speech_indices:
+            for level in labels_dict:
+                if level not in self._running:
+                    self._running[level] = {"distance": 0, "length": 0}
+                d, l = compute_per_level_stats(
+                    pred_labels[level][speech_indices],
+                    labels_dict[level][speech_indices],
+                    pad_token_idx=self.pad_token_idx,
+                )
+                self._running[level]["distance"] += d
+                self._running[level]["length"] += l
+
+        # Silence: frame-level error rate for phonemes only
+        if silence_indices:
+            sil_pred = pred_labels["phonemes"][silence_indices]
+            sil_errors = (sil_pred != self.pad_token_idx).sum()
+            sil_total = sil_pred.size
+            self._silence_running["errors"] += int(sil_errors)
+            self._silence_running["total"] += sil_total
 
         if compute_result:
             metrics = {}
@@ -286,13 +318,23 @@ class IncrementalMetrics:
                 total_per += per
                 n += 1
             metrics["average_per"] = total_per / n if n > 0 else 0.0
+
+            # Silence PER (not included in average_per)
+            if self._silence_running["total"] > 0:
+                metrics["silence_per"] = (
+                    self._silence_running["errors"] / self._silence_running["total"]
+                )
+
             self._running = {}
+            self._silence_running = {"errors": 0, "total": 0}
             return metrics
 
         return {}
 
 
-def build_audiomentations_augs(p=0.4, seed=42, all=False):
+def build_audiomentations_augs(
+    p=0.4, seed=42, all=False, noise_dir_path: str | None = None
+):
     """taken form: https://github.com/snakers4/silero-vad/blob/master/tuning/utils.py#L37"""
     # audiomentations usesd python random for its calculations
     random.seed(seed)
@@ -315,12 +357,21 @@ def build_audiomentations_augs(p=0.4, seed=42, all=False):
         SevenBandParametricEQ,
         Aliasing,
         AddGaussianNoise,
+        AddBackgroundNoise,
         GainTransition,
         Compose,
         TimeStretch,
     )
 
-    transforms = [
+    transforms = (
+        [
+            AddBackgroundNoise(sounds_path=noise_dir_path, p=1.0),
+        ]
+        if noise_dir_path is not None
+        else []
+    )
+
+    transforms += [
         Aliasing(p=1),
         AddGaussianNoise(p=1),
         AirAbsorption(p=1),
@@ -349,10 +400,13 @@ class Augment(object):
         self,
         seed=77,
         augment_prob=0.4,
+        noise_dir_path: str | None = None,
     ):
         self.seed = seed
         self.augment_prob = augment_prob
-        self.augment = build_audiomentations_augs(1, seed=seed)
+        self.augment = build_audiomentations_augs(
+            1, seed=seed, noise_dir_path=noise_dir_path
+        )
 
     def apply(
         self,
@@ -385,12 +439,62 @@ def fix_dataset_len(ds: Dataset, batch_size: int) -> Dataset:
     return ds.select(range(ds_len))
 
 
+def prepare_noise_dataset(
+    train_config: TrainConfig,
+    augmentation_ratio: float = 0.3,
+    extend_seconds: float = 1.0,
+    extended_seconds_threshold: float = 10.0,
+    all_noise_as_input: bool = True,
+) -> dict:
+    """Split noise dataset into augmentation + input parts.
+
+    Returns:
+        {"augmentation": str(path to saved noise WAVs), "input": Dataset}
+    """
+    noise_ds = load_dataset(
+        "obadx/freesound-commercial-50k-noise-only",
+        split="train",
+    )
+    noise_ds = noise_ds.cast_column("audio", Audio(decode=False))
+
+    split_ds = noise_ds.train_test_split(
+        test_size=augmentation_ratio,
+        generator=np.random.default_rng(train_config.seed),
+    )
+    aug_ds = split_ds["test"]
+    if all_noise_as_input:
+        input_ds = noise_ds
+    else:
+        input_ds = split_ds["train"]
+
+    hf_cache = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
+    noise_dir = Path(hf_cache) / "noise-dir"
+
+    if not noise_dir.exists():
+        noise_dir.mkdir(parents=True, exist_ok=True)
+        import soundfile as sf
+
+        for i, example in enumerate(tqdm(aug_ds, desc="Saving noise samples")):
+            audio_dict = example["audio"]
+            src = io.BytesIO(audio_dict["bytes"])
+            wav, sr = librosa.load(src, sr=16000, mono=True)
+            if len(wav) / sr < extended_seconds_threshold:
+                extend_len = int(extend_seconds * sr)
+                wav = np.pad(wav, (0, extend_len))
+            sf.write(str(noise_dir / f"noise_{i:06d}.wav"), wav, sr)
+
+    input_ds = input_ds.add_column("input_type", ["silence"] * input_ds.num_rows)
+
+    return {"augmentation": str(noise_dir), "input": input_ds}
+
+
 def prepare_dataset(
     train_config: TrainConfig,
     processor,
     multi_level_tokenizer: MultiLevelTokenizer,
     sample_rate=16000,
     is_testset=False,
+    input_noise_ds: Dataset | None = None,
 ):
     if is_testset:
         moshaf_ids = train_config.test_moshaf_ids
@@ -425,6 +529,34 @@ def prepare_dataset(
             lambda ex: _audio_len(ex["audio"]) <= max_samples,
             num_proc=train_config.num_workers,
         )
+
+    # Add input_type column to speech samples
+    ds = ds.add_column("input_type", ["speech"] * ds.num_rows)
+
+    if input_noise_ds is not None:
+        input_noise_ds = input_noise_ds.cast_column("audio", Audio(decode=False))
+        input_noise_ds = input_noise_ds.add_column(
+            "uthmani", [""] * input_noise_ds.num_rows
+        )
+        input_noise_ds = input_noise_ds.add_column(
+            "moshaf_id", [""] * input_noise_ds.num_rows
+        )
+        input_noise_ds = input_noise_ds.add_column(
+            "segment_index", ["-1"] * input_noise_ds.num_rows
+        )
+        input_noise_ds = input_noise_ds.remove_columns(
+            [
+                "title",
+                "description",
+                "tags",
+                "username",
+                "freesound_id",
+                "license",
+                "attribution_required",
+                "commercial_use",
+            ]
+        )
+        ds = concatenate_datasets([ds, input_noise_ds])
 
     if is_testset:
         return DatasetDict(
@@ -503,6 +635,12 @@ class DataCollatorCTCWithPadding:
     moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
     augment: Augment
     special_moshaf_id_to_seg_to_moshaf_attr: dict[str, dict[str, MoshafAttributes]]
+    max_noise_input_seconds: float = 40.0
+    chunk_frames: int = 25
+    sample_rate: int = 16000
+
+    def __post_init__(self):
+        self._batch_input_types: list[str] = []
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -510,13 +648,57 @@ class DataCollatorCTCWithPadding:
         # split inputs and labels since they have to be of different lengths and need
         # different padding methods
         waves = []
+        phonemes_list = []
+        sifat_list = []
+        moshaf_attrs_list = []
+        self._batch_input_types = []
+
+        min_silence_samples = self.chunk_frames * 20 * self.sample_rate // 1000
+        max_silence_samples = int(self.max_noise_input_seconds * self.sample_rate)
+
         for f in features:
             audio_dict = f["audio"]
-            src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+            src = io.BytesIO(audio_dict["bytes"])
             wav, _ = librosa.load(src, sr=16000, mono=True)
+            input_type = f.get("input_type", "speech")
+            self._batch_input_types.append(input_type)
+
+            if input_type == "silence":
+                # Enforce min length (chunk_frames * 20ms)
+                if len(wav) < min_silence_samples:
+                    wav = np.pad(wav, (0, min_silence_samples - len(wav)))
+                # Enforce max length
+                if len(wav) > max_silence_samples:
+                    wav = wav[:max_silence_samples]
+            else:
+                wav = self.augment.apply(wav)
+
             waves.append(wav)
-        for idx in range(len(waves)):
-            waves[idx] = self.augment.apply(waves[idx])
+
+        for idx in range(len(features)):
+            if self._batch_input_types[idx] == "silence":
+                phonemes_list.append("")
+                sifat_list.append([])
+            else:
+                m_id = features[idx]["moshaf_id"]
+                if m_id in self.special_moshaf_id_to_seg_to_moshaf_attr:
+                    seg_idx = features[idx]["segment_index"]
+                    if seg_idx in self.special_moshaf_id_to_seg_to_moshaf_attr[m_id]:
+                        moshaf_attr = self.special_moshaf_id_to_seg_to_moshaf_attr[
+                            m_id
+                        ][seg_idx]
+                    else:
+                        moshaf_attr = self.moshaf_id_to_moshaf_attr[m_id]
+                else:
+                    moshaf_attr = self.moshaf_id_to_moshaf_attr[m_id]
+
+                phonized = quran_phonetizer(
+                    features[idx]["uthmani"],
+                    moshaf_attr,
+                    remove_spaces=True,
+                )
+                phonemes_list.append(phonized.phonemes)
+                sifat_list.append(phonized.sifat)
 
         batch = self.processor(
             waves,
@@ -526,33 +708,9 @@ class DataCollatorCTCWithPadding:
             return_attention_mask=True,
         )
 
-        # Preparing Moshaf Attributes
-        moshaf_attrs = []
-        for idx in range(len(features)):
-            m_id = features[idx]["moshaf_id"]
-            if m_id in self.special_moshaf_id_to_seg_to_moshaf_attr:
-                seg_idx = features[idx]["segment_index"]
-                if seg_idx in self.special_moshaf_id_to_seg_to_moshaf_attr[m_id]:
-                    moshaf_attrs.append(
-                        self.special_moshaf_id_to_seg_to_moshaf_attr[m_id][seg_idx]
-                    )
-                else:
-                    moshaf_attrs.append(self.moshaf_id_to_moshaf_attr[m_id])
-            else:
-                moshaf_attrs.append(self.moshaf_id_to_moshaf_attr[m_id])
-
-        photenized_outs = [
-            quran_phonetizer(
-                features[idx]["uthmani"],
-                moshaf_attrs[idx],
-                remove_spaces=True,
-            )
-            for idx in range(len(features))
-        ]
-
         labels = self.multi_level_tokenizer.tokenize(
-            [p.phonemes for p in photenized_outs],
-            [p.sifat for p in photenized_outs],
+            phonemes_list,
+            sifat_list,
             to_dict=True,
             add_eos=True,
             return_tensors="pt",
@@ -703,7 +861,11 @@ def run_qdat_bench_test(
                     }
                 )
 
-    pred_path = Path(output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl" if model_suffix else Path(output_dir) / "qdat_bench_predictions.jsonl"
+    pred_path = (
+        Path(output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
+        if model_suffix
+        else Path(output_dir) / "qdat_bench_predictions.jsonl"
+    )
     with open(pred_path, "w") as f:
         for r in results:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
@@ -716,7 +878,11 @@ def run_qdat_bench_test(
         bootstrap=False,
     )
 
-    results_path = Path(output_dir) / f"qdat_bench_test_results_{model_suffix}.json" if model_suffix else Path(output_dir) / "qdat_bench_test_results.json"
+    results_path = (
+        Path(output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
+        if model_suffix
+        else Path(output_dir) / "qdat_bench_test_results.json"
+    )
     with open(results_path, "w") as f:
         json.dump(metrics, f, indent=4, ensure_ascii=False)
     print(f"QDAT benchmark results saved to {results_path}")
@@ -798,8 +964,9 @@ if __name__ == "__main__":
         ex["id"]: MoshafAttributes(**ex) for ex in moshaf_dataeet
     }
 
-    processor.push_to_hub(train_config.hub_model_id)
-    multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id)
+    if args.push_to_hub:
+        processor.push_to_hub(train_config.hub_model_id)
+        multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id)
 
     # Initializaze wanddb
     # set the wandb project where this run will be logged
@@ -811,9 +978,17 @@ if __name__ == "__main__":
     # turn off watch to log faster
     os.environ["WANDB_WATCH"] = "false"
 
+    # Prepare noise dataset
+    noise_data = prepare_noise_dataset(train_config)
+
     # Load dataset
     # Update with your dataset path
-    dataset = prepare_dataset(train_config, processor, multi_level_tokenizer)
+    dataset = prepare_dataset(
+        train_config,
+        processor,
+        multi_level_tokenizer,
+        input_noise_ds=noise_data["input"],
+    )
 
     # Configure training arguments
     training_args = TrainingArguments(
@@ -855,8 +1030,14 @@ if __name__ == "__main__":
         processor=processor,
         multi_level_tokenizer=multi_level_tokenizer,
         moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
-        augment=Augment(augment_prob=train_config.augment_prob, seed=train_config.seed),
+        augment=Augment(
+            augment_prob=train_config.augment_prob,
+            seed=train_config.seed,
+            noise_dir_path=noise_data["augmentation"],
+        ),
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
+        max_noise_input_seconds=train_config.max_noise_input_seconds,
+        chunk_frames=train_config.chunk_frames,
     )
 
     # Initialize Trainer
@@ -865,7 +1046,10 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["validation"],
-        compute_metrics=IncrementalMetrics(pad_token_idx=PAD_TOKEN_IDX),
+        compute_metrics=IncrementalMetrics(
+            pad_token_idx=PAD_TOKEN_IDX,
+            data_collator=data_collector,
+        ),
         data_collator=data_collector,
     )
 
@@ -877,7 +1061,9 @@ if __name__ == "__main__":
         trainer.train()
 
     # Final evaluation on test set
-    test_results_path = Path(train_config.output_dir) / f"test_results_{model_suffix}.json"
+    test_results_path = (
+        Path(train_config.output_dir) / f"test_results_{model_suffix}.json"
+    )
     if train_config.test_moshaf_ids is not None:
         if test_results_path.exists() and not args.rerun_testset:
             print(
@@ -895,8 +1081,12 @@ if __name__ == "__main__":
     # QDAT benchmark evaluation
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.bfloat16
-    qdat_pred_path = Path(train_config.output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
-    qdat_results_path = Path(train_config.output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
+    qdat_pred_path = (
+        Path(train_config.output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
+    )
+    qdat_results_path = (
+        Path(train_config.output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
+    )
 
     if qdat_results_path.exists() and not args.rerun_qdat_bench:
         print(
@@ -935,7 +1125,10 @@ if __name__ == "__main__":
         trainer.push_to_hub()
 
         api = HfApi()
-        for fname in [f"test_results_{model_suffix}.json", f"qdat_bench_test_results_{model_suffix}.json"]:
+        for fname in [
+            f"test_results_{model_suffix}.json",
+            f"qdat_bench_test_results_{model_suffix}.json",
+        ]:
             fpath = Path(train_config.output_dir) / fname
             if fpath.exists():
                 api.upload_file(

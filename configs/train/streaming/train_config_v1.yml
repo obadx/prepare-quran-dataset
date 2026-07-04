@@ -1,0 +1,110 @@
+# Training configuration for w2v2bert-streaming-rnn
+train_moshaf_ids:
+  - "0.0"
+  - "0.1"
+  - "0.2"
+  - "0.3"
+  - "1.0"
+  - "2.0"
+  - "2.1"
+  - "3.0"
+  - "4.0"
+  - "5.0"
+  - "6.0"
+  - "7.0"
+  - "8.0"
+  - "9.0"
+  - "11.0"
+  - "12.0"
+  - "13.0"
+  - "22.0"
+  - "24.0"
+  - "26.0"
+  - "27.0"
+  - "28.0"
+
+# Test moshaf IDs (optional)
+test_moshaf_ids:
+  - "19.0"
+  - "29.0"
+  - "30.0"
+
+# Loss
+loss_weights:
+  # phonemes: 0.4
+  # shidda_or_rakhawa: 0.0605
+  # tafkheem_or_taqeeq: 0.0605
+  phonemes: 0.5789
+  shidda_or_rakhawa: 0.05263
+  tafkheem_or_taqeeq: 0.05263
+
+
+# Augmentaion
+augment_prob: 0.4
+max_audio_seconds: null
+max_noise_input_seconds: 30.0
+
+# Model dropout
+dropout: 0.1
+
+# Model architecture
+architecture: w2v2bert-streaming-rnn
+
+# Base model weights ID or path (Wav2Vec2Bert backbone)
+base_model_name_or_path: ./results-streaming-rnn-v0/checkpoint-16390/
+# base_model_name_or_path: facebook/w2v-bert-2.0
+
+# Processor/feature extractor ID or path
+processor_name_or_path: facebook/w2v-bert-2.0
+
+# Model architecture (defaults match w2v-bert-2.0)
+num_hidden_layers: 16
+hidden_size: 512
+output_hidden_size: 512
+intermediate_size: 2048
+num_attention_heads: 8
+
+# Streaming-specific
+chunk_frames: 25
+lookback_frames: 5
+lookahead_frames: 5
+rnn_hidden_size: 128
+rnn_dropout: 0.05
+max_chunk_batch: 128
+conv_depthwise_kernel_size: 7
+
+# Training parameters
+num_epochs: 5
+learning_rate: 5e-4
+seed: 10
+
+# Batch sizes
+per_device_train_batch_size: 64
+pre_device_eval_batch_size: 64
+
+# Dataset parameters
+devset_ratio: 0.1
+save_every: 0.1
+
+# Hardware settings
+num_workers: 4
+
+# Optimizer settings
+weight_decay: 0.01
+warmup_ratio: 0.2
+
+# Model saving and evaluation
+metric_for_bet_model: "average_per"
+greater_is_better: false
+
+hub_model_id: "obadx/muaalem-streaming-rnn-v1"
+wandb_project_name: "muaalem-streaming-rnn-v1"
+
+# Ignore mismatched sizes when loading pretrained weights
+ignore_mismatched_sizes: true
+
+# Gradint checkpointing
+gradient_checkpoiniting: true
+
+# Output directory for checkpoints
+output_dir: "./results-streaming-rnn-v1"

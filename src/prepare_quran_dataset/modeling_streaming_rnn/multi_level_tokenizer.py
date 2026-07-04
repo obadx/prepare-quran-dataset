@@ -114,9 +114,12 @@ class MultiLevelTokenizer:
 
         # Convert inner dicts to SifaOutput objects on a per-sample basis,
         # since some samples may have empty sifat lists (e.g. when phonemes is "").
-        for i, inner_list in enumerate(sifat):
-            if inner_list and isinstance(inner_list[0], dict):
-                sifat[i] = [SifaOutput(**s) for s in inner_list]
+        sifat = [
+            [SifaOutput(**s) for s in inner_list]
+            if inner_list and isinstance(inner_list[0], dict)
+            else inner_list
+            for inner_list in sifat
+        ]
 
         level_to_text_list = {}
         for level in self.levels:
