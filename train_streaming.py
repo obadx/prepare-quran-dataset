@@ -239,13 +239,10 @@ class IncrementalMetrics:
     the full eval set predictions in memory.
     """
 
-    def __init__(
-        self, pad_token_idx=0, data_collator: "DataCollatorCTCWithPadding | None" = None
-    ):
+    def __init__(self, pad_token_idx=0):
         self.pad_token_idx = pad_token_idx
         self._running = {}
         self._silence_running = {"errors": 0, "total": 0}
-        self.data_collator = data_collator
 
     def __call__(self, eval_pred, compute_result=False):
         predictions = eval_pred.predictions
@@ -268,22 +265,19 @@ class IncrementalMetrics:
             level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
         }
 
-        batch_input_types = (
-            getattr(self.data_collator, "_batch_input_types", None)
-            if self.data_collator
-            else None
-        )
-
-        if batch_input_types:
-            speech_indices = [
-                i for i, t in enumerate(batch_input_types) if t == "speech"
-            ]
-            silence_indices = [
-                i for i, t in enumerate(batch_input_types) if t == "silence"
-            ]
-        else:
-            speech_indices = list(range(len(next(iter(predictions_dict.values())))))
-            silence_indices = []
+        # Separate speech vs silence by checking label content:
+        # Silence samples have all-pad labels (1 non-pad token max from EOS),
+        # speech samples have real phoneme tokens. This avoids relying on a
+        # shared-state buffer that breaks with multiprocessing DataLoaders.
+        batch_size = len(next(iter(labels_dict.values())))
+        speech_indices = []
+        silence_indices = []
+        for i in range(batch_size):
+            non_pad = (labels_dict["phonemes"][i] != self.pad_token_idx).sum()
+            if non_pad <= 1:
+                silence_indices.append(i)
+            else:
+                speech_indices.append(i)
 
         # Speech: normal PER computation per level
         if speech_indices:
@@ -444,7 +438,7 @@ def prepare_noise_dataset(
     augmentation_ratio: float = 0.3,
     extend_seconds: float = 1.0,
     extended_seconds_threshold: float = 10.0,
-    all_noise_as_input: bool = True,
+    all_noise_as_input: bool = False,
 ) -> dict:
     """Split noise dataset into augmentation + input parts.
 
@@ -639,9 +633,6 @@ class DataCollatorCTCWithPadding:
     chunk_frames: int = 25
     sample_rate: int = 16000
 
-    def __post_init__(self):
-        self._batch_input_types: list[str] = []
-
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
     ) -> Dict[str, torch.Tensor]:
@@ -650,8 +641,7 @@ class DataCollatorCTCWithPadding:
         waves = []
         phonemes_list = []
         sifat_list = []
-        moshaf_attrs_list = []
-        self._batch_input_types = []
+        features_input_types = []
 
         min_silence_samples = self.chunk_frames * 20 * self.sample_rate // 1000
         max_silence_samples = int(self.max_noise_input_seconds * self.sample_rate)
@@ -661,7 +651,7 @@ class DataCollatorCTCWithPadding:
             src = io.BytesIO(audio_dict["bytes"])
             wav, _ = librosa.load(src, sr=16000, mono=True)
             input_type = f.get("input_type", "speech")
-            self._batch_input_types.append(input_type)
+            features_input_types.append(input_type)
 
             if input_type == "silence":
                 # Enforce min length (chunk_frames * 20ms)
@@ -676,7 +666,7 @@ class DataCollatorCTCWithPadding:
             waves.append(wav)
 
         for idx in range(len(features)):
-            if self._batch_input_types[idx] == "silence":
+            if features_input_types[idx] == "silence":
                 phonemes_list.append("")
                 sifat_list.append([])
             else:
@@ -1048,7 +1038,6 @@ if __name__ == "__main__":
         eval_dataset=dataset["validation"],
         compute_metrics=IncrementalMetrics(
             pad_token_idx=PAD_TOKEN_IDX,
-            data_collator=data_collector,
         ),
         data_collator=data_collector,
     )

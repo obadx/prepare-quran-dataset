@@ -75,7 +75,7 @@ conv_depthwise_kernel_size: 7
 
 # Training parameters
 num_epochs: 5
-learning_rate: 1e-4
+learning_rate: 5e-5
 seed: 10
 
 # Batch sizes
@@ -97,8 +97,8 @@ warmup_ratio: 0.2
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-streaming-rnn-v1"
-wandb_project_name: "muaalem-streaming-rnn-v1"
+hub_model_id: "obadx/muaalem-streaming-rnn-v2"
+wandb_project_name: "muaalem-streaming-rnn-v2"
 
 # Ignore mismatched sizes when loading pretrained weights
 ignore_mismatched_sizes: true
@@ -107,4 +107,4 @@ ignore_mismatched_sizes: true
 gradient_checkpoiniting: true
 
 # Output directory for checkpoints
-output_dir: "./results-streaming-rnn-v1"
+output_dir: "./results-streaming-rnn-v2"
