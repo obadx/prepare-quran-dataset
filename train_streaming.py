@@ -913,6 +913,12 @@ if __name__ == "__main__":
         default=False,
         help="Use the last saved checkpoint instead of the best model when running test set evaluation, qdat_bench, and pushing to the Hub (default: best model)",
     )
+    parser.add_argument(
+        "--reset-learning-rate",
+        action="store_true",
+        default=False,
+        help="Override the checkpoint's learning rate with the config value on resume (keeps optimizer momentum intact)",
+    )
     args = parser.parse_args()
     load_best_model_at_end = not args.load_last_model
     model_suffix = "last" if args.load_last_model else "best"
@@ -1045,6 +1051,31 @@ if __name__ == "__main__":
     # Start training
     if list(Path(train_config.output_dir).glob("checkpoint-*")):
         print("Resuming !")
+        if args.reset_learning_rate:
+            print(
+                f"🚨🚨🚨🚨🚨🚨  Resting Learning rate to {train_config.learning_rate}"
+            )
+            # Monkey-patch _load_optimizer_and_scheduler to override LR after checkpoint restore.
+            # This keeps Adam momentum/variance intact — only the LR value changes.
+            _original_load_opt = trainer._load_optimizer_and_scheduler
+
+            def _patched_load_opt(checkpoint):
+                _original_load_opt(checkpoint)
+                new_lr = train_config.learning_rate
+                for group in trainer.optimizer.param_groups:
+                    group["lr"] = new_lr
+                if trainer.lr_scheduler is not None:
+                    trainer.lr_scheduler.base_lrs = [new_lr] * len(
+                        trainer.optimizer.param_groups
+                    )
+                    if hasattr(trainer.lr_scheduler, "get_last_lr"):
+                        for i in range(len(trainer.lr_scheduler.get_last_lr())):
+                            trainer.lr_scheduler.optimizer.param_groups[i]["lr"] = (
+                                new_lr
+                            )
+
+            trainer._load_optimizer_and_scheduler = _patched_load_opt
+
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
