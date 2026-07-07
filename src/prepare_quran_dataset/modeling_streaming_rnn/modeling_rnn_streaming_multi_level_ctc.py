@@ -125,9 +125,9 @@ def convert_input_to_chunked_for_offline(
         )
 
     batch, seq_len, features = input.shape
-    if max_chunk_batch_size != 1 and max_chunk_batch_size % batch != 0:
+    if batch % max_chunk_batch_size != 0 and max_chunk_batch_size % batch != 0:
         raise ValueError(
-            f"`max_chunk_batch_size` has either to be 1 or be multiple of `batch_size`: You input `max_chunk_batch_size`={max_chunk_batch_size}, and the `batch_size` is {batch}"
+            f"`max_chunk_batch_size` has to be multiple of `batch_size`. Or `batch_size` is multiple of `max_chunk_batch_size`: You input `max_chunk_batch_size`={max_chunk_batch_size}, and the `batch_size` is {batch}"
         )
     streaming_len = lookback + chunk + lookahead
 
@@ -436,11 +436,11 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         batch_size, seq_len, features = input_features.shape
 
         if self.config.max_chunk_batch == 0 or (
-            self.config.max_chunk_batch != 1
+            batch_size % self.config.max_chunk_batch != 0
             and self.config.max_chunk_batch % batch_size != 0
         ):
             raise ValueError(
-                f"`config.max_chunk_batch` has either to be 1 or be multiple of `batch_size`: You input `config.max_chunk_batch`={self.config.max_chunk_batch}, and the `batch_size` is {batch_size}"
+                f"`config.max_chunk_batch` has to be multiple of `batch_size`. Or `batch_size` is multiple of `config.max_chunk_batch`: You input `config.max_chunk_batch`={self.config.max_chunk_batch}, and the `batch_size` is {batch_size}"
             )
 
         if labels is not None:
