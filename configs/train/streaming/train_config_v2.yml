@@ -74,8 +74,8 @@ max_chunk_batch: 128
 conv_depthwise_kernel_size: 7
 
 # Training parameters
-num_epochs: 10
-learning_rate: 2e-5
+num_epochs: 15
+learning_rate: 1e-5
 seed: 10
 
 # Batch sizes
@@ -84,7 +84,7 @@ pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.05
+save_every: 0.03333333333333333 # every half epoch
 
 # Hardware settings
 num_workers: 4
