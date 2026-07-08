@@ -85,6 +85,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
         # reset the model and buffer
         self.reset()
 
+    def get_first_input_samples(self) -> int:
+        return self.input_samples
+
+    def get_chunk_samples(self) -> int:
+        return self.chunk_samples
+
     def reset(self):
         """reset the LSTM state and buffer"""
         self.buffer = np.zeros(self.lookahead_samples + self.lookback_samples)
