@@ -75,7 +75,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
             // (config.lookback_frames + config.lookahead_frames)
         )
         assert (
-            self.chunk_samples + self.lookahead_samples + self.lookahead_samples
+            self.chunk_samples + self.lookahead_samples + self.lookback_samples
             == self.input_samples
         )
 
