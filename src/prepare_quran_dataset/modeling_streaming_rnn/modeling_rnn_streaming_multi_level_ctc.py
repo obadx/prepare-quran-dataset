@@ -488,6 +488,10 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
                 raise ValueError(
                     f"The sequence len must be of shape: `chunk_frames + lookback_frames + lookahead_frames` = `{self.streaming_len}`, got: `{seq_len}`"
                 )
+            if self.config.max_chunk_batch != 1:
+                raise ValueError(
+                    f"For `stream_inference` mode `config.max_chunk_batch` has to be 1, got: `{self.config.max_chunk_batch}`"
+                )
             # Expanding dimension for the number of chunks
             batched_input_features = input_features.unsqueeze(dim=1)
             batched_attention_mask = attention_mask.unsqueeze(dim=1)
