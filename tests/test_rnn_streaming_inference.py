@@ -5,6 +5,9 @@ import numpy as np
 from prepare_quran_dataset.modeling_streaming_rnn.inference import (
     Wav2Vec2BertForRNNStreamingMultilevelCTCInference,
 )
+from prepare_quran_dataset.modeling_streaming_rnn.modeling_rnn_streaming_multi_level_ctc import (
+    convert_input_to_chunked_for_offline,
+)
 from prepare_quran_dataset.modeling_streaming_rnn.multi_level_tokenizer import (
     MultiLevelTokenizer,
 )
@@ -31,6 +34,82 @@ def ctc_decode(batch_arr, blank_id=0, collapse_consecutive=True) -> list[np.ndar
     return decoded_list
 
 
+def run_original_streaming(rnn_inf, audio, ph_ids_to_str):
+    out_ids = []
+    n = rnn_inf.get_chunk_samples()
+    rnn_inf.reset()
+    consumed = 0
+    while consumed < len(audio):
+        wav = audio[consumed : consumed + n]
+        if len(wav) < n:
+            wav = np.pad(wav, (0, n - len(wav)))
+        for output in rnn_inf(wav):
+            out_ids += output.phonemes_ids
+        consumed += n
+    decoded = ctc_decode([np.array(out_ids)])[0].tolist()
+    text = "".join(ph_ids_to_str[idx] for idx in decoded)
+    return decoded, text
+
+
+def run_chunk_aligned_streaming(rnn_inf, audio, ph_ids_to_str, device):
+    inputs = rnn_inf.processor(audio, sampling_rate=16000, return_tensors="pt")
+    input_features = inputs["input_features"].to(device, dtype=rnn_inf.dtype)
+    attention_mask = inputs["attention_mask"].to(device, dtype=rnn_inf.dtype)
+
+    cfg = rnn_inf.config
+    chunk_frames = cfg.chunk_frames
+    lookback_frames = cfg.lookback_frames
+    lookahead_frames = cfg.lookahead_frames
+
+    feat_chunked = convert_input_to_chunked_for_offline(
+        input_features,
+        lookback=lookback_frames,
+        chunk=chunk_frames,
+        lookahead=lookahead_frames,
+        max_chunk_batch_size=1,
+    )
+    mask_chunked = convert_input_to_chunked_for_offline(
+        attention_mask,
+        lookback=lookback_frames,
+        chunk=chunk_frames,
+        lookahead=lookahead_frames,
+        max_chunk_batch_size=1,
+    )
+
+    out_ids = []
+    rnn_history = None
+    num_chunks = feat_chunked.shape[0]
+    for i in range(num_chunks):
+        chunk_feat = feat_chunked[i : i + 1]
+        chunk_mask = mask_chunked[i : i + 1]
+        outputs = rnn_inf.model(
+            input_features=chunk_feat,
+            attention_mask=chunk_mask,
+            stream_inference=True,
+            rnn_history=rnn_history,
+            return_dict=True,
+        )
+        phoneme_ids = outputs.logits["phonemes"].argmax(dim=-1)[0].tolist()
+        out_ids += phoneme_ids
+        rnn_history = outputs.rnn_history
+
+    decoded = ctc_decode([np.array(out_ids)])[0].tolist()
+    text = "".join(ph_ids_to_str[idx] for idx in decoded)
+    return decoded, text
+
+
+def run_offline(rnn_inf, audio, ph_ids_to_str, device):
+    rnn_inf.reset()
+    inputs = rnn_inf.processor(audio, sampling_rate=16000, return_tensors="pt")
+    inputs = {k: v.to(device, dtype=rnn_inf.dtype) for k, v in inputs.items()}
+    outputs = rnn_inf.model(**inputs, stream_inference=False, return_dict=True)
+    phoneme_logits = outputs.logits["phonemes"]
+    phoneme_ids = phoneme_logits.argmax(dim=-1)[0].tolist()
+    decoded = ctc_decode([np.array(phoneme_ids)])[0].tolist()
+    text = "".join(ph_ids_to_str[idx] for idx in decoded)
+    return decoded, text
+
+
 def run_inference_comparison(
     audio_path: str,
     model_path: str = "./results-streaming-rnn-v2/checkpoint-35480",
@@ -44,62 +123,50 @@ def run_inference_comparison(
 
     audio, sr = load(audio_path, sr=16000)
 
-    # ── Streaming Inference ──────────────────────────────────────────────
+    # ── 1. Original streaming ────────────────────────────────────────────
     print("=" * 60)
-    print("STREAMING INFERENCE")
+    print("1) ORIGINAL STREAMING (inference.py __call__)")
     print("=" * 60)
+    dec_stream, text_stream = run_original_streaming(rnn_inf, audio, ph_ids_to_str)
+    print(f"tokens: {len(dec_stream)}")
+    print(f"text: {text_stream}")
 
-    chunk_idx = 0
-    out_ids = []
-    n = rnn_inf.get_chunk_samples()
-    rnn_inf.reset()
-
-    consumed = 0
-    while consumed < len(audio):
-        wav = audio[consumed : consumed + n]
-        if len(wav) < n:
-            wav = np.pad(wav, (0, n - len(wav)))
-        for output in rnn_inf(wav):
-            out_ids += output.phonemes_ids
-            print(f"chunk {chunk_idx:02d} phonemes_ids: {output.phonemes_ids}")
-        consumed += n
-        chunk_idx += 1
-
-    decoded_streaming = ctc_decode([np.array(out_ids)])[0].tolist()
-    text_streaming = "".join(ph_ids_to_str[idx] for idx in decoded_streaming)
-    print(f"\nstreaming decoded IDs: {decoded_streaming}")
-    print(f"streaming text: {text_streaming}")
-
-    # ── Offline Inference ────────────────────────────────────────────────
+    # ── 2. Chunk-aligned streaming ───────────────────────────────────────
     print("\n" + "=" * 60)
-    print("OFFLINE INFERENCE")
+    print(
+        "2) CHUNK-ALIGNED STREAMING (convert_input_to_chunked_for_offline + stream_inference)"
+    )
     print("=" * 60)
-
     rnn_inf.reset()
-    inputs = rnn_inf.processor(audio, sampling_rate=16000, return_tensors="pt")
-    inputs = {k: v.to(device, dtype=rnn_inf.dtype) for k, v in inputs.items()}
+    dec_chunk, text_chunk = run_chunk_aligned_streaming(
+        rnn_inf, audio, ph_ids_to_str, device
+    )
+    print(f"tokens: {len(dec_chunk)}")
+    print(f"text: {text_chunk}")
 
-    outputs = rnn_inf.model(**inputs, stream_inference=False, return_dict=True)
-    phoneme_logits = outputs.logits["phonemes"]  # (1, T, vocab_size)
-    phoneme_ids_offline = phoneme_logits.argmax(dim=-1)[0].tolist()
-
-    decoded_offline = ctc_decode([np.array(phoneme_ids_offline)])[0].tolist()
-    text_offline = "".join(ph_ids_to_str[idx] for idx in decoded_offline)
-
-    print(f"offline raw IDs (first 200): {phoneme_ids_offline[:200]}")
-    print(f"offline decoded IDs: {decoded_offline}")
-    print(f"offline text: {text_offline}")
-
-    # ── Comparison ───────────────────────────────────────────────────────
+    # ── 3. Offline ───────────────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print("COMPARISON")
+    print("3) OFFLINE (stream_inference=False)")
     print("=" * 60)
-    print(f"streaming: {text_streaming}")
-    print(f"offline:   {text_offline}")
-    print(f"streaming tokens: {len(decoded_streaming)}")
-    print(f"offline tokens:   {len(decoded_offline)}")
+    rnn_inf.reset()
+    dec_offline, text_offline = run_offline(rnn_inf, audio, ph_ids_to_str, device)
+    print(f"tokens: {len(dec_offline)}")
+    print(f"text: {text_offline}")
 
-    return text_streaming, text_offline
+    # ── Three-way comparison ─────────────────────────────────────────────
+    print("\n" + "=" * 60)
+    print("THREE-WAY COMPARISON")
+    print("=" * 60)
+    print(f"{'method':<30} {'tokens':>8} {'text preview':<30}")
+    print("-" * 68)
+    print(f"{'original streaming':<30} {len(dec_stream):>8} {text_stream[:28]:<30}")
+    print(f"{'chunk-aligned streaming':<30} {len(dec_chunk):>8} {text_chunk[:28]:<30}")
+    print(f"{'offline':<30} {len(dec_offline):>8} {text_offline[:28]:<30}")
+    print()
+    print(f"original vs chunk-aligned tokens: {len(dec_stream)} vs {len(dec_chunk)}")
+    print(f"chunk-aligned vs offline tokens:  {len(dec_chunk)} vs {len(dec_offline)}")
+
+    return text_stream, text_chunk, text_offline
 
 
 if __name__ == "__main__":
