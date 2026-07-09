@@ -1,3 +1,4 @@
+from typing import Iterator
 from dataclasses import dataclass
 
 
@@ -53,7 +54,8 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
         self.dtype = dtype
 
         config = Wav2Vec2BertForRNNStreamingMultilevelCTCConfig.from_pretrained(
-            model_name_or_path
+            model_name_or_path,
+            max_chunk_batch=1,
         )
         self.config = config
         self.processor = AutoFeatureExtractor.from_pretrained(model_name_or_path)
@@ -78,15 +80,12 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
         )
 
         self.model = Wav2Vec2BertForRNNStreamingMultilevelCTC.from_pretrained(
-            model_name_or_path
+            model_name_or_path, config=config
         ).to(device, dtype=dtype)
         self.model.eval()
 
         # reset the model and buffer
         self.reset()
-
-    def get_first_input_samples(self) -> int:
-        return self.input_samples
 
     def get_chunk_samples(self) -> int:
         return self.chunk_samples
@@ -94,21 +93,27 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
     def reset(self):
         """reset the LSTM state and buffer"""
         self.buffer = np.zeros(self.lookahead_samples + self.lookback_samples)
+        self.rnn_history = None
 
-        # zeroout lstm inputs
-
+    @torch.inference_mode()
     def __call__(
-        self, wav: ndarray, is_first=False
+        self,
+        wav: ndarray,
     ) -> Iterator[StreamingRNNInferenceOutput]:
-        if is_first:
-            assert len(wav) == self.input_samples
-            input_samples = wav
-            self.buffer = wav[-(self.lookback_samples + self.lookahead_samples) :]
-        else:
-            assert len(wav) == self.chunk_samples
-            input_samples = np.pad(self.buffer, wav)
+        assert len(wav) == self.chunk_samples
+        input_samples = np.concatenate([self.buffer, wav])
         self.buffer = wav[-(self.lookback_samples + self.lookahead_samples) :]
 
         inputs = self.processor(
             input_samples, sampling_rate=self.sr, return_tensors="pt"
         )
+        inputs = {k: v.to(self.device, dtype=self.dtype) for k, v in inputs.items()}
+        outputs = self.model(
+            **inputs,
+            stream_inference=True,
+            rnn_history=self.rnn_history,
+            return_dict=True,
+        )
+        phoneme_ids = outputs.logits["phonemes"].argmax(dim=-1)[0].tolist()
+        self.rnn_history = outputs.rnn_history
+        yield StreamingRNNInferenceOutput(phonemes_ids=phoneme_ids)
