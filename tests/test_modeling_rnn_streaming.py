@@ -1,4 +1,5 @@
 import json
+from librosa.core import load
 
 from quran_transcript import quran_phonetizer, Aya, MoshafAttributes
 from transformers import AutoFeatureExtractor, Wav2Vec2BertModel
@@ -31,7 +32,7 @@ if __name__ == "__main__":
         apply_spec_augment=False,
         mask_time_prob=0.0,
         layerdrop=0.0,
-        conv_depthwise_kernel_size=9,
+        conv_depthwise_kernel_size=7,
     )
     print(config)
 
@@ -47,7 +48,10 @@ if __name__ == "__main__":
     batch_size = 2
 
     # Test Infernce without labels
-    inputs = processor([[0] * 16000] * batch_size, return_tensors="pt")
+    wav, _ = load("./assets/audio-sampels/test.wav", sr=16000, mono=True)
+    wav = wav.tolist()
+    inputs = processor([wav] * batch_size, return_tensors="pt")
+    # inputs = processor([[0] * 16000] * batch_size, return_tensors="pt")
     model_output = model(**inputs)
     print(model_output)
 
