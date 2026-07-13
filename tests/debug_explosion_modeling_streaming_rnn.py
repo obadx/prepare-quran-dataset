@@ -10,6 +10,7 @@ import math
 import torch
 import torch.nn as nn
 import numpy as np
+from librosa.core import load
 
 from transformers import AutoFeatureExtractor
 from transformers.models.wav2vec2_bert.modeling_wav2vec2_bert import (
@@ -657,7 +658,9 @@ def _install_patches():
 def _reinit_distance_embeddings(model, init_std):
     """Safety net: re-init distance_embedding with small std to prevent NaN."""
     for module in model.modules():
-        if hasattr(module, "distance_embedding") and isinstance(module.distance_embedding, nn.Embedding):
+        if hasattr(module, "distance_embedding") and isinstance(
+            module.distance_embedding, nn.Embedding
+        ):
             nn.init.normal_(module.distance_embedding.weight, mean=0.0, std=init_std)
 
 
@@ -672,17 +675,17 @@ def build_model(init_range, num_layers):
         apply_spec_augment=False,
         mask_time_prob=0.0,
         layerdrop=0.0,
-        conv_depthwise_kernel_size=9,
+        conv_depthwise_kernel_size=7,
         initializer_range=init_range,
-        layer_norm_eps=1e-3,
-        ctc_zero_infinity=True,
+        layer_norm_eps=1e-5,
+        ctc_zero_infinity=False,
     )
     model = Wav2Vec2BertForRNNStreamingMultilevelCTC.from_pretrained(
         "facebook/w2v-bert-2.0",
         config=config,
         ignore_mismatched_sizes=True,
     )
-    _reinit_distance_embeddings(model, config.initializer_range)
+    # _reinit_distance_embeddings(model, config.initializer_range)
     model.eval()
     return model
 
@@ -703,17 +706,9 @@ def run_test(init_range, num_layers, audio_type, seed=0, label=""):
             [[0.0] * 16000] * 2, return_tensors="pt", sampling_rate=16000
         )
     else:
-        torch.manual_seed(seed + 1000)
-        audio = [
-            (
-                torch.sin(torch.linspace(0, 200 * np.pi, 16000)) * 0.3
-                + torch.randn(16000) * 0.05
-            )
-            .clamp(-1, 1)
-            .numpy()
-            for _ in range(2)
-        ]
-        inputs = processor(audio, sampling_rate=16000, return_tensors="pt")
+        wav, _ = load("./assets/audio-sampels/test.wav", sr=16000, mono=True)
+        wav = wav.tolist()
+        inputs = processor([wav] * 2, return_tensors="pt", sampling_rate=16000)
 
     print(f"\n{'=' * 100}")
     print(f"  {label}")
@@ -788,8 +783,8 @@ if __name__ == "__main__":
     run_test(
         init_range=0.02,
         num_layers=16,
-        audio_type="silence",
-        seed=100,
+        audio_type="audio",
+        seed=10,
         label="init=0.02, 16 layers, silence [seed=0]",
     )
 
