@@ -583,7 +583,8 @@ def build_model_components(
     ignore_mismatched_sizes: bool = True,
 ):
     processor = AutoFeatureExtractor.from_pretrained(
-        train_config.processor_name_or_path
+        train_config.processor_name_or_path,
+        do_normalize_per_mel_bins=False,
     )
 
     config = Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(
