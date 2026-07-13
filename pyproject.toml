@@ -67,6 +67,10 @@ annotate = [
   "qdat-bench",
 ]
 
+test_streaming = [
+  "gradio>=6.20.0",
+]
+
 
 [tool.uv.extra-build-dependencies]
 mamba-ssm = ["torch"]
