@@ -82,14 +82,14 @@ pre_device_eval_batch_size: 64
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 0.1
-save_every: 0.1
+save_every: 1774
 # Hardware settings
 # num_workers: 4
 
 # Optimizer settings
 weight_decay: 0.01
-warmup_ratio: 0.2
+warmup_steps: 2000
+lr_scheduler_type: constant
 
 # Model saving and evaluation
 metric_for_bet_model: "average_per"

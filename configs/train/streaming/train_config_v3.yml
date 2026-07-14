@@ -51,7 +51,7 @@ dropout: 0.1
 architecture: w2v2bert-streaming-rnn
 
 # Base model weights ID or path (Wav2Vec2Bert backbone)
-base_model_name_or_path: ./results-streaming-rnn-v0/checkpoint-16390/
+base_model_name_or_path: ./results-streaming-rnn-v2/checkpoint-37254/
 # base_model_name_or_path: facebook/w2v-bert-2.0
 
 # Processor/feature extractor ID or path
@@ -74,7 +74,7 @@ max_chunk_batch: 128
 conv_depthwise_kernel_size: 7
 
 # Training parameters
-num_epochs: 5
+num_epochs: 15
 learning_rate: 1e-4
 seed: 10
 
@@ -91,15 +91,15 @@ num_workers: 4
 
 # Optimizer settings
 weight_decay: 0.01
-warmup_steps: 2000
-lr_scheduler_type: constant
+warmup_steps: 0
+lr_scheduler_type: cosine
 
 # Model saving and evaluation
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-streaming-rnn-v1"
-wandb_project_name: "muaalem-streaming-rnn-v1"
+hub_model_id: "obadx/muaalem-streaming-rnn-v3"
+wandb_project_name: "muaalem-streaming-rnn-v3"
 
 # Ignore mismatched sizes when loading pretrained weights
 ignore_mismatched_sizes: true
@@ -108,4 +108,4 @@ ignore_mismatched_sizes: true
 gradient_checkpoiniting: true
 
 # Output directory for checkpoints
-output_dir: "./results-streaming-rnn-v1"
+output_dir: "./results-streaming-rnn-v3"
