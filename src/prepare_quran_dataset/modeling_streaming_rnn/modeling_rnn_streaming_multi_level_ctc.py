@@ -281,6 +281,20 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
+    def freeze_all_except_feature_projection(self):
+        """Freeze all parameters except Wav2Vec2BertFeatureProjection.
+
+        This is used to recover from the feature normalization bug where the
+        pretrained model's feature projection statistics were corrupted.
+        By freezing all other layers and only training the feature projection
+        (layer_norm, projection, dropout), we can re-learn correct feature
+        normalization without destroying the pretrained encoder weights.
+        """
+        for param in self.parameters():
+            param.requires_grad = False
+        for param in self.wav2vec2_bert.feature_projection.parameters():
+            param.requires_grad = True
+
     # def initialize_weights(self):
     #     """
     #     Initialize all weights, then re-initialize nn.Embedding modules that

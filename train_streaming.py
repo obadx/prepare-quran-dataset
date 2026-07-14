@@ -947,6 +947,12 @@ if __name__ == "__main__":
         ignore_mismatched_sizes=train_config.ignore_mismatched_sizes,
     )
 
+    # WARN: Note used but for histoy leaving it
+    # Freeze all layers except feature_projection to recover from the feature
+    # normalization bug. Only the feature projection (layer_norm + projection)
+    # will be trained while the pretrained encoder weights stay intact.
+    # model.freeze_all_except_feature_projection()
+
     # Loading moshaf data
     moshaf_dataeet = load_dataset(
         "obadx/mualem-recitations-annotated",
