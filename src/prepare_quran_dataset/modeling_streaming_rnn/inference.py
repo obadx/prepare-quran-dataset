@@ -105,7 +105,10 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTCInference(object):
         self.buffer = wav[-(self.lookback_samples + self.lookahead_samples) :]
 
         inputs = self.processor(
-            input_samples, sampling_rate=self.sr, return_tensors="pt"
+            input_samples,
+            sampling_rate=self.sr,
+            return_tensors="pt",
+            do_normalize_per_mel_bins=False,
         )
         inputs = {k: v.to(self.device, dtype=self.dtype) for k, v in inputs.items()}
         outputs = self.model(
