@@ -584,7 +584,6 @@ def build_model_components(
 ):
     processor = AutoFeatureExtractor.from_pretrained(
         train_config.processor_name_or_path,
-        do_normalize_per_mel_bins=False,
     )
 
     config = Wav2Vec2BertForRNNStreamingMultilevelCTCConfig(
@@ -697,6 +696,7 @@ class DataCollatorCTCWithPadding:
             padding="longest",
             return_tensors="pt",
             return_attention_mask=True,
+            do_normalize_per_mel_bins=False,  # Very vital bug we have not to normalize mel frequency bins
         )
 
         labels = self.multi_level_tokenizer.tokenize(
