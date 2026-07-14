@@ -112,7 +112,7 @@ def run_offline(rnn_inf, audio, ph_ids_to_str, device):
 
 def run_inference_comparison(
     audio_path: str,
-    model_path: str = "./results-streaming-rnn-v2/checkpoint-35480",
+    model_path: str = "./results-streaming-rnn-v2/checkpoint-37254",
     device: str = "cpu",
 ):
     rnn_inf = Wav2Vec2BertForRNNStreamingMultilevelCTCInference(
