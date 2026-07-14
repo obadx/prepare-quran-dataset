@@ -65,7 +65,7 @@ class TrainConfig(BaseModel):
     num_attention_heads: int = 16
     output_dir: str = "./results"
     devset_ratio: float = 0.1
-    save_every: float = 0.2
+    save_every: int = 1774
     learning_rate: float = 5e-5
     seed: int = 42
     per_device_train_batch_size: int = 128
@@ -76,7 +76,8 @@ class TrainConfig(BaseModel):
     greater_is_better: bool = True
     hub_model_id: str = "obadx/Muaalem-model-dev"
     wandb_project_name: str = "Muaalem-model-dev"
-    warmup_ratio: float = 0.2
+    warmup_steps: int = 2000
+    lr_scheduler_type: str = "constant"
     gradient_checkpoiniting: bool = False
     architecture: Literal["w2v2bert-streaming-rnn"] = "w2v2bert-streaming-rnn"
     base_model_name_or_path: str = "facebook/w2v-bert-2.0"
@@ -1016,9 +1017,9 @@ if __name__ == "__main__":
         # push_to_hub=True,  # this pushed every checkpoint to the hup we want to push the best model only
         hub_model_id=train_config.hub_model_id,  # Update with your model name
         bf16=True,
-        warmup_ratio=train_config.warmup_ratio,
+        warmup_steps=train_config.warmup_steps,
         optim="adamw_torch",
-        lr_scheduler_type="constant",
+        lr_scheduler_type=train_config.lr_scheduler_type,
         report_to=["tensorboard", "wandb"],
         gradient_checkpointing=train_config.gradient_checkpoiniting,  # Optional for memory savings
         save_total_limit=3,
