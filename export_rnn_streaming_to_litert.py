@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import os
+from typing import Optional
 
 import numpy as np
 import torch
@@ -58,10 +59,10 @@ def _make_sample(model, processor):
 
 
 class MuaalemStreamingWrapper(torch.nn.Module):
-    def __init__(self, model):
+    def __init__(self, model, selected_levels: Optional[set[str]] = None):
         super().__init__()
         self.model = model
-        self.level_names = list(model.level_to_lm_head.keys())
+        self.selected_levels = selected_levels
 
     def forward(self, input_features, attention_mask, h0, c0):
         out = self.model(
@@ -69,8 +70,9 @@ class MuaalemStreamingWrapper(torch.nn.Module):
             attention_mask=attention_mask,
             rnn_history=(h0, c0),
             stream_inference=True,
+            selected_levels=self.selected_levels,
         )
-        return tuple(out.logits[name] for name in self.level_names) + (
+        return tuple(out.logits[name] for name in out.logits) + (
             out.rnn_history[0],
             out.rnn_history[1],
         )
@@ -89,7 +91,7 @@ def main():
     )
     parser.add_argument(
         "--model-id",
-        default="./results-streaming-rnn-v3/checkpoint-12418",
+        default="./results-streaming-rnn-v3/checkpoint-23062",
         help="HuggingFace model ID or local path",
     )
     parser.add_argument(
@@ -97,7 +99,18 @@ def main():
         default=SCRIPT_DIR,
         help="Directory to save .tflite files (default: script directory)",
     )
+    parser.add_argument(
+        "--selected-levels",
+        type=str,
+        default=None,
+        help="Comma-separated list of level names to include. "
+        "If omitted, all levels are used. "
+        "Example: --selected-levels 'phonemes,tafkheem_or_taqeeq'",
+    )
     args = parser.parse_args()
+    args.selected_levels = (
+        set(args.selected_levels.split(",")) if args.selected_levels else None
+    )
     os.makedirs(args.output_dir, exist_ok=True)
 
     f32_path = os.path.join(args.output_dir, f"{args.prefix}_float32.tflite")
@@ -113,7 +126,11 @@ def main():
         args.model_id, config=config
     )
 
-    wrapped = MuaalemStreamingWrapper(model).eval().float()
+    wrapped = (
+        MuaalemStreamingWrapper(model, selected_levels=args.selected_levels)
+        .eval()
+        .float()
+    )
     sample = _make_sample(model, processor)
 
     # 1. float32
