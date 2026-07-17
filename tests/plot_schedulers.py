@@ -6,7 +6,7 @@ import torch
 from transformers import get_scheduler
 
 LR = 1e-4
-MAX_STEPS = 50_000
+MAX_STEPS = 53_220
 WARMUP_STEPS = 0
 
 
