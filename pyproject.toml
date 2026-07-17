@@ -71,10 +71,19 @@ annotate = [
 test_streaming = [
   "gradio>=6.20.0",
 ]
+litert = [
+    "ai-edge-litert>=2.1.5",
+    "ai-edge-quantizer>=0.7.0",
+    "litert-torch>=0.9.1",
+]
 
 
 [tool.uv.extra-build-dependencies]
 mamba-ssm = ["torch"]
+
+# Solving installtion of litert
+[tool.uv]
+override-dependencies = ["xdsl>=0.40"]
 
 [tool.uv.sources]
 qdat-bench = { git = "https://github.com/obadx/qdat_bench.git" }
