@@ -384,6 +384,19 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
 
         return rnn_output, (h_n, c_n)
 
+    def rnn_forward_streaming(
+        self,
+        rnn_input: torch.FloatTensor,
+        rnn_history: tuple[torch.FloatTensor, torch.FloatTensor],
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor]]:
+        """Run the LSTM for a single streaming chunk (no packing).
+
+        Avoids pack_padded_sequence which is incompatible with torch.export.
+        Used when stream_inference=True and num_chunks is always 1.
+        """
+        rnn_output, (h_n, c_n) = self.rnn(rnn_input, rnn_history)
+        return rnn_output, (h_n, c_n)
+
     @auto_docstring
     def forward(
         self,
@@ -396,6 +409,7 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         stream_inference: bool = False,
         labels: Optional[dict[str, torch.Tensor]] = None,
         labels_mask: Optional[dict[str, torch.Tensor]] = None,
+        selected_levels: Optional[set[str]] = None,
     ) -> Union[tuple, CausalLMOutput]:
         r"""
         input_features (`torch.Tensor` of shape `(batch_size, seq_len, feature_size)`):
@@ -571,15 +585,19 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         hidden_states = self.ssl_dropout(hidden_states)
 
         # RNN inference loop over the chunk dimension (dim=1)
-        # Computing masks for chunks; not all chunks have valid input, some are all-zero padding
-        num_chunks_mask = (batched_attention_mask.sum(dim=-1) != 0).to(torch.long)
-        rnn_output, rnn_history = self.rnn_forward(
-            hidden_states[
-                :, :, 0, : self.config.hidden_size
-            ],  # taking the first token(0) to the rnn as feedback
-            rnn_history,
-            num_chunks_mask=num_chunks_mask,
-        )
+        rnn_input = hidden_states[:, :, 0, : self.config.hidden_size]
+        if stream_inference:
+            # Streaming mode: always 1 chunk, skip pack_padded_sequence
+            # which is incompatible with torch.export
+            rnn_output, rnn_history = self.rnn_forward_streaming(rnn_input, rnn_history)
+        else:
+            # Computing masks for chunks; not all chunks have valid input, some are all-zero padding
+            num_chunks_mask = (batched_attention_mask.sum(dim=-1) != 0).to(torch.long)
+            rnn_output, rnn_history = self.rnn_forward(
+                rnn_input,
+                rnn_history,
+                num_chunks_mask=num_chunks_mask,
+            )
         rnn_output = self.rnn_dropout(rnn_output)
 
         # Keeping only the chunk and drop the lookback and lookahead
@@ -610,7 +628,11 @@ class Wav2Vec2BertForRNNStreamingMultilevelCTC(Wav2Vec2BertPreTrainedModel):
         # Applying CTC Linear Heads for every level
         level_to_logits = {}
         for level in self.level_to_lm_head:
-            level_to_logits[level] = self.level_to_lm_head[level](hidden_states)
+            if selected_levels is not None:
+                if level in selected_levels:
+                    level_to_logits[level] = self.level_to_lm_head[level](hidden_states)
+            else:
+                level_to_logits[level] = self.level_to_lm_head[level](hidden_states)
 
         loss = None
         if labels is not None:
