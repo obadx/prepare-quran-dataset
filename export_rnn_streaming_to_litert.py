@@ -91,7 +91,7 @@ def main():
     )
     parser.add_argument(
         "--model-id",
-        default="./results-streaming-rnn-v3/checkpoint-23062",
+        default="./results-streaming-rnn-v3/checkpoint-46124",
         help="HuggingFace model ID or local path",
     )
     parser.add_argument(

@@ -1,6 +1,6 @@
+import numpy as np
 import torch
 from librosa import load
-import numpy as np
 
 from prepare_quran_dataset.modeling_streaming_rnn.inference import (
     Wav2Vec2BertForRNNStreamingMultilevelCTCInference,
@@ -112,7 +112,7 @@ def run_offline(rnn_inf, audio, ph_ids_to_str, device):
 
 def run_inference_comparison(
     audio_path: str,
-    model_path: str = "./results-streaming-rnn-v2/checkpoint-37254",
+    model_path: str = "./results-streaming-rnn-v3/checkpoint-46124",
     device: str = "cpu",
 ):
     rnn_inf = Wav2Vec2BertForRNNStreamingMultilevelCTCInference(
