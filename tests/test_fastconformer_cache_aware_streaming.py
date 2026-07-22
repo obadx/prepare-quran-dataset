@@ -1,3 +1,5 @@
+from math import floor
+
 import torch
 from nemo.collections.asr.models.ctc_models import EncDecCTCModel
 from omegaconf import OmegaConf
@@ -42,7 +44,7 @@ cfg = OmegaConf.create(
                 "ff_expansion_factor": 4,
                 "self_attention_model": "rel_pos",
                 "n_heads": 8,
-                "att_context_size": [84, 3],
+                "att_context_size": [78, 12],
                 "att_context_style": "chunked_limited",
                 "att_context_probs": None,
                 "xscaling": True,
@@ -73,21 +75,18 @@ model = EncDecCTCModel(cfg=cfg.model)
 model.eval()
 
 chunk_len_s = 0.52
-lookahead_s = 0.12
+lookahead_s = 0.48
 sample_rate = 16000
 B = 1
 
 chunk_samples = int(chunk_len_s * sample_rate)
 lookahead_samples = int(lookahead_s * sample_rate)
 total_samples = chunk_samples + lookahead_samples
-
-chunk_audio = torch.randn(B, chunk_samples) * 0.1
-lookahead_audio = torch.randn(B, lookahead_samples) * 0.1
-audio_input = torch.cat([chunk_audio, lookahead_audio], dim=-1)
+audio_input = torch.randn(B, total_samples) * 0.1
 audio_length = torch.full((B,), total_samples, dtype=torch.long)
 
-print(f"Chunk shape: {chunk_audio.shape} ({int(chunk_len_s * 1000)}ms)")
-print(f"Lookahead shape: {lookahead_audio.shape} ({int(lookahead_s * 1000)}ms)")
+print(f"Chunk shape: {chunk_samples} ({int(chunk_len_s * 1000)}ms)")
+print(f"Lookahead shape: {lookahead_samples} ({int(lookahead_s * 1000)}ms)")
 print(f"Total audio input shape: {audio_input.shape}")
 
 # Preprocess audio to mel spectrogram
@@ -126,6 +125,22 @@ with torch.no_grad():
         cache_last_time=cache_last_time,
         cache_last_channel_len=cache_last_channel_len,
     )
+    print("Encoder Ouput with without truncating lookahead")
+    print(f"Encoder output shape: {encoder_out.shape}")
+    print(f"Output lengths: {out_lens}")
+    print()
+
+    rets = model.encoder.forward_internal(
+        audio_signal=processed_signal,
+        length=processed_length,
+        cache_last_channel=cache_last_channel,
+        cache_last_time=cache_last_time,
+        cache_last_channel_len=cache_last_channel_len,
+    )
+    encoder_out, out_lens, new_cache_ch, new_cache_t, new_cache_len = (
+        model.encoder.streaming_post_process(rets, keep_all_outputs=False)
+    )
+
 
 print(f"Encoder output shape: {encoder_out.shape}")
 print(f"Output lengths: {out_lens}")
