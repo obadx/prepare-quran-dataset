@@ -55,7 +55,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         *   ``d_model`` — hidden / channel dimension (default 512).
         *   ``subsampling_factor`` — temporal subsampling factor (default 4).
         *   ``att_context_size`` — left/right attention context ``[left, right]``
-            (default ``[78, 12]``).
+            (default ``[90, 17]``).
         *   ``att_context_style`` — attention masking strategy; set to
             ``"chunked_limited"`` for cache-aware streaming training.
 
@@ -209,7 +209,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         ff_expansion_factor: int = 4,
         self_attention_model: str = "rel_pos",
         n_heads: int = 8,
-        att_context_size: list[int] | None = None,
+        att_context_size: list[int] | None = [90, 17],
         att_context_style: str = "chunked_limited",
         xscaling: bool = True,
         pos_emb_max_len: int = 5000,
@@ -288,7 +288,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         self.ff_expansion_factor = ff_expansion_factor
         self.self_attention_model = self_attention_model
         self.n_heads = n_heads
-        self.att_context_size = att_context_size or [78, 12]
+        self.att_context_size = att_context_size or -1
         self.att_context_style = att_context_style
         self.xscaling = xscaling
         self.pos_emb_max_len = pos_emb_max_len

@@ -185,40 +185,8 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         self.cache: FastConformerCache | None = None
 
         # 5. Weight initialisation and tying
+        # TODO: is this right after loading nemo checkpoint ?
         self.post_init()
-
-    # ------------------------------------------------------------------
-    # Subsampling length utility
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _get_feat_extract_output_lengths(
-        input_lengths: torch.LongTensor,
-    ) -> torch.LongTensor:
-        """Compute the number of encoder output frames after subsampling.
-
-        The FastConformer encoder uses 2 stages of causal strided convolution
-        (``dw_striding``, ``kernel_size=3``, ``stride=2``), implementing::
-
-            Stage 1: out = floor(len / 2) + 1
-            Stage 2: out = floor(out / 2) + 1
-
-        This yields a total subsampling factor of approximately 4× for long
-        sequences, with small corrections for the causal padding at the
-        sequence boundaries.
-
-        Args:
-            input_lengths:
-                Number of input mel-spectrogram frames.
-                Shape ``(batch_size,)``.
-
-        Returns:
-            Number of output encoder frames after full subsampling.
-            Shape ``(batch_size,)``.
-        """
-        x = torch.floor_divide(input_lengths, 2) + 1
-        x = torch.floor_divide(x, 2) + 1
-        return x
 
     # ------------------------------------------------------------------
     # Setup streaming parameters
@@ -279,8 +247,6 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         labels_mask: dict[str, torch.BoolTensor] | None = None,
         processed_signal: torch.FloatTensor | None = None,
         processed_length: torch.LongTensor | None = None,
-        output_attentions: bool | None = None,
-        output_hidden_states: bool | None = None,
         return_dict: bool | None = None,
         selected_levels: set[str] | None = None,
     ) -> Union[tuple, FastConformerCTCWithCacheOutput]:
@@ -323,9 +289,9 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                 with cache reuse via ``forward_internal()``.
             keep_all_outputs:
                 Only meaningful when ``cache`` is provided.
-                If ``True`` (typically the last streaming step), return
+                If ``True`` (offline) (typically the last streaming step), return
                 **all** encoder output frames including the lookahead region.
-                If ``False``, drop the lookahead frames, keeping only the
+                If ``False`` (streaming), drop the lookahead frames, keeping only the
                 ``valid_out_len`` frames for the current chunk.
             drop_extra_pre_encoded:
                 Only meaningful when ``cache`` is provided.
@@ -350,10 +316,6 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                 Number of valid frames per sequence in ``processed_signal``.
                 Shape ``(batch_size,)``.  Required when ``processed_signal``
                 is given.
-            output_attentions:
-                If ``True``, return attention weights from each encoder layer.
-            output_hidden_states:
-                Reserved for API compatibility.  Currently unused.
             return_dict:
                 If ``True``, return :class:`FastConformerCTCWithCacheOutput`.
                 If ``False``, return a plain tuple.
@@ -468,9 +430,7 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
             )
         else:
             # --- Streaming inference (forward_internal + streaming_post_process) ---
-            prev_drop: int | None = None
             if drop_extra_pre_encoded is not None:
-                prev_drop = self.encoder.streaming_cfg.drop_extra_pre_encoded
                 self.encoder.streaming_cfg.drop_extra_pre_encoded = (
                     drop_extra_pre_encoded
                 )
@@ -487,9 +447,6 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                     rets, keep_all_outputs=keep_all_outputs
                 )
             )
-
-            if prev_drop is not None:
-                self.encoder.streaming_cfg.drop_extra_pre_encoded = prev_drop
 
             new_cache = FastConformerCache(
                 last_channel=new_ch,

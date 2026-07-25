@@ -19,6 +19,9 @@ from typing import Iterator, Optional
 
 import numpy as np
 import torch
+from nemo.collections.asr.parts.utils.streaming_utils import (
+    CacheAwareStreamingAudioBuffer,
+)
 from numpy.typing import NDArray
 
 from .modeling_fastconformer_cache_aware_ctc import (
@@ -116,7 +119,10 @@ def stream_inference(
         >>> print(tokens[:5])
         [12, 7, 31, 0, 18]
     """
-    if not hasattr(model.encoder, "streaming_cfg") or model.encoder.streaming_cfg is None:
+    if (
+        not hasattr(model.encoder, "streaming_cfg")
+        or model.encoder.streaming_cfg is None
+    ):
         raise ValueError(
             "Model encoder has no streaming configuration.  "
             "Call `model.setup_streaming_params()` before running inference."
@@ -136,9 +142,6 @@ def stream_inference(
     model.eval()
 
     # --- Create streaming buffer ---
-    from nemo.collections.asr.parts.utils.streaming_utils import (
-        CacheAwareStreamingAudioBuffer,
-    )
 
     streaming_buffer = CacheAwareStreamingAudioBuffer(model)
     streaming_buffer.append_audio(audio)
