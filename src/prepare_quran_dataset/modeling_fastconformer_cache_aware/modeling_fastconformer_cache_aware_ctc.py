@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 import torch
+from nemo.collections.asr.modules import ConformerEncoder
 from torch import nn
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import ModelOutput
@@ -39,6 +40,9 @@ from .configuration_fastconformer_cache_aware import (
     FastConformerCacheAwareMultilevelCTCConfig,
 )
 from .processor import FastConformerMelProcessor
+
+
+class MuaalemConformerEncoder(ConformerEncoder): ...
 
 
 @dataclass
@@ -136,9 +140,8 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         self.processor = FastConformerMelProcessor(**config.processor_kwargs)
 
         # 2. NeMo FastConformer encoder
-        from nemo.collections.asr.modules import ConformerEncoder
 
-        self.encoder = ConformerEncoder(
+        self.encoder = MuaalemConformerEncoder(
             feat_in=config.feat_in,
             feat_out=config.feat_out,
             n_layers=config.n_layers,
