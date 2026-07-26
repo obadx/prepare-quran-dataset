@@ -55,10 +55,28 @@ class MuaalemConformerEncoder(ConformerEncoder):
         """Create the self-attention mask and padding mask.
 
         The attention mask applies the configured context style (``regular``
-        or ``chunked_limited``) with the given left/right context sizes.  The
-        padding mask marks all positions beyond the valid sequence length.
-        When ``offset`` is provided (streaming with cache), only positions at
-        or after the offset are considered unmasked.
+        or ``chunked_limited``) with the given left/right context sizes.
+
+        The padding mask (``pad_mask``) marks which frames are **invalid**
+        and must be excluded from *all* encoder sub-layers — both
+        self-attention and convolution.  Two conditions produce masked
+        positions:
+
+        1. ``idx >= padding_length`` — frames beyond the valid signal
+           length (standard sequence padding).
+        2. ``idx < offset`` (only during streaming with cache) — zero-
+           padded cache slots that contain no real data from a prior step.
+
+        ``pad_mask`` is consumed in two ways:
+
+        *   **Attention** — expanded to a 2D matrix
+            (``pad_mask_2d[i,j] = pad_mask[i] OR pad_mask[j]``),
+            then OR-ed into ``att_mask`` so padded positions are blocked
+            as both queries and keys.
+        *   **Convolution** — passed directly to each Conformer block's
+            ``ConvLayer`` so the causal convolution state is only updated
+            from valid (non-padding) frames, preventing boundary artifacts
+            at chunk seams.
 
         Args:
             att_context_size:
@@ -70,18 +88,35 @@ class MuaalemConformerEncoder(ConformerEncoder):
             max_audio_length:
                 Maximum sequence length (padded), in frames.
             offset:
-                Per-sample frame offset (used during streaming with cache to
-                exclude left-context padding).  ``None`` in offline mode.
-                Shape ``(batch_size,)``.
+                Per-sample frame offset used during streaming with cache.
+                Frames at ``idx < offset`` are zero-padded cache slots
+                treated as padding in ``pad_mask``.  ``None`` in offline
+                mode.  Shape ``(batch_size,)``.
             device:
                 Target device for the returned tensors.
 
         Returns:
             ``(pad_mask, att_mask)`` — the padding mask has shape
-            ``(batch_size, max_audio_length)`` with ``True`` = padding.
+            ``(batch_size, max_audio_length)`` with ``True`` = padded /
+            masked-out and ``False`` = valid signal (allowed).
+
             The attention mask has shape ``(batch_size, max_audio_length,
-            max_audio_length)`` with ``True`` = masked-out positions, or
-            ``None`` when using ``rel_pos_local_attn``.
+            max_audio_length)`` where ``att_mask[i, j]`` is ``True`` =
+            query position **i** cannot attend to key position **j**
+            (blocked by padding or outside the context window) and
+            ``False`` = allowed.  In row-major terms: row **i** lists
+            which key positions are masked for query **i**; column **j**
+            lists which queries cannot attend to key **j**.
+
+            Returns ``None`` when using ``rel_pos_local_attn`` (the
+            local-attention mechanism handles its own masking).
+
+            .. note::
+                ``True`` = **masked** in both masks (position is ignored
+                in the attention computation).  This follows PyTorch's
+                ``scaled_dot_product_attention`` / ``nn.functional.softmax``
+                convention where ``True`` entries contribute ``-inf`` to
+                the softmax, producing zero attention weight.
 
         Example — ``att_context_size=[6, 2]``, ``chunked_limited``::
 
@@ -115,6 +150,9 @@ class MuaalemConformerEncoder(ConformerEncoder):
             chunks (6 frames), so row 3 attends frames 0-5 (its chunk plus
             left context), but row 6 cannot attend frame 0 because that is
             2 chunks away and exceeds ``left_chunks=2``.
+
+            Remember: ``True`` = masked (``X``), ``False`` = allowed (``.``)
+            — row **i** shows what query **i** can and cannot see.
         """
         if self.self_attention_model != "rel_pos_local_attn":
             att_mask = torch.ones(
