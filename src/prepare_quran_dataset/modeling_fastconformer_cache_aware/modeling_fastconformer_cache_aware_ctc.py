@@ -27,6 +27,7 @@ chunk-by-chunk processing with cache reuse, using NeMo's
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -42,7 +43,405 @@ from .configuration_fastconformer_cache_aware import (
 from .processor import FastConformerMelProcessor
 
 
-class MuaalemConformerEncoder(ConformerEncoder): ...
+class MuaalemConformerEncoder(ConformerEncoder):
+    def _create_masks(
+        self,
+        att_context_size: list[int],
+        padding_length: torch.LongTensor,
+        max_audio_length: int,
+        offset: torch.LongTensor | None,
+        device: torch.device,
+    ) -> tuple[torch.BoolTensor, torch.BoolTensor | None]:
+        """Create the self-attention mask and padding mask.
+
+        The attention mask applies the configured context style (``regular``
+        or ``chunked_limited``) with the given left/right context sizes.  The
+        padding mask marks all positions beyond the valid sequence length.
+        When ``offset`` is provided (streaming with cache), only positions at
+        or after the offset are considered unmasked.
+
+        Args:
+            att_context_size:
+                Left and right attention context as ``[left, right]`` in
+                encoder frames.  ``-1`` means unlimited.
+            padding_length:
+                Number of valid frames per sample.
+                Shape ``(batch_size,)``.
+            max_audio_length:
+                Maximum sequence length (padded), in frames.
+            offset:
+                Per-sample frame offset (used during streaming with cache to
+                exclude left-context padding).  ``None`` in offline mode.
+                Shape ``(batch_size,)``.
+            device:
+                Target device for the returned tensors.
+
+        Returns:
+            ``(pad_mask, att_mask)`` — the padding mask has shape
+            ``(batch_size, max_audio_length)`` with ``True`` = padding.
+            The attention mask has shape ``(batch_size, max_audio_length,
+            max_audio_length)`` with ``True`` = masked-out positions, or
+            ``None`` when using ``rel_pos_local_attn``.
+
+        Example — ``att_context_size=[6, 2]``, ``chunked_limited``::
+
+            >>> pad_mask, att_mask = encoder._create_masks(
+            ...     att_context_size=[6, 2],
+            ...     padding_length=torch.tensor([20]),
+            ...     max_audio_length=20,
+            ...     offset=torch.tensor([3]),
+            ...     device='cpu',
+            ... )
+            >>> pad_mask[0]
+            tensor([ True,  True,  True, False, False, False, ...])
+
+            Frame layout::
+
+                idx range     content
+                ─────────────────────────────────────────
+                [0, offset)   zero-padded cache slots (masked)
+                [offset, cache_len)    valid cached frames
+                [cache_len, padding_length)  current input chunk
+                [padding_length, max_audio_length)  beyond valid signal (masked)
+
+            ``offset=3`` means frames 0-2 are zero-padded cache slots and are
+            masked in both ``pad_mask`` and ``att_mask``.
+            ``padding_length=20`` means all 20 frames are within the valid
+            range for this example, so only the offset region is masked.
+
+            With ``chunked_limited [6,2]`` the attention is further restricted:
+            ``chunk_size = 2 + 1 = 3`` and ``left_chunks = 6 // 3 = 2``.
+            Each chunk (3 frames) can attend to itself and the 2 preceding
+            chunks (6 frames), so row 3 attends frames 0-5 (its chunk plus
+            left context), but row 6 cannot attend frame 0 because that is
+            2 chunks away and exceeds ``left_chunks=2``.
+        """
+        if self.self_attention_model != "rel_pos_local_attn":
+            att_mask = torch.ones(
+                1, max_audio_length, max_audio_length, dtype=torch.bool, device=device
+            )
+
+            if self.att_context_style == "regular":
+                if att_context_size[0] >= 0:
+                    att_mask = att_mask.triu(diagonal=-att_context_size[0])
+                if att_context_size[1] >= 0:
+                    att_mask = att_mask.tril(diagonal=att_context_size[1])
+            elif self.att_context_style == "chunked_limited":
+                # When right context is unlimited, just the left side of the masking need to get updated
+                if att_context_size[1] == -1:
+                    if att_context_size[0] >= 0:
+                        att_mask = att_mask.triu(diagonal=-att_context_size[0])
+                else:
+                    chunk_size = att_context_size[1] + 1
+                    # left_chunks_num specifies the number of chunks to be visible by each chunk on the left side
+                    if att_context_size[0] >= 0:
+                        left_chunks_num = att_context_size[0] // chunk_size
+                    else:
+                        left_chunks_num = 10000
+
+                    chunk_idx = torch.arange(
+                        0, max_audio_length, dtype=torch.int, device=att_mask.device
+                    )
+                    chunk_idx = torch.div(chunk_idx, chunk_size, rounding_mode="trunc")
+                    diff_chunks = chunk_idx.unsqueeze(1) - chunk_idx.unsqueeze(0)
+                    chunked_limited_mask = torch.logical_and(
+                        torch.le(diff_chunks, left_chunks_num), torch.ge(diff_chunks, 0)
+                    )
+                    att_mask = torch.logical_and(
+                        att_mask, chunked_limited_mask.unsqueeze(0)
+                    )
+        else:
+            att_mask = None
+
+        # pad_mask is the masking to be used to ignore paddings
+        pad_mask = torch.arange(0, max_audio_length, device=device).expand(
+            padding_length.size(0), -1
+        ) < padding_length.unsqueeze(-1)
+
+        if offset is not None:
+            pad_mask_off = torch.arange(0, max_audio_length, device=device).expand(
+                padding_length.size(0), -1
+            ) >= offset.unsqueeze(-1)
+            pad_mask = pad_mask_off.logical_and(pad_mask)
+
+        if att_mask is not None:
+            # pad_mask_for_att_mask is the mask which helps to ignore paddings
+            pad_mask_for_att_mask = pad_mask.unsqueeze(1).repeat(
+                [1, max_audio_length, 1]
+            )
+            pad_mask_for_att_mask = torch.logical_and(
+                pad_mask_for_att_mask, pad_mask_for_att_mask.transpose(1, 2)
+            )
+            # att_mask is the masking to be used by the MHA layers to ignore the tokens not supposed to be visible
+            att_mask = att_mask[:, :max_audio_length, :max_audio_length]
+            # paddings should also get ignored, so pad_mask_for_att_mask is used to ignore their corresponding scores
+            att_mask = torch.logical_and(
+                pad_mask_for_att_mask, att_mask.to(pad_mask_for_att_mask.device)
+            )
+            att_mask = ~att_mask
+
+        pad_mask = ~pad_mask
+        return pad_mask, att_mask
+
+    def forward_internal(
+        self,
+        audio_signal: torch.FloatTensor,
+        length: torch.LongTensor | None,
+        cache_last_channel: torch.FloatTensor | None = None,
+        cache_last_time: torch.FloatTensor | None = None,
+        cache_last_channel_len: torch.LongTensor | None = None,
+    ) -> (
+        tuple[torch.FloatTensor, torch.LongTensor]
+        | tuple[
+            torch.FloatTensor,
+            torch.LongTensor,
+            torch.FloatTensor,
+            torch.FloatTensor,
+            torch.LongTensor,
+        ]
+    ):
+        """Run the encoder on (possibly chunked) audio with optional cache.
+
+        When ``cache_last_channel`` is ``None``, runs the full encoder as a
+        single forward pass — identical to the parent
+        :class:`~nemo.collections.asr.modules.ConformerEncoder`.
+
+        When a cache is provided, uses the caching-aware path:
+
+        1.  Pre-encode (subsampling) — drops ``drop_extra_pre_encoded``
+            frames from the start.
+        2.  Prepends ``cache_len`` left-context frames for self-attention.
+        3.  Loops through Conformer layers, reading/writing per-layer cache.
+        4.  Applies final projection and reduction subsampling.
+        5.  Returns updated cache tensors for the next streaming step.
+
+        .. note::
+            This method is called by the parent class's
+            :meth:`streaming_post_process` which truncates the output to
+            ``valid_out_len`` frames.
+
+        Args:
+            audio_signal:
+                Mel-spectrogram features.
+                Shape ``(batch_size, num_mel_bins, num_frames)``.
+            length:
+                Number of valid frames per sample.
+                Shape ``(batch_size,)``.  If ``None``, inferred from
+                ``audio_signal.size(-1)``.
+            cache_last_channel:
+                Left-context cache for self-attention layers (one entry per
+                encoder layer).  Shape ``(n_layers, batch_size, cache_size,
+                d_model)``.  ``None`` for offline (cache-free) mode.
+            cache_last_time:
+                Left-context cache for convolution layers.
+                Shape ``(n_layers, batch_size, d_model, cache_size)``.
+                ``None`` for offline mode.
+            cache_last_channel_len:
+                Number of valid cached frames per sample.
+                Shape ``(batch_size,)``.  ``None`` for offline mode.
+
+        Returns:
+            *   **Offline mode** (``cache_last_channel`` is ``None``):
+                ``(audio_signal, length)`` — encoder output with shape
+                ``(batch_size, d_model, num_encoder_frames)`` and valid
+                lengths ``(batch_size,)``.
+            *   **Streaming mode** (cache provided):
+                ``(audio_signal, length, cache_ch_next, cache_t_next,
+                cache_len_next)`` — the first two elements are the encoder
+                output for this chunk (including lookahead); the last three
+                are the updated cache state for the next streaming step.
+
+        Example — streaming step with 3-of-6 cache slots valid::
+
+            >>> cache = model.get_initial_cache(batch_size=1)
+            >>> cache.last_channel_len[:] = 3   # 3 valid, 3 zero-padded
+            >>> audio = torch.randn(1, 80, 50)
+            >>> length = torch.tensor([50])
+            >>> out = encoder.forward_internal(audio, length,
+            ...     cache_last_channel=cache.last_channel,
+            ...     cache_last_time=cache.last_time,
+            ...     cache_last_channel_len=cache.last_channel_len)
+
+            Inside the method::
+
+                # pre-encode: (1,80,50) → (1,14,64), length=[14]
+                # cache_len=6 → max_audio_len=14+6=20, padding_length=[20]
+                # offset = -3 + 6 = 3  → frames 0..2 are zero-padded cache
+                # _create_masks masks frames 0..2 and applies chunked_limited
+                # attention with left=6 / right=2 on frames 3..19
+                # Returns: (1,64,T'), (1,), + updated cache tensors
+        """
+        if length is None:
+            length = audio_signal.new_full(
+                (audio_signal.size(0),),
+                audio_signal.size(-1),
+                dtype=torch.int64,
+                device=audio_signal.device,
+            )
+
+        # select a random att_context_size with the distribution specified by att_context_probs during training
+        # for non-validation cases like test, validation or inference, it uses the first mode in self.att_context_size
+        if self.training and len(self.att_context_size_all) > 1:
+            cur_att_context_size = random.choices(
+                self.att_context_size_all, weights=self.att_context_probs
+            )[0]
+        else:
+            cur_att_context_size = self.att_context_size
+
+        audio_signal = torch.transpose(audio_signal, 1, 2)
+
+        if isinstance(self.pre_encode, nn.Linear):
+            audio_signal = self.pre_encode(audio_signal)
+        else:
+            audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
+            length = length.to(torch.int64)
+            # self.streaming_cfg is set by setup_streaming_cfg(), called in the init
+            if (
+                self.streaming_cfg.drop_extra_pre_encoded > 0
+                and cache_last_channel is not None
+            ):
+                audio_signal = audio_signal[
+                    :, self.streaming_cfg.drop_extra_pre_encoded :, :
+                ]
+                length = (length - self.streaming_cfg.drop_extra_pre_encoded).clamp(
+                    min=0
+                )
+
+        if self.reduction_position is not None and cache_last_channel is not None:
+            raise ValueError("Caching with reduction feature is not supported yet!")
+
+        max_audio_length = audio_signal.size(1)
+        if cache_last_channel is not None:
+            cache_len = self.streaming_cfg.last_channel_cache_size
+            cache_keep_size = max_audio_length - self.streaming_cfg.cache_drop_size
+            max_audio_length = max_audio_length + cache_len
+            padding_length = length + cache_len
+            offset = torch.neg(cache_last_channel_len) + cache_len
+        else:
+            padding_length = length
+            cache_last_channel_next = None
+            cache_len = 0
+            offset = None
+
+        audio_signal, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
+
+        # Create the self-attention and padding masks
+        pad_mask, att_mask = self._create_masks(
+            att_context_size=cur_att_context_size,
+            padding_length=padding_length,
+            max_audio_length=max_audio_length,
+            offset=offset,
+            device=audio_signal.device,
+        )
+
+        if cache_last_channel is not None:
+            pad_mask = pad_mask[:, cache_len:]
+            if att_mask is not None:
+                att_mask = att_mask[:, cache_len:]
+            # Convert caches from the tensor to list
+            cache_last_time_next = []
+            cache_last_channel_next = []
+
+        for lth, (drop_prob, layer) in enumerate(
+            zip(self.layer_drop_probs, self.layers)
+        ):
+            original_signal = audio_signal
+            if cache_last_channel is not None:
+                cache_last_channel_cur = cache_last_channel[lth]
+                cache_last_time_cur = cache_last_time[lth]
+            else:
+                cache_last_channel_cur = None
+                cache_last_time_cur = None
+            audio_signal = layer(
+                x=audio_signal,
+                att_mask=att_mask,
+                pos_emb=pos_emb,
+                pad_mask=pad_mask,
+                cache_last_channel=cache_last_channel_cur,
+                cache_last_time=cache_last_time_cur,
+            )
+
+            if cache_last_channel_cur is not None:
+                (audio_signal, cache_last_channel_cur, cache_last_time_cur) = (
+                    audio_signal
+                )
+                cache_last_channel_next.append(cache_last_channel_cur)
+                cache_last_time_next.append(cache_last_time_cur)
+
+            # applying stochastic depth logic from https://arxiv.org/abs/2102.03216
+            if self.training and drop_prob > 0.0:
+                should_drop = torch.rand(1) < drop_prob
+                # adjusting to match expectation
+                if should_drop:
+                    # that's not efficient, but it's hard to implement distributed
+                    # version of dropping layers without deadlock or random seed meddling
+                    # so multiplying the signal by 0 to ensure all weights get gradients
+                    audio_signal = audio_signal * 0.0 + original_signal
+                else:
+                    # not doing this operation if drop prob is 0 as it's identity in that case
+                    audio_signal = (audio_signal - original_signal) / (
+                        1.0 - drop_prob
+                    ) + original_signal
+
+            if self.reduction_position == lth:
+                audio_signal, length = self.reduction_subsampling(
+                    x=audio_signal, lengths=length
+                )
+                max_audio_length = audio_signal.size(1)
+                # Don't update the audio_signal here because then it will again scale the audio_signal
+                # and cause an increase in the WER
+                _, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
+                pad_mask, att_mask = self._create_masks(
+                    att_context_size=cur_att_context_size,
+                    padding_length=length,
+                    max_audio_length=max_audio_length,
+                    offset=offset,
+                    device=audio_signal.device,
+                )
+
+            # saving tensors if required for interctc loss
+            if self.is_access_enabled(getattr(self, "model_guid", None)):
+                if self.interctc_capture_at_layers is None:
+                    self.interctc_capture_at_layers = self.access_cfg.get(
+                        "interctc", {}
+                    ).get("capture_layers", [])
+                if lth in self.interctc_capture_at_layers:
+                    lth_audio_signal = audio_signal
+                    if self.out_proj is not None:
+                        lth_audio_signal = self.out_proj(audio_signal)
+                    # shape is the same as the shape of audio_signal output, i.e. [B, D, T]
+                    self.register_accessible_tensor(
+                        name=f"interctc/layer_output_{lth}",
+                        tensor=torch.transpose(lth_audio_signal, 1, 2),
+                    )
+                    self.register_accessible_tensor(
+                        name=f"interctc/layer_length_{lth}", tensor=length
+                    )
+
+        if self.out_proj is not None:
+            audio_signal = self.out_proj(audio_signal)
+
+        # Reduction
+        if self.reduction_position == -1:
+            audio_signal, length = self.reduction_subsampling(
+                x=audio_signal, lengths=length
+            )
+
+        audio_signal = torch.transpose(audio_signal, 1, 2)
+        length = length.to(dtype=torch.int64)
+
+        if cache_last_channel is not None:
+            cache_last_channel_next = torch.stack(cache_last_channel_next, dim=0)
+            cache_last_time_next = torch.stack(cache_last_time_next, dim=0)
+            return (
+                audio_signal,
+                length,
+                cache_last_channel_next,
+                cache_last_time_next,
+                torch.clamp(cache_last_channel_len + cache_keep_size, max=cache_len),
+            )
+        else:
+            return audio_signal, length
 
 
 @dataclass
