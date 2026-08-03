@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from nemo.collections.asr.modules import AudioToMelSpectrogramPreprocessor
 
 
 class FastConformerMelProcessor:
@@ -104,8 +105,6 @@ class FastConformerMelProcessor:
         self.sample_rate = sample_rate
         self.window_stride = window_stride
         self.features = features
-
-        from nemo.collections.asr.modules import AudioToMelSpectrogramPreprocessor
 
         self._processor = AudioToMelSpectrogramPreprocessor(
             sample_rate=sample_rate,

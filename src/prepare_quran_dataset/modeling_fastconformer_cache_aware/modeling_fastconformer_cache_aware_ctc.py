@@ -32,7 +32,12 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 import torch
+from nemo.collections.asr.models.configs import CacheAwareStreamingConfig
 from nemo.collections.asr.modules import ConformerEncoder
+from nemo.collections.asr.parts.submodules.causal_convs import CausalConv1D
+from nemo.collections.asr.parts.submodules.multi_head_attention import (
+    MultiHeadAttention,
+)
 from torch import nn
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import ModelOutput
@@ -89,6 +94,7 @@ class MuaalemConformerEncoder(ConformerEncoder):
                 Maximum sequence length (padded), in frames.
             offset:
                 Per-sample frame offset used during streaming with cache.
+                offset = max_cach_len - last_cache_len. We want to ingonre this offset during computation
                 Frames at ``idx < offset`` are zero-padded cache slots
                 treated as padding in ``pad_mask``.  ``None`` in offline
                 mode.  Shape ``(batch_size,)``.
@@ -331,7 +337,11 @@ class MuaalemConformerEncoder(ConformerEncoder):
         if isinstance(self.pre_encode, nn.Linear):
             audio_signal = self.pre_encode(audio_signal)
         else:
+            print(f"Len Before pre-encode: {length}")
+            print(f"Len Before audio_sigal: {audio_signal.shape}")
             audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
+            print(f"Len After pre-encode: {length}")
+            print(f"Len After audio_sigal: {audio_signal.shape}")
             length = length.to(torch.int64)
             # self.streaming_cfg is set by setup_streaming_cfg(), called in the init
             if (
@@ -354,6 +364,7 @@ class MuaalemConformerEncoder(ConformerEncoder):
             cache_keep_size = max_audio_length - self.streaming_cfg.cache_drop_size
             max_audio_length = max_audio_length + cache_len
             padding_length = length + cache_len
+            # offset is the len which not filled yet by the model
             offset = torch.neg(cache_last_channel_len) + cache_len
         else:
             padding_length = length
@@ -480,6 +491,126 @@ class MuaalemConformerEncoder(ConformerEncoder):
             )
         else:
             return audio_signal, length
+
+    def setup_streaming_params(
+        self,
+        chunk_size: int | None = None,
+        shift_size: int | None = None,
+        left_chunks: int | None = None,
+        att_context_size: list | None = None,
+        max_context: int = 10000,
+    ):
+        """
+        This function sets the needed values and parameters to perform streaming. The configuration would be stored in self.streaming_cfg.
+        The streaming configuration is needed to simulate streaming inference.
+
+        Args:
+            chunk_size (int): overrides the chunk size
+            shift_size (int): overrides the shift size for chunks
+            left_chunks (int): overrides the number of left chunks visible to each chunk
+            max_context (int): the value used for the cache size of last_channel layers if left context is set to infinity (-1)
+                Defaults to -1 (means feat_out is d_model)
+        """
+        streaming_cfg = CacheAwareStreamingConfig()
+
+        # When att_context_size is not specified, it uses the default_att_context_size
+        if att_context_size is None:
+            att_context_size = self.att_context_size
+
+        if chunk_size is not None:
+            if chunk_size < 1:
+                raise ValueError(
+                    "chunk_size needs to be a number larger or equal to one."
+                )
+            lookahead_steps = chunk_size - 1
+            streaming_cfg.cache_drop_size = chunk_size - shift_size
+        elif self.att_context_style == "chunked_limited":
+            lookahead_steps = att_context_size[1]
+            streaming_cfg.cache_drop_size = 0
+        elif self.att_context_style == "regular":
+            lookahead_steps = (
+                att_context_size[1] * self.n_layers
+                + self.conv_context_size[1] * self.n_layers
+            )
+            streaming_cfg.cache_drop_size = lookahead_steps
+        else:
+            streaming_cfg.cache_drop_size = 0
+            lookahead_steps = None
+
+        if chunk_size is None:
+            streaming_cfg.last_channel_cache_size = (
+                att_context_size[0] if att_context_size[0] >= 0 else max_context
+            )
+        else:
+            if left_chunks is None:
+                raise ValueError("left_chunks can not be None when chunk_size is set.")
+            streaming_cfg.last_channel_cache_size = left_chunks * chunk_size
+
+        if hasattr(self.pre_encode, "get_sampling_frames"):
+            sampling_frames = self.pre_encode.get_sampling_frames()
+        else:
+            sampling_frames = 0
+
+        if isinstance(sampling_frames, list):
+            streaming_cfg.chunk_size = [
+                sampling_frames[0] + self.subsampling_factor * lookahead_steps,
+                sampling_frames[1] + self.subsampling_factor * lookahead_steps,
+            ]
+        else:
+            streaming_cfg.chunk_size = sampling_frames * (1 + lookahead_steps)
+
+        if isinstance(sampling_frames, list):
+            streaming_cfg.shift_size = [
+                sampling_frames[0]
+                + sampling_frames[1]
+                * (lookahead_steps - streaming_cfg.cache_drop_size),
+                sampling_frames[1]
+                + sampling_frames[1]
+                * (lookahead_steps - streaming_cfg.cache_drop_size),
+            ]
+        else:
+            streaming_cfg.shift_size = sampling_frames * (
+                1 + lookahead_steps - streaming_cfg.cache_drop_size
+            )
+
+        if isinstance(streaming_cfg.shift_size, list):
+            streaming_cfg.valid_out_len = (
+                streaming_cfg.shift_size[1] - sampling_frames[1]
+            ) // self.subsampling_factor + 1
+        else:
+            streaming_cfg.valid_out_len = (
+                streaming_cfg.shift_size // self.subsampling_factor
+            )
+
+        if hasattr(self.pre_encode, "get_streaming_cache_size"):
+            streaming_cfg.pre_encode_cache_size = (
+                self.pre_encode.get_streaming_cache_size()
+            )
+        else:
+            streaming_cfg.pre_encode_cache_size = 0
+
+        if isinstance(streaming_cfg.pre_encode_cache_size, list):
+            if streaming_cfg.pre_encode_cache_size[1] >= 1:
+                streaming_cfg.drop_extra_pre_encoded = (
+                    1
+                    + (streaming_cfg.pre_encode_cache_size[1] - 1)
+                    // self.subsampling_factor
+                )
+            else:
+                streaming_cfg.drop_extra_pre_encoded = 0
+        else:
+            streaming_cfg.drop_extra_pre_encoded = (
+                streaming_cfg.pre_encode_cache_size // self.subsampling_factor
+            )
+
+        for m in self.layers.modules():
+            if hasattr(m, "_max_cache_len"):
+                if isinstance(m, MultiHeadAttention):
+                    m.cache_drop_size = streaming_cfg.cache_drop_size
+                if isinstance(m, CausalConv1D):
+                    m.cache_drop_size = streaming_cfg.cache_drop_size
+
+        self.streaming_cfg = streaming_cfg
 
 
 @dataclass
@@ -678,8 +809,8 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
 
     def forward(
         self,
-        raw_audio: torch.FloatTensor,
-        audio_length: torch.LongTensor,
+        raw_audio: torch.FloatTensor | None,
+        audio_length: torch.LongTensor | None,
         cache: FastConformerCache | None = None,
         keep_all_outputs: bool = True,
         drop_extra_pre_encoded: int | None = None,
