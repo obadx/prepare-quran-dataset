@@ -6,52 +6,23 @@ a high-level wrapper for running cache-aware streaming inference on audio files.
 The wrapper integrates:
 
 *   :class:`~processor.FastConformerMelProcessor` — raw audio → mel spectrograms.
-*   NeMo's :class:`~nemo.collections.asr.parts.utils.streaming_utils.CacheAwareStreamingAudioBuffer`
-    — manages the sliding window of mel frames across streaming steps.
-*   :meth:`~modeling_fastconformer_cache_aware_ctc.FastConformerCacheAwareMultilevelCTC.cache_aware_stream_step`
+*   Manual chunking loop with zero-padded tail for constant lookahead delay.
+*   :meth:`~modeling_fastconformer_cache_aware_ctc.FastConformerCacheAwareMultilevelCTC`
     — per-step encoder execution with cache reuse.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Optional
 
 import numpy as np
 import torch
-from nemo.collections.asr.parts.utils.streaming_utils import (
-    CacheAwareStreamingAudioBuffer,
-)
 from numpy.typing import NDArray
 
 from .modeling_fastconformer_cache_aware_ctc import (
     FastConformerCacheAwareMultilevelCTC,
 )
-from .processor import FastConformerMelProcessor
-
-
-def _calc_drop_extra_pre_encoded(
-    model: FastConformerCacheAwareMultilevelCTC,
-    step_num: int,
-    pad_and_drop_preencoded: bool = False,
-) -> int:
-    """Determine ``drop_extra_pre_encoded`` for a given streaming step.
-
-    The first streaming step has no pre-encode cache, so no frames need to
-    be dropped.  Subsequent steps use the encoder's configured default.
-
-    Args:
-        model: The FastConformer model instance.
-        step_num: Zero-based streaming step index.
-        pad_and_drop_preencoded: If ``True``, always use the configured
-            drop value (enables ONNX-friendly uniform step behaviour).
-
-    Returns:
-        The number of frames to drop after the pre-encode subsampling.
-    """
-    if step_num == 0 and not pad_and_drop_preencoded:
-        return 0
-    return int(model.encoder.streaming_cfg.drop_extra_pre_encoded)
 
 
 @torch.inference_mode()
@@ -65,10 +36,16 @@ def stream_inference(
 ) -> list[int]:
     """Run cache-aware streaming inference on a single audio waveform.
 
-    This convenience function loads the audio, creates a
-    ``CacheAwareStreamingAudioBuffer``, iterates through the streaming steps,
-    and returns the concatenated argmax token IDs for the requested output
-    level.
+    This convenience function computes mel spectrograms from the audio,
+    pads the tail with zeros for constant lookahead delay, iterates
+    through the streaming steps, and returns the concatenated argmax
+    token IDs for the requested output level.
+
+    Unlike the NeMo ``CacheAwareStreamingAudioBuffer`` path, this
+    implementation computes mel directly via ``model.processor`` and
+    performs manual chunking — it does **not** require
+    ``model._cfg`` (which the NeMo buffer needs) and therefore works
+    with the HuggingFace-wrapped model.
 
     Args:
         model:
@@ -141,51 +118,87 @@ def stream_inference(
     model = model.to(device=device, dtype=dtype)
     model.eval()
 
-    # --- Create streaming buffer ---
-
-    streaming_buffer = CacheAwareStreamingAudioBuffer(model)
-    streaming_buffer.append_audio(audio)
-
-    # --- Initialise cache ---
-    model.cache = model.get_initial_cache(
-        batch_size=len(streaming_buffer.streams_length)
+    # --- Compute mel spectrograms ---
+    audio_tensor = torch.tensor(audio, dtype=dtype, device=device).unsqueeze(0)
+    mel, mel_len = model.processor(
+        input_signal=audio_tensor,
+        length=torch.tensor([len(audio)], device=device),
     )
 
+    # --- Zero-pad tail for constant lookahead delay ---
+    # When att_context_size has a third entry (C), each emitted frame
+    # needs C future frames as keys.  The last few output frames would
+    # otherwise see truncated lookahead; padding the tail with zeros
+    # gives them full C-frame lookahead (their predictions are noise,
+    # but frames before them get correct constant-delay context).
+    att_ctx = model.config.att_context_size
+    C = att_ctx[2] if isinstance(att_ctx, list) and len(att_ctx) > 2 else 0
+    if C > 0:
+        pad_mel = C * model.encoder.subsampling_factor
+        mel = torch.nn.functional.pad(mel, (0, pad_mel))
+        mel_len = mel_len + pad_mel
+
+    # --- Initialise cache ---
+    cache = model.get_initial_cache(batch_size=1)
+
     # --- Streaming loop ---
-    pred_out_prev: Optional[torch.FloatTensor] = None
-    all_token_ids: list[int] = []
+    # Manual chunking (no NeMo buffer) — drop_extra_pre_encoded is always
+    # 0 because we feed fresh mel chunks without a pre-encode cache.
+    s = model.encoder.streaming_cfg
+    all_tokens: Optional[torch.FloatTensor] = None
+    buffer_idx = 0
+    step_num = 0
 
-    for step_num, (chunk_proc, chunk_len) in enumerate(iter(streaming_buffer)):
-        chunk_proc = chunk_proc.to(device=device, dtype=dtype)
-        chunk_len = chunk_len.to(device=device)
+    while buffer_idx < mel.size(-1):
+        # Determine chunk size and shift for this step
+        if step_num == 0:
+            chunk_size = s.chunk_size[0]
+            shift = s.shift_size[0]
+        else:
+            chunk_size = s.chunk_size[1]
+            shift = s.shift_size[1]
 
-        drop = _calc_drop_extra_pre_encoded(model, step_num)
+        # Slice chunk (no pre-encode cache)
+        end = min(buffer_idx + chunk_size, mel.size(-1))
+        chunk = mel[:, :, buffer_idx:end]
 
+        # Stop if chunk is too small to produce output
+        if chunk.size(-1) < 1:
+            break
+
+        # No pre-encode cache → always drop 0 extra frames
+        model.encoder.streaming_cfg.drop_extra_pre_encoded = 0
+
+        # Determine if this is the last step (no more shifts fit)
+        is_last = (buffer_idx + shift >= mel.size(-1))
+
+        # Forward pass
         out = model(
             raw_audio=None,
             audio_length=None,
-            processed_signal=chunk_proc,
-            processed_length=chunk_len,
-            cache=model.cache,
-            keep_all_outputs=streaming_buffer.is_buffer_empty(),
-            drop_extra_pre_encoded=drop,
+            processed_signal=chunk,
+            processed_length=torch.tensor([chunk.size(-1)], device=device),
+            cache=cache,
+            keep_all_outputs=is_last,
+            drop_extra_pre_encoded=0,
         )
-        model.cache = out.cache
+        cache = out.cache
 
+        # Collect predictions
         logits = model.level_to_lm_head[level](out.encoder_output)
         pred_ids = logits.argmax(dim=-1)
 
-        # Concatenate predictions across steps
-        if pred_out_prev is not None:
-            valid_out_len = int(model.encoder.streaming_cfg.valid_out_len)
-            pred_out_prev = torch.cat([pred_out_prev, pred_ids], dim=-1)
+        if all_tokens is None:
+            all_tokens = pred_ids
         else:
-            pred_out_prev = pred_ids
+            all_tokens = torch.cat([all_tokens, pred_ids], dim=-1)
 
-    if pred_out_prev is not None:
-        all_token_ids = pred_out_prev[0].tolist()
+        buffer_idx += shift
+        step_num += 1
 
-    return all_token_ids
+    if all_tokens is not None:
+        return all_tokens[0].tolist()
+    return []
 
 
 class FastConformerCacheAwareMultilevelCTCInference:

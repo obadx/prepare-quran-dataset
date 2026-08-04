@@ -86,7 +86,10 @@ class MuaalemConformerEncoder(ConformerEncoder):
         Args:
             att_context_size:
                 Left and right attention context as ``[left, right]`` in
-                encoder frames.  ``-1`` means unlimited.
+                encoder frames.  ``-1`` means unlimited.  An optional third
+                entry ``constant_lookahead_delay`` caps the right context to
+                that many future frames (see :meth:`_create_masks`) as
+                ``[left, rigth, constat_lookhead_delay]``.
             padding_length:
                 Number of valid frames per sample.
                 Shape ``(batch_size,)``.
@@ -171,6 +174,15 @@ class MuaalemConformerEncoder(ConformerEncoder):
                 if att_context_size[1] >= 0:
                     att_mask = att_mask.tril(diagonal=att_context_size[1])
             elif self.att_context_style == "chunked_limited":
+                # Optional third entry of att_context_size: a constant lookahead
+                # delay (C).  When C > 0 each position may also attend up to C
+                # future frames (the chunk attends left and right), which makes
+                # the lookahead constant across the emitted chunk instead of
+                # shrinking towards the chunk tail.  C == 0 keeps the legacy
+                # behaviour (zero right context across chunk boundaries).
+                constant_lookahead_delay = (
+                    att_context_size[2] if len(att_context_size) > 2 else 0
+                )
                 # When right context is unlimited, just the left side of the masking need to get updated
                 if att_context_size[1] == -1:
                     if att_context_size[0] >= 0:
@@ -188,12 +200,38 @@ class MuaalemConformerEncoder(ConformerEncoder):
                     )
                     chunk_idx = torch.div(chunk_idx, chunk_size, rounding_mode="trunc")
                     diff_chunks = chunk_idx.unsqueeze(1) - chunk_idx.unsqueeze(0)
-                    chunked_limited_mask = torch.logical_and(
-                        torch.le(diff_chunks, left_chunks_num), torch.ge(diff_chunks, 0)
-                    )
-                    att_mask = torch.logical_and(
-                        att_mask, chunked_limited_mask.unsqueeze(0)
-                    )
+                    if constant_lookahead_delay > 0:
+                        # Keys are restricted to the current and preceding
+                        # ``left_chunks_num`` chunks (left context).  The constant
+                        # lookahead delay extends the right context to
+                        # ``chunk_end + C`` for every row in the chunk, keeping
+                        # the chunked_limited block structure instead of a
+                        # per-row diagonal band.  C == 0 falls through to the
+                        # legacy path (``torch.ge`` blocks future chunks).
+                        chunked_limited_mask = torch.le(diff_chunks, left_chunks_num)
+                        att_mask = torch.logical_and(
+                            att_mask, chunked_limited_mask.unsqueeze(0)
+                        )
+                        # Right cap: every row of chunk k may attend up to
+                        # (k+1)*chunk_size + C (exclusive).  This anchors the
+                        # lookahead at the chunk boundary so all rows in a
+                        # chunk share the same window [left_block, chunk_end+C).
+                        right_cap = (
+                            chunk_idx + 1
+                        ) * chunk_size + constant_lookahead_delay
+                        key_idx = torch.arange(max_audio_length, device=att_mask.device)
+                        right_mask = torch.le(
+                            key_idx.unsqueeze(0), right_cap.unsqueeze(1) - 1
+                        )
+                        att_mask = torch.logical_and(att_mask, right_mask.unsqueeze(0))
+                    else:
+                        chunked_limited_mask = torch.logical_and(
+                            torch.le(diff_chunks, left_chunks_num),
+                            torch.ge(diff_chunks, 0),
+                        )
+                        att_mask = torch.logical_and(
+                            att_mask, chunked_limited_mask.unsqueeze(0)
+                        )
         else:
             att_mask = None
 
@@ -517,6 +555,13 @@ class MuaalemConformerEncoder(ConformerEncoder):
         if att_context_size is None:
             att_context_size = self.att_context_size
 
+        if len(att_context_size) > 2 and self.att_context_style != "chunked_limited":
+            raise ValueError(
+                "constant_lookahead_delay (att_context_size[2]) is only "
+                "supported with att_context_style='chunked_limited'.  "
+                f"Got att_context_style='{self.att_context_style}'."
+            )
+
         if chunk_size is not None:
             if chunk_size < 1:
                 raise ValueError(
@@ -525,8 +570,18 @@ class MuaalemConformerEncoder(ConformerEncoder):
             lookahead_steps = chunk_size - 1
             streaming_cfg.cache_drop_size = chunk_size - shift_size
         elif self.att_context_style == "chunked_limited":
-            lookahead_steps = att_context_size[1]
-            streaming_cfg.cache_drop_size = 0
+            # Optional third entry of att_context_size: a constant lookahead
+            # delay (C).  The chunk grows by C frames (so each emitted frame
+            # keeps a constant C-frame lookahead) while the shift stays based
+            # on the lookahead only, producing a C-frame overlap between
+            # consecutive chunks.  The overlap is dropped from both caches
+            # (`cache_drop_size = C`) so the next step re-processes it with
+            # its own lookahead available.
+            constant_lookahead_delay = (
+                att_context_size[2] if len(att_context_size) > 2 else 0
+            )
+            lookahead_steps = att_context_size[1] + constant_lookahead_delay
+            streaming_cfg.cache_drop_size = constant_lookahead_delay
         elif self.att_context_style == "regular":
             lookahead_steps = (
                 att_context_size[1] * self.n_layers

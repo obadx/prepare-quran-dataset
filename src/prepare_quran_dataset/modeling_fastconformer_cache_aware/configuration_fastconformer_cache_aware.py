@@ -123,8 +123,13 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         n_heads:
             Number of attention heads.  Defaults to ``8``.
         att_context_size:
-            Left and right attention context in encoder frames.  Format
-            ``[left_context, right_context]``.  Defaults to ``[78, 12]``
+            Attention context in encoder frames.  Format
+            ``[left_context, right_context]`` or, to enable a **constant
+            lookahead delay**, ``[left_context, right_context,
+            constant_lookahead_delay]``.  The optional third entry is the
+            number of future encoder frames each position may attend (the
+            chunk attends left and right, with the right context fixed to
+            ``constant_lookahead_delay``).  Defaults to ``[78, 12]``
             (1040 ms worst-case latency with 40 ms per encoder frame).
         att_context_style:
             Attention context style.  Set to ``"chunked_limited"`` for
@@ -288,6 +293,18 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         self.ff_expansion_factor = ff_expansion_factor
         self.self_attention_model = self_attention_model
         self.n_heads = n_heads
+        if isinstance(att_context_size, list):
+            if len(att_context_size) not in (2, 3):
+                raise ValueError(
+                    "`att_context_size` must be `[left, right]` or "
+                    "`[left, right, constant_lookahead_delay]`.  "
+                    f"Got {len(att_context_size)} elements: {att_context_size}."
+                )
+            if len(att_context_size) == 3 and att_context_size[2] < 0:
+                raise ValueError(
+                    "`constant_lookahead_delay` (att_context_size[2]) must be "
+                    f"non-negative.  Got {att_context_size[2]}."
+                )
         self.att_context_size = att_context_size or -1
         self.att_context_style = att_context_style
         self.xscaling = xscaling
