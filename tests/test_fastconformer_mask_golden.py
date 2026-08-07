@@ -654,11 +654,13 @@ def test_create_masks_matches_golden(golden, mask_stub):
 @pytest.mark.parametrize("left, right", [(6, 2), (8, 1), (9, 2), (12, 3)])
 def test_two_element_context_equals_zero_constant_delay(left, right, mask_stub):
     """``att_context_size=[left, right]`` and ``[left, right, 0]`` must be identical."""
+    chunk_size = right + 1
+    stream_len = chunk_size + left
     scenarios = [
         (None, 20, 20),
-        (6, 10, 10),
-        (3, 12, 12),
-        (0, 16, 16),
+        (left, stream_len, stream_len),
+        (chunk_size, stream_len, stream_len),
+        (0, stream_len, stream_len),
     ]
     for offset, padding_length, max_audio_length in scenarios:
         pad2, att2 = MuaalemConformerEncoder._create_masks(
@@ -701,5 +703,74 @@ def test_non_chunk_aligned_context_raises(invalid_context, mask_stub):
             torch.tensor([20]),
             20,
             None,
+            "cpu",
+        )
+
+
+@pytest.mark.parametrize(
+    "context, offset",
+    [
+        ([6, 2], 4),
+        ([6, 2], 1),
+        ([8, 1], 3),
+        ([9, 2], 7),
+        ([12, 3], 6),
+    ],
+    ids=lambda v: str(v),
+)
+def test_offset_not_chunk_multiple_raises(context, offset, mask_stub):
+    """In streaming mode ``offset % (right + 1) != 0`` must raise ValueError."""
+    with pytest.raises(ValueError, match="offset"):
+        MuaalemConformerEncoder._create_masks(
+            mask_stub,
+            list(context),
+            torch.tensor([20]),
+            20,
+            torch.tensor([offset]),
+            "cpu",
+        )
+
+
+@pytest.mark.parametrize(
+    "context, bad_length",
+    [
+        ([6, 2], 10),
+        ([8, 1], 12),
+        ([9, 2], 10),
+        ([12, 3], 17),
+    ],
+    ids=lambda v: str(v),
+)
+def test_streaming_length_mismatch_zero_delay_raises(context, bad_length, mask_stub):
+    """Streaming ``max_audio_length != left + right + 1`` must raise ValueError."""
+    with pytest.raises(ValueError, match="max_audio_length"):
+        MuaalemConformerEncoder._create_masks(
+            mask_stub,
+            list(context),
+            torch.tensor([bad_length]),
+            bad_length,
+            torch.tensor([0]),
+            "cpu",
+        )
+
+
+@pytest.mark.parametrize(
+    "context, bad_length",
+    [
+        ([6, 2, 2], 10),
+        ([8, 1, 4], 12),
+        ([12, 3, 2], 17),
+    ],
+    ids=lambda v: str(v),
+)
+def test_streaming_length_mismatch_constant_delay_raises(context, bad_length, mask_stub):
+    """Streaming ``max_audio_length != left + right + 1 + C`` must raise ValueError."""
+    with pytest.raises(ValueError, match="max_audio_length"):
+        MuaalemConformerEncoder._create_masks(
+            mask_stub,
+            list(context),
+            torch.tensor([bad_length]),
+            bad_length,
+            torch.tensor([0]),
             "cpu",
         )
