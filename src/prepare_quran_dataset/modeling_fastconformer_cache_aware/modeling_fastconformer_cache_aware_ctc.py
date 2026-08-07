@@ -90,6 +90,11 @@ class MuaalemConformerEncoder(ConformerEncoder):
                 entry ``constant_lookahead_delay`` caps the right context to
                 that many future frames (see :meth:`_create_masks`) as
                 ``[left, rigth, constat_lookhead_delay]``.
+
+                In ``chunked_limited`` mode (with a finite right context) the
+                left context must be a **multiple of ``right + 1``** (the
+                chunk size), so it spans whole chunks: ``left % (right + 1)
+                == 0``.  A mismatch raises ``ValueError``.
             padding_length:
                 Number of valid frames per sample.
                 Shape ``(batch_size,)``.
@@ -189,6 +194,25 @@ class MuaalemConformerEncoder(ConformerEncoder):
                         att_mask = att_mask.triu(diagonal=-att_context_size[0])
                 else:
                     chunk_size = att_context_size[1] + 1
+                    # The left context must span whole chunks (chunk_size =
+                    # right + 1) so that ``left_chunks_num`` matches the
+                    # configured ``att_context_size[0]`` exactly.
+                    if (
+                        att_context_size[0] >= 0
+                        and att_context_size[0] % chunk_size != 0
+                    ):
+                        raise ValueError(
+                            "chunked_limited attention requires "
+                            "att_context_size[0] (left context) to be a "
+                            f"multiple of att_context_size[1] + 1 "
+                            f"(chunk_size={chunk_size}), so the left context "
+                            f"spans whole chunks. Got {att_context_size}."
+                        )
+                    if offset is not None:
+                        if offset[0].item() % chunk_size != 0:
+                            raise ValueError(
+                                f"`offset` i.e (max_cache_size - last_cache_size) has to be multiple of `chunk_size` got offset=`{offset[0].item()}`, chunk_size=(attn_context_size[1] + 1) = `{chunk_size}`."
+                            )
                     # left_chunks_num specifies the number of chunks to be visible by each chunk on the left side
                     if att_context_size[0] >= 0:
                         left_chunks_num = att_context_size[0] // chunk_size
@@ -201,6 +225,15 @@ class MuaalemConformerEncoder(ConformerEncoder):
                     chunk_idx = torch.div(chunk_idx, chunk_size, rounding_mode="trunc")
                     diff_chunks = chunk_idx.unsqueeze(1) - chunk_idx.unsqueeze(0)
                     if constant_lookahead_delay > 0:
+                        if offset is not None and (
+                            max_audio_length
+                            != constant_lookahead_delay
+                            + chunk_size
+                            + att_context_size[0]
+                        ):
+                            raise ValueError(
+                                f"`max_audio_length` in `chunked_limited` mode with attn_context of [left, right, constat_lookahead_delay] in streaming mode (with cache) has to be of length (left + right + 1 + constant_lookahead_delay) `{att_context_size[0]} + {att_context_size[1]} + 1 + {constant_lookahead_delay} = {att_context_size[0] + chunk_size + constant_lookahead_delay}` got max_audio_length = `{max_audio_length}`)"
+                            )
                         # Keys are restricted to the current and preceding
                         # ``left_chunks_num`` chunks (left context).  The constant
                         # lookahead delay extends the right context to
@@ -225,6 +258,15 @@ class MuaalemConformerEncoder(ConformerEncoder):
                         )
                         att_mask = torch.logical_and(att_mask, right_mask.unsqueeze(0))
                     else:
+                        if offset is not None and (
+                            max_audio_length
+                            !=  chunk_size
+                            + att_context_size[0]
+                        ):
+                            raise ValueError(
+                                f"`max_audio_length` in `chunked_limited` mode with attn_context of [left, right] in streaming mode (with cache) has to be of length (left + right + 1) `{att_context_size[0]} + {att_context_size[1]} + 1 = {att_context_size[0] + chunk_size}` got max_audio_length = `{max_audio_length}`)"
+                            )
+
                         chunked_limited_mask = torch.logical_and(
                             torch.le(diff_chunks, left_chunks_num),
                             torch.ge(diff_chunks, 0),
@@ -421,10 +463,27 @@ class MuaalemConformerEncoder(ConformerEncoder):
             device=audio_signal.device,
         )
 
+        # We are in streaming inference (cache is valid not `None`)
         if cache_last_channel is not None:
             pad_mask = pad_mask[:, cache_len:]
             if att_mask is not None:
                 att_mask = att_mask[:, cache_len:]
+                # Streaming: the C (Constate Delay) lookahead tail rows are keys-only —
+                # they must NOT attend on themselves or anything.  The
+                # emitted chunk (first 1+lookahead rows) still attends
+                # the full window including the tail.
+                att_ctx = self.att_context_size
+                C = att_ctx[2] if isinstance(att_ctx, list) and len(att_ctx) > 2 else 0
+                if C > 0:
+                    if audio_signal.size(1) != (att_ctx[1] + 1 + C):
+                        raise ValueError(
+                            f"For chunked Streaming with `constant_lookahead_delay`(att_context_size[2]) > 0. The input len after downsampling for `chuncked_limited` mode have to be: `att_context_size[1] + 1 + att_context_size[2]` i.e: `chunk_size + constat_lookahead_delay` where `chunk_size = att_context_size[1] + 1`. Got audio_signal.size(1) = `{audio_signal.size(1)}` exepected: `{att_ctx[1] + 1 + C}` "
+                        )
+
+                    chunk_size = att_ctx[1] + 1
+                    tail_start = chunk_size
+                    tail_end = min(tail_start + C, att_mask.size(2))
+                    att_mask[:, tail_start:tail_end, :] = True
             # Convert caches from the tensor to list
             cache_last_time_next = []
             cache_last_channel_next = []
@@ -658,6 +717,8 @@ class MuaalemConformerEncoder(ConformerEncoder):
                 streaming_cfg.pre_encode_cache_size // self.subsampling_factor
             )
 
+        # This a very bad way to set an object attribute for both
+        # `MultiHeadAttention` and `CausalConv1D` the default for object.cache_drop_size is zero
         for m in self.layers.modules():
             if hasattr(m, "_max_cache_len"):
                 if isinstance(m, MultiHeadAttention):
