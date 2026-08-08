@@ -27,8 +27,10 @@ chunk-by-chunk processing with cache reuse, using NeMo's
 
 from __future__ import annotations
 
-import logging
 import random
+import re
+import sys
+import warnings
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -48,7 +50,145 @@ from .configuration_fastconformer_cache_aware import (
 )
 from .processor import FastConformerMelProcessor
 
-logger = logging.getLogger(__name__)
+
+class FastConformerNeMoLoadWarning(Warning):
+    """Emitted by :meth:`FastConformerCacheAwareMultilevelCTC.from_nemo` when
+    checkpoint weights could not be fully transferred; the message carries an
+    HF-style ``Key | Status | Details`` load report.
+
+    A plain ``UserWarning`` is avoided because NeMo replaces
+    ``warnings.showwarning`` and drops every ``UserWarning`` (it treats any
+    ``ignore`` filter whose category equals ``UserWarning`` as applying
+    everywhere), which would silently swallow this report.
+    """
+
+
+_DIGIT_RX = re.compile(r"(?<=\.)(\d+)(?=\.|$)")
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+_ANSI_RESET = "\x1b[0m"
+_ANSI = {
+    "bold": "\x1b[1m",
+    "red": "\x1b[31m",
+    "yellow": "\x1b[33m",
+    "orange": "\x1b[38;5;208m",
+    "italic": "\x1b[3m",
+}
+
+
+def _style(text, color):
+    """Color ``text`` only when stderr is a terminal (warnings go to stderr)."""
+    if sys.stderr.isatty():
+        return f"{_ANSI[color]}{text}{_ANSI_RESET}"
+    return text
+
+
+def _strip_ansi(text):
+    return _ANSI_RE.sub("", str(text))
+
+
+def _merge_key_indices(keys):
+    """Collapse ``layers.0.x``, ``layers.1.x`` into ``layers.{0, 1}.x`` (HF style)."""
+    bucket = {}
+    for key in keys:
+        digits = _DIGIT_RX.findall(key)
+        pattern = _DIGIT_RX.sub("*", key)
+        index_sets = bucket.setdefault(pattern, [set() for _ in digits])
+        for i, digit in enumerate(digits):
+            index_sets[i].add(int(digit))
+
+    merged = []
+    for pattern, index_sets in bucket.items():
+        parts = pattern.split("*")
+        final = parts[0]
+        for i in range(1, len(parts)):
+            values = sorted(index_sets[i - 1])
+            if len(values) > 10:
+                text = f"{values[0]}...{values[-1]}"
+            else:
+                text = ", ".join(map(str, values))
+            final += ("{" + text + "}") if len(values) > 1 else str(values[0])
+            final += parts[i]
+        merged.append(final)
+    return merged
+
+
+def _make_report_table(rows, headers):
+    """Render a ``Key | Status | Details`` table with ``-+-`` separators (HF style)."""
+    cols = list(zip(*([headers] + rows)))
+    widths = [max(len(_strip_ansi(x)) for x in col) for col in cols]
+
+    def pad(text, width):
+        t = str(text)
+        return t + " " * max(0, width - len(_strip_ansi(t)))
+
+    header_line = " | ".join(pad(h, w) for h, w in zip(headers, widths))
+    sep_line = "-+-".join("-" * w for w in widths)
+    body = [" | ".join(pad(c, w) for c, w in zip(row, widths)) for row in rows]
+    return "\n".join([header_line, sep_line] + body)
+
+
+def _build_load_report(
+    cls_name,
+    pretrained_model_name_or_path,
+    unexpected,
+    missing,
+    mismatched,
+    mismatch_shapes,
+):
+    """Build an HF-style load report (Key | Status | Details table + Notes)."""
+    rows = []
+    notes = []
+    if unexpected:
+        notes.append(
+            "- UNEXPECTED: "
+            + _style(
+                "can be ignored when loading from different task/architecture; "
+                "not ok if you expect identical arch.",
+                "italic",
+            )
+        )
+        for key in _merge_key_indices(sorted(unexpected)):
+            rows.append([key, _style("UNEXPECTED", "orange"), ""])
+    if missing:
+        notes.append(
+            "- MISSING: "
+            + _style(
+                "those params were newly initialized because missing from the "
+                "checkpoint. Consider training on your downstream task.",
+                "italic",
+            )
+        )
+        for key in _merge_key_indices(sorted(missing)):
+            rows.append([key, _style("MISSING", "red"), ""])
+    if mismatched:
+        notes.append(
+            "- MISMATCH: "
+            + _style(
+                "ckpt weights were loaded, but they did not match the original "
+                "empty weight shapes.",
+                "italic",
+            )
+        )
+        for key in sorted(mismatched):
+            ckpt_shape, model_shape = mismatch_shapes[key]
+            rows.append(
+                [
+                    key,
+                    _style("MISMATCH", "yellow"),
+                    f"Reinit due to size mismatch - ckpt: {ckpt_shape} vs "
+                    f"model: {model_shape}",
+                ]
+            )
+
+    if not rows:
+        return None
+
+    prelude = (
+        _style(f"{cls_name} LOAD REPORT", "bold")
+        + f" from: {pretrained_model_name_or_path}\n"
+    )
+    table = _make_report_table(rows, headers=["Key", "Status", "Details"])
+    return prelude + table + "\n\nNotes:" + "".join("\n" + n for n in notes)
 
 
 class MuaalemConformerEncoder(ConformerEncoder):
@@ -901,8 +1041,9 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         ``config`` (the HF-compatible
         :class:`~configuration_fastconformer_cache_aware.FastConformerCacheAwareMultilevelCTCConfig`).
         Checkpoint layers that could not be matched (missing key or different
-        shape) are **not** loaded and are reported via a warning, as is every
-        randomly-initialised layer of this model (the multi-level CTC heads).
+        shape) are **not** loaded; an HF-style load report (a
+        :class:`FastConformerNeMoLoadWarning` with a ``Key | Status | Details``
+        table) lists every not-used, mismatched and newly-initialised layer.
 
         .. note::
             The encoder architecture in ``config`` must match the checkpoint
@@ -962,6 +1103,7 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         matched: dict[str, torch.Tensor] = {}
         unexpected: list[str] = []
         mismatched: list[str] = []
+        mismatch_shapes: dict[str, tuple[tuple[int, ...], tuple[int, ...]]] = {}
         for key, tensor in nemo_state_dict.items():
             if key.startswith("encoder."):
                 if key not in model_state_dict:
@@ -970,62 +1112,31 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                     matched[key] = tensor
                 else:
                     mismatched.append(key)
+                    mismatch_shapes[key] = (
+                        tuple(tensor.shape),
+                        tuple(model_state_dict[key].shape),
+                    )
         n_encoder_keys = len(matched) + len(unexpected) + len(mismatched)
 
         model.load_state_dict(matched, strict=False)
 
         missing = sorted(k for k in model_state_dict if k not in nemo_state_dict)
-        unexpected.sort()
-        mismatched.sort()
 
-        logger.info(
-            "Loaded %d/%d encoder weights from the NeMo checkpoint %r.",
-            len(matched),
-            n_encoder_keys,
-            pretrained_model_name_or_path,
+        print(
+            f"Loaded {len(matched)}/{n_encoder_keys} encoder weights from "
+            f"{pretrained_model_name_or_path!r}."
         )
 
-        if unexpected:
-            logger.warning(
-                "Some weights of the model checkpoint at %s were not used when "
-                "initializing %s: %s",
-                pretrained_model_name_or_path,
-                cls.__name__,
-                unexpected,
-            )
-            logger.warning(
-                "- This IS expected if you are initializing %s from the "
-                "checkpoint of a model trained on another task or with another "
-                "architecture (e.g. initializing a BertForSequenceClassification "
-                "model from a BertForPreTraining model).",
-                cls.__name__,
-            )
-            logger.warning(
-                "- This IS NOT expected if you are initializing %s from the "
-                "checkpoint of a model that you expect to be exactly identical "
-                "(initializing a BertForSequenceClassification model from a "
-                "BertForSequenceClassification model).",
-                cls.__name__,
-            )
-        if mismatched:
-            logger.warning(
-                "Some weights of the model checkpoint at %s were not matched "
-                "(different shape) and were not loaded: %s",
-                pretrained_model_name_or_path,
-                mismatched,
-            )
-        if missing:
-            logger.warning(
-                "Some weights of %s were not initialized from the model "
-                "checkpoint at %s and are newly initialized: %s",
-                cls.__name__,
-                pretrained_model_name_or_path,
-                missing,
-            )
-            logger.warning(
-                "You should probably TRAIN this model on a down-stream task to "
-                "be able to use it for predictions and inference."
-            )
+        report = _build_load_report(
+            cls_name=cls.__name__,
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            unexpected=unexpected,
+            missing=missing,
+            mismatched=mismatched,
+            mismatch_shapes=mismatch_shapes,
+        )
+        if report is not None:
+            warnings.warn(report, FastConformerNeMoLoadWarning, stacklevel=2)
 
         return model
 
