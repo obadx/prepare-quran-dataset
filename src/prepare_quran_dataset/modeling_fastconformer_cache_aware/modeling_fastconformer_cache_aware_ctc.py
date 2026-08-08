@@ -27,6 +27,7 @@ chunk-by-chunk processing with cache reuse, using NeMo's
 
 from __future__ import annotations
 
+import logging
 import random
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -46,6 +47,8 @@ from .configuration_fastconformer_cache_aware import (
     FastConformerCacheAwareMultilevelCTCConfig,
 )
 from .processor import FastConformerMelProcessor
+
+logger = logging.getLogger(__name__)
 
 
 class MuaalemConformerEncoder(ConformerEncoder):
@@ -259,9 +262,7 @@ class MuaalemConformerEncoder(ConformerEncoder):
                         att_mask = torch.logical_and(att_mask, right_mask.unsqueeze(0))
                     else:
                         if offset is not None and (
-                            max_audio_length
-                            !=  chunk_size
-                            + att_context_size[0]
+                            max_audio_length != chunk_size + att_context_size[0]
                         ):
                             raise ValueError(
                                 f"`max_audio_length` in `chunked_limited` mode with attn_context of [left, right] in streaming mode (with cache) has to be of length (left + right + 1) `{att_context_size[0]} + {att_context_size[1]} + 1 = {att_context_size[0] + chunk_size}` got max_audio_length = `{max_audio_length}`)"
@@ -872,8 +873,161 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         self.cache: FastConformerCache | None = None
 
         # 5. Weight initialisation and tying
-        # TODO: is this right after loading nemo checkpoint ?
         self.post_init()
+
+    # ------------------------------------------------------------------
+    # Loading NVIDIA NeMo checkpoints (encoder weights only)
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def from_nemo(
+        cls,
+        pretrained_model_name_or_path: str,
+        config: FastConformerCacheAwareMultilevelCTCConfig,
+        map_location: str | torch.device = "cpu",
+    ) -> "FastConformerCacheAwareMultilevelCTC":
+        r"""Load a model initialised from a NVIDIA NeMo checkpoint on the HF Hub.
+
+        Restores a NeMo model published on the Hugging Face Hub (e.g.
+        ``"nvidia/stt_ar_fastconformer_hybrid_large_pcd_v1.0"``) with NeMo's
+        ``ASRModel.from_pretrained`` and transfers **only the FastConformer
+        encoder weights** into this model.  Everything else in the NeMo
+        checkpoint — CTC / Transducer decoders, audio preprocessor, etc. — is
+        ignored, mirroring the behaviour of
+        :meth:`~transformers.PreTrainedModel.from_pretrained`.
+
+        Only the model weights are restored; no configuration is taken from
+        the NeMo checkpoint.  The encoder architecture comes entirely from
+        ``config`` (the HF-compatible
+        :class:`~configuration_fastconformer_cache_aware.FastConformerCacheAwareMultilevelCTCConfig`).
+        Checkpoint layers that could not be matched (missing key or different
+        shape) are **not** loaded and are reported via a warning, as is every
+        randomly-initialised layer of this model (the multi-level CTC heads).
+
+        .. note::
+            The encoder architecture in ``config`` must match the checkpoint
+            for the weights to transfer.  For example, the Arabic hybrid-large
+            checkpoint is an offline-trained FastConformer with 8×
+            subsampling: with the class defaults (``subsampling_factor=4``,
+            ``causal_downsampling=True``) the pretrained front-end's extra
+            downsampling convs (``pre_encode.conv.5/6``) and its output
+            projection (``pre_encode.out``) do **not** transfer and are
+            re-initialised.  Use ``subsampling_factor=8``,
+            ``subsampling_conv_channels=256`` and
+            ``causal_downsampling=False`` in ``config`` to transfer the whole
+            encoder front-end.
+
+        Args:
+            pretrained_model_name_or_path:
+                NeMo model identifier on the Hugging Face Hub, e.g.
+                ``"nvidia/stt_ar_fastconformer_hybrid_large_pcd_v1.0"``.
+            config:
+                Configuration for the model to build.  The encoder
+                architecture it describes determines which checkpoint weights
+                can be transferred.
+            map_location:
+                Device on which the NeMo checkpoint is restored.  Defaults to
+                ``"cpu"``.
+
+        Returns:
+            A :class:`FastConformerCacheAwareMultilevelCTC` whose encoder is
+            initialised from the NeMo checkpoint and whose multi-level CTC
+            heads are freshly initialised (they must be trained / fine-tuned).
+
+        Example:
+            >>> model = FastConformerCacheAwareMultilevelCTC.from_nemo(
+            ...     "nvidia/stt_ar_fastconformer_hybrid_large_pcd_v1.0",
+            ...     config=FastConformerCacheAwareMultilevelCTCConfig(
+            ...         level_to_vocab_size={"phonemes": 44},
+            ...     ),
+            ... )
+            >>> model.setup_streaming_params()
+        """
+        import nemo.collections.asr as nemo_asr
+
+        nemo_model = nemo_asr.models.ASRModel.from_pretrained(
+            pretrained_model_name_or_path,
+            map_location=torch.device(map_location),
+        )
+        nemo_state_dict = nemo_model.state_dict()
+        del nemo_model
+
+        model = cls(config)
+        model_state_dict = model.state_dict()
+
+        # Transfer only the FastConformer encoder weights that match by name
+        # *and* shape.  Anything else (decoder / joint / preprocessor / extra
+        # or mismatched encoder layers) is left untouched and reported below,
+        # exactly like HF's from_pretrained reports unmatched layers.
+        matched: dict[str, torch.Tensor] = {}
+        unexpected: list[str] = []
+        mismatched: list[str] = []
+        for key, tensor in nemo_state_dict.items():
+            if key.startswith("encoder."):
+                if key not in model_state_dict:
+                    unexpected.append(key)
+                elif tensor.shape == model_state_dict[key].shape:
+                    matched[key] = tensor
+                else:
+                    mismatched.append(key)
+        n_encoder_keys = len(matched) + len(unexpected) + len(mismatched)
+
+        model.load_state_dict(matched, strict=False)
+
+        missing = sorted(k for k in model_state_dict if k not in nemo_state_dict)
+        unexpected.sort()
+        mismatched.sort()
+
+        logger.info(
+            "Loaded %d/%d encoder weights from the NeMo checkpoint %r.",
+            len(matched),
+            n_encoder_keys,
+            pretrained_model_name_or_path,
+        )
+
+        if unexpected:
+            logger.warning(
+                "Some weights of the model checkpoint at %s were not used when "
+                "initializing %s: %s",
+                pretrained_model_name_or_path,
+                cls.__name__,
+                unexpected,
+            )
+            logger.warning(
+                "- This IS expected if you are initializing %s from the "
+                "checkpoint of a model trained on another task or with another "
+                "architecture (e.g. initializing a BertForSequenceClassification "
+                "model from a BertForPreTraining model).",
+                cls.__name__,
+            )
+            logger.warning(
+                "- This IS NOT expected if you are initializing %s from the "
+                "checkpoint of a model that you expect to be exactly identical "
+                "(initializing a BertForSequenceClassification model from a "
+                "BertForSequenceClassification model).",
+                cls.__name__,
+            )
+        if mismatched:
+            logger.warning(
+                "Some weights of the model checkpoint at %s were not matched "
+                "(different shape) and were not loaded: %s",
+                pretrained_model_name_or_path,
+                mismatched,
+            )
+        if missing:
+            logger.warning(
+                "Some weights of %s were not initialized from the model "
+                "checkpoint at %s and are newly initialized: %s",
+                cls.__name__,
+                pretrained_model_name_or_path,
+                missing,
+            )
+            logger.warning(
+                "You should probably TRAIN this model on a down-stream task to "
+                "be able to use it for predictions and inference."
+            )
+
+        return model
 
     # ------------------------------------------------------------------
     # Setup streaming parameters
