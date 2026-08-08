@@ -1,53 +1,66 @@
 """refernce notebook: https://colab.research.google.com/drive/1_jsPUMe4odJiRpuyeE9kjnNu--Lg-MGB?usp=sharing"""
 
-from pathlib import Path
-import json
-import os
-import yaml
-import random
-from typing import List, Union, Dict, Literal
-from dataclasses import dataclass
-import string
-
-
-from quran_transcript import quran_phonetizer, MoshafAttributes
-import Levenshtein
-from dotenv import load_dotenv
-import wandb
-from transformers import (
-    TrainingArguments,
-    Trainer,
-    AutoFeatureExtractor,
-    Wav2Vec2BertProcessor,
-)
-from huggingface_hub import login as hf_login
-from datasets import load_dataset, DatasetDict, Dataset, concatenate_datasets, Audio
-import numpy as np
-from numpy.typing import NDArray
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from torch.utils.data import default_collate
-import torch
-from torch.nn import CrossEntropyLoss
-from pydantic import BaseModel, field_validator, model_validator
-
-
 import argparse
 import io
-import librosa
+import json
+import os
+import random
+import string
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Union
 
-from prepare_quran_dataset.modeling_streaming_rnn.multi_level_tokenizer import (
-    MultiLevelTokenizer,
+import Levenshtein
+import librosa
+import numpy as np
+import torch
+import wandb
+import yaml
+from datasets import Audio, Dataset, DatasetDict, concatenate_datasets, load_dataset
+from dotenv import load_dotenv
+from huggingface_hub import HfApi
+from huggingface_hub import login as hf_login
+from numpy.typing import NDArray
+from pydantic import BaseModel, Field, field_validator, model_validator
+from qdat_bench.audio_utils import decode_audio
+from qdat_bench.eval_results import eval_qdat_bench
+from quran_transcript import MoshafAttributes, quran_phonetizer
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from torch.nn import CrossEntropyLoss
+from torch.utils.data import DataLoader, default_collate
+from tqdm import tqdm
+from transformers import (
+    AutoFeatureExtractor,
+    Trainer,
+    TrainingArguments,
+    Wav2Vec2BertProcessor,
 )
-from prepare_quran_dataset.modeling_streaming_rnn.vocab import PAD_TOKEN_IDX
+
+from prepare_quran_dataset.modeling_fastconformer_cache_aware import (
+    FastConformerCacheAwareMultilevelCTC,
+    FastConformerCacheAwareMultilevelCTCConfig,
+    FastConformerMelProcessor,
+)
 from prepare_quran_dataset.modeling_streaming_rnn.modeling_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTC,
     Wav2Vec2BertForRNNStreamingMultilevelCTCConfig,
 )
+from prepare_quran_dataset.modeling_streaming_rnn.multi_level_tokenizer import (
+    MultiLevelTokenizer,
+)
+from prepare_quran_dataset.modeling_streaming_rnn.vocab import PAD_TOKEN_IDX
 
-from qdat_bench.audio_utils import decode_audio
-from qdat_bench.eval_results import eval_qdat_bench
-from huggingface_hub import HfApi
-from tqdm import tqdm
+ArchitectureName = Literal["w2v2bert-streaming-rnn", "fastconformer-cache-aware"]
+
+
+def load_vocab(
+    vocab_path: str = "./vocab_streaming/vocab.json",
+) -> tuple[dict[str, dict[str, int]], dict[str, int]]:
+    """Load ``vocab_streaming/vocab.json`` and derive per-level vocab sizes."""
+    with open(vocab_path, encoding="utf-8") as f:
+        vocab = json.load(f)
+    level_to_vocab_size = {level: len(tokens) for level, tokens in vocab.items()}
+    return vocab, level_to_vocab_size
 
 
 class TrainConfig(BaseModel):
@@ -79,10 +92,14 @@ class TrainConfig(BaseModel):
     warmup_steps: int = 2000
     lr_scheduler_type: str = "constant"
     gradient_checkpoiniting: bool = False
-    architecture: Literal["w2v2bert-streaming-rnn"] = "w2v2bert-streaming-rnn"
+    architecture: ArchitectureName = "w2v2bert-streaming-rnn"
     base_model_name_or_path: str = "facebook/w2v-bert-2.0"
-    processor_name_or_path: str = "facebook/w2v-bert-2.0"
+    processor_name_or_path: str | None = "facebook/w2v-bert-2.0"
     ignore_mismatched_sizes: bool = True
+
+    # FastConformer cache-aware specific fields
+    model_kwargs: dict[str, Any] = Field(default_factory=dict)
+    from_nemo_model_name_or_path: str | None = None
 
     # Streaming-specific fields
     chunk_frames: int = 25
@@ -336,11 +353,15 @@ def build_audiomentations_augs(
     np.random.seed(seed)
 
     from audiomentations import (
-        SomeOf,
+        AddBackgroundNoise,
+        AddGaussianNoise,
         AirAbsorption,
+        Aliasing,
         BandPassFilter,
         BandStopFilter,
         ClippingDistortion,
+        Compose,
+        GainTransition,
         HighPassFilter,
         HighShelfFilter,
         LowPassFilter,
@@ -350,11 +371,7 @@ def build_audiomentations_augs(
         PitchShift,
         RoomSimulator,
         SevenBandParametricEQ,
-        Aliasing,
-        AddGaussianNoise,
-        AddBackgroundNoise,
-        GainTransition,
-        Compose,
+        SomeOf,
         TimeStretch,
     )
 
@@ -583,6 +600,35 @@ def build_model_components(
     pad_token_id: int,
     ignore_mismatched_sizes: bool = True,
 ):
+    if train_config.architecture == "fastconformer-cache-aware":
+        config = FastConformerCacheAwareMultilevelCTCConfig(
+            level_to_vocab_size=level_to_vocab_size,
+            pad_token_id=pad_token_id,
+            level_to_loss_weight=train_config.loss_weights,
+            **train_config.model_kwargs,
+        )
+
+        if train_config.from_nemo_model_name_or_path is not None:
+            model = FastConformerCacheAwareMultilevelCTC.from_nemo(
+                train_config.from_nemo_model_name_or_path,
+                config,
+                map_location="cpu",
+            )
+        else:
+            model = FastConformerCacheAwareMultilevelCTC(config)
+
+        # Mel-spectrogram extraction happens in the collator via a standalone
+        # FastConformerMelProcessor (same config as the model's internal one),
+        # mirroring how other architectures preprocess audio outside the model.
+        processor = FastConformerMelProcessor(**config.processor_kwargs)
+        return processor, config, model
+
+    if train_config.processor_name_or_path is None:
+        raise ValueError(
+            "`processor_name_or_path` is required for the "
+            f"`{train_config.architecture}` architecture.  Got None."
+        )
+
     processor = AutoFeatureExtractor.from_pretrained(
         train_config.processor_name_or_path,
     )
@@ -624,8 +670,54 @@ def build_model_components(
 
 
 @dataclass
+class NemoFastConformerBatch:
+    processed_signal: torch.Tensor
+    processed_length: torch.Tensor
+
+
+def nemo_fasterconformer_preprocesor(
+    waves: list[NDArray[np.float32]],
+    processor: FastConformerMelProcessor,
+) -> NemoFastConformerBatch:
+    """Zero-pad raw waveforms and extract mel features with the NeMo processor."""
+    max_len = max(len(w) for w in waves)
+    raw_audio = torch.zeros((len(waves), max_len), dtype=torch.float32)
+    for i, w in enumerate(waves):
+        raw_audio[i, : len(w)] = torch.from_numpy(np.asarray(w))
+    processed_signal, processed_length = processor(
+        input_signal=raw_audio,
+        length=torch.tensor([len(w) for w in waves], dtype=torch.long),
+    )
+    return NemoFastConformerBatch(
+        processed_signal=processed_signal,
+        processed_length=processed_length,
+    )
+
+
+@dataclass
+class QdatBenchCollator:
+    processor: Wav2Vec2BertProcessor | FastConformerMelProcessor | None
+    architecture: ArchitectureName = "w2v2bert-streaming-rnn"
+
+    def __call__(self, features: list[dict]) -> dict[str, Any]:
+        waves = [decode_audio(f["audio"]).wav for f in features]
+        ids = [f["id"] for f in features]
+        if self.architecture == "fastconformer-cache-aware":
+            batch = asdict(nemo_fasterconformer_preprocesor(waves, self.processor))
+        else:
+            batch = self.processor(
+                waves,
+                sampling_rate=16000,
+                padding="longest",
+                return_tensors="pt",
+            )
+        batch["id"] = ids
+        return batch
+
+
+@dataclass
 class DataCollatorCTCWithPadding:
-    processor: Wav2Vec2BertProcessor
+    processor: Wav2Vec2BertProcessor | FastConformerMelProcessor | None
     multi_level_tokenizer: MultiLevelTokenizer
     moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes]
     augment: Augment
@@ -633,6 +725,7 @@ class DataCollatorCTCWithPadding:
     max_noise_input_seconds: float = 40.0
     chunk_frames: int = 25
     sample_rate: int = 16000
+    architecture: ArchitectureName = "w2v2bert-streaming-rnn"
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -691,14 +784,17 @@ class DataCollatorCTCWithPadding:
                 phonemes_list.append(phonized.phonemes)
                 sifat_list.append(phonized.sifat)
 
-        batch = self.processor(
-            waves,
-            sampling_rate=16000,
-            padding="longest",
-            return_tensors="pt",
-            return_attention_mask=True,
-            do_normalize_per_mel_bins=False,  # Very vital bug we have not to normalize mel frequency bins
-        )
+        if self.architecture == "fastconformer-cache-aware":
+            batch = asdict(nemo_fasterconformer_preprocesor(waves, self.processor))
+        else:
+            batch = self.processor(
+                waves,
+                sampling_rate=16000,
+                padding="longest",
+                return_tensors="pt",
+                return_attention_mask=True,
+                do_normalize_per_mel_bins=False,  # Very vital bug we have not to normalize mel frequency bins
+            )
 
         labels = self.multi_level_tokenizer.tokenize(
             phonemes_list,
@@ -747,16 +843,18 @@ def prepare_special_moshaf_ways(
 
 
 def run_qdat_bench_test(
-    model,
-    processor,
-    multi_level_tokenizer,
-    output_dir,
-    vocab,
-    device,
-    dtype,
-    batch_size=1,
-    model_suffix="",
-):
+    model: Wav2Vec2BertForRNNStreamingMultilevelCTC
+    | FastConformerCacheAwareMultilevelCTC,
+    processor: Wav2Vec2BertProcessor | FastConformerMelProcessor | None,
+    multi_level_tokenizer: MultiLevelTokenizer,
+    output_dir: str | Path,
+    vocab: dict[str, dict[str, int]],
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int = 1,
+    model_suffix: str = "",
+    architecture: ArchitectureName = "w2v2bert-streaming-rnn",
+) -> None:
     """
     Run inference + evaluation on the qdat_bench dataset.
 
@@ -765,38 +863,23 @@ def run_qdat_bench_test(
     with ``eval_qdat_bench`` and saves metrics as ``qdat_bench_test_results.json``.
 
     Args:
-        model: Trained Wav2Vec2BertForRNNStreamingMultilevelCTC model (eval mode).
-        processor: AutoFeatureExtractor for audio processing.
+        model: Trained Wav2Vec2BertForRNNStreamingMultilevelCTC / FastConformer
+            cache-aware model (eval mode).
+        processor: AutoFeatureExtractor for audio processing (``None`` when
+            audio is not preprocessed by a collator processor).
         multi_level_tokenizer: MultiLevelTokenizer instance for eval.
         output_dir: Path to save prediction/results JSON files.
         vocab: Dict mapping level name -> {label: id} (from ``vocab.json``).
         device: torch device (cuda/cpu).
         dtype: torch dtype (bfloat16/float32).
         batch_size: Inference batch size.
+        architecture: Model architecture name; controls how audio batches are
+            built (HF processor mel features vs raw zero-padded audio).
     """
-    from torch.utils.data import DataLoader
-    from dataclasses import dataclass
-
-    @dataclass
-    class _Collator:
-        processor: AutoFeatureExtractor
-
-        def __call__(self, features):
-            waves = [decode_audio(f["audio"]).wav for f in features]
-            ids = [f["id"] for f in features]
-            batch = self.processor(
-                waves,
-                sampling_rate=16000,
-                padding="longest",
-                return_tensors="pt",
-            )
-            batch["id"] = ids
-            return batch
-
     ds = load_dataset("obadx/qdat_bench", split="train")
     ds = ds.cast_column("audio", Audio(decode=False))
 
-    collator = _Collator(processor=processor)
+    collator = QdatBenchCollator(processor=processor, architecture=architecture)
     dataloader = DataLoader(
         ds,
         batch_size=batch_size,
@@ -808,10 +891,14 @@ def run_qdat_bench_test(
     with torch.no_grad():
         for batch in tqdm(dataloader):
             ids = batch.pop("id")
-            batch = {k: v.to(device, dtype=dtype) for k, v in batch.items()}
+            if architecture == "fastconformer-cache-aware":
+                # processed_signal must stay float32 for the encoder (no bf16)
+                batch = {k: v.to(device) for k, v in batch.items()}
+            else:
+                batch = {k: v.to(device, dtype=dtype) for k, v in batch.items()}
 
             outputs = model(**batch)
-            level_to_logits = outputs[0]
+            level_to_logits = outputs.logits
 
             level_to_labels = {}
             for level in level_to_logits:
@@ -931,9 +1018,7 @@ if __name__ == "__main__":
     print(train_config)
     multi_level_tokenizer = MultiLevelTokenizer("./vocab_streaming")
 
-    with open("./vocab_streaming/vocab.json", encoding="utf-8") as f:
-        vocab = json.load(f)
-    level_to_vocab_size = {l: len(v) for l, v in vocab.items()}
+    vocab, level_to_vocab_size = load_vocab()
     for level in train_config.loss_weights:
         if level not in level_to_vocab_size:
             raise ValueError(
@@ -968,7 +1053,7 @@ if __name__ == "__main__":
         ex["id"]: MoshafAttributes(**ex) for ex in moshaf_dataeet
     }
 
-    if args.push_to_hub:
+    if args.push_to_hub and processor is not None:
         processor.push_to_hub(train_config.hub_model_id)
         multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id)
 
@@ -1042,6 +1127,7 @@ if __name__ == "__main__":
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
         max_noise_input_seconds=train_config.max_noise_input_seconds,
         chunk_frames=train_config.chunk_frames,
+        architecture=train_config.architecture,
     )
 
     # Initialize Trainer
@@ -1143,6 +1229,7 @@ if __name__ == "__main__":
             dtype=dtype,
             batch_size=1,
             model_suffix=model_suffix,
+            architecture=train_config.architecture,
         )
 
     # [optional] finish the wandb run, necessary in notebooks

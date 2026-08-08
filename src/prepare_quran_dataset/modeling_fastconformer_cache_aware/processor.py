@@ -14,10 +14,12 @@ model.  It supports serialisation via :meth:`save_pretrained` and
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import torch
+from huggingface_hub import HfApi
 from nemo.collections.asr.modules import AudioToMelSpectrogramPreprocessor
 
 
@@ -106,18 +108,37 @@ class FastConformerMelProcessor:
         self.window_stride = window_stride
         self.features = features
 
-        self._processor = AudioToMelSpectrogramPreprocessor(
-            sample_rate=sample_rate,
-            normalize=normalize,
-            window_size=window_size,
-            window_stride=window_stride,
-            window=window,
-            features=features,
-            n_fft=n_fft,
-            frame_splicing=frame_splicing,
-            dither=dither,
-            pad_to=pad_to,
-        )
+        self._init_kwargs = {
+            "sample_rate": sample_rate,
+            "normalize": normalize,
+            "window_size": window_size,
+            "window_stride": window_stride,
+            "window": window,
+            "features": features,
+            "n_fft": n_fft,
+            "frame_splicing": frame_splicing,
+            "dither": dither,
+            "pad_to": pad_to,
+        }
+        self._processor = AudioToMelSpectrogramPreprocessor(**self._init_kwargs)
+
+    def __getstate__(self) -> dict[str, Any]:
+        """State for pickling — drops the NeMo module, which is not picklable.
+
+        NeMo's ``FilterbankFeatures.__init__`` assigns
+        ``self.forward = torch.no_grad()(self.forward)`` (an instance-level
+        wrapper), which pickle cannot serialize.  The preprocessor is stateless
+        (config → module), so it is dropped here and rebuilt in
+        :meth:`__setstate__` with the exact same construction kwargs.
+        """
+        state = self.__dict__.copy()
+        state.pop("_processor", None)
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Restore a pickled processor by rebuilding the NeMo module."""
+        self.__dict__.update(state)
+        self._processor = AudioToMelSpectrogramPreprocessor(**self._init_kwargs)
 
     def __call__(
         self,
@@ -192,6 +213,39 @@ class FastConformerMelProcessor:
         config_path = save_directory / "processor_config.json"
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(self.state_dict(), f, indent=2, ensure_ascii=False)
+
+    def push_to_hub(
+        self,
+        repo_id: str,
+        token: str | None = None,
+        private: bool = False,
+    ) -> str:
+        """Upload ``processor_config.json`` to a HuggingFace Hub repository.
+
+        Args:
+            repo_id:
+                Hub repository identifier (e.g. ``"username/model_name"``).
+            token:
+                HuggingFace authentication token.  Defaults to ``None``, in
+                which case the token stored in the environment is used.
+            private:
+                Whether to create the repository as private if it does not
+                already exist.
+
+        Returns:
+            The ``repo_id`` the processor was pushed to.
+        """
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            self.save_pretrained(tmp_dir)
+            api = HfApi(token=token)
+            api.create_repo(repo_id, exist_ok=True, private=private)
+            api.upload_file(
+                path_or_fileobj=str(Path(tmp_dir) / "processor_config.json"),
+                path_in_repo="processor_config.json",
+                repo_id=repo_id,
+                repo_type="model",
+            )
+        return repo_id
 
     @classmethod
     def from_pretrained(

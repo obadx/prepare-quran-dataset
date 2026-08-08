@@ -19,6 +19,21 @@ from typing import Any
 from transformers import PretrainedConfig
 
 
+_DEFAULT_LEVEL_TO_VOCAB_SIZE: dict[str, int] = {
+    "phonemes": 44,
+    "hams_or_jahr": 4,
+    "shidda_or_rakhawa": 5,
+    "tafkheem_or_taqeeq": 5,
+    "itbaq": 4,
+    "safeer": 4,
+    "qalqla": 4,
+    "tikraar": 4,
+    "tafashie": 4,
+    "istitala": 4,
+    "ghonna": 4,
+}
+
+
 class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
     r"""Configuration for :class:`~modeling_fastconformer_cache_aware_ctc.FastConformerCacheAwareMultilevelCTC`.
 
@@ -77,7 +92,8 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
             Dictionary mapping each output level name to its vocabulary size.
             At least one level must be provided.  Vocabulary sizes determine
             the output dimensionality of each CTC head (e.g.
-            ``{"phonemes": 44, "shidda_or_rakhawa": 3}``).
+            ``{"phonemes": 44, "shidda_or_rakhawa": 3}``).  Defaults to the
+            actual 11-level Quran vocabulary (``vocab_streaming/vocab.json``).
         level_to_loss_weight:
             Dictionary mapping level names to their CTC loss weight multiplier.
             Unmentioned levels receive the remaining weight mass equally.
@@ -253,7 +269,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
 
         # ---- Multi-level CTC ----
         if level_to_vocab_size is None:
-            level_to_vocab_size = {}
+            level_to_vocab_size = _DEFAULT_LEVEL_TO_VOCAB_SIZE
         if not level_to_vocab_size:
             raise ValueError(
                 "At least one CTC level must be defined in "

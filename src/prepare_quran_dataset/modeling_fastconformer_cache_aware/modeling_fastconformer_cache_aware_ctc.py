@@ -558,11 +558,7 @@ class MuaalemConformerEncoder(ConformerEncoder):
         if isinstance(self.pre_encode, nn.Linear):
             audio_signal = self.pre_encode(audio_signal)
         else:
-            print(f"Len Before pre-encode: {length}")
-            print(f"Len Before audio_sigal: {audio_signal.shape}")
             audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
-            print(f"Len After pre-encode: {length}")
-            print(f"Len After audio_sigal: {audio_signal.shape}")
             length = length.to(torch.int64)
             # self.streaming_cfg is set by setup_streaming_cfg(), called in the init
             if (
@@ -1190,8 +1186,8 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
 
     def forward(
         self,
-        raw_audio: torch.FloatTensor | None,
-        audio_length: torch.LongTensor | None,
+        raw_audio: torch.FloatTensor | None = None,
+        audio_length: torch.LongTensor | None = None,
         cache: FastConformerCache | None = None,
         keep_all_outputs: bool = True,
         drop_extra_pre_encoded: int | None = None,
@@ -1419,7 +1415,9 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         # ---- 5. CTC loss with labels_mask ----
         loss: torch.FloatTensor | None = None
         if labels is not None:
-            loss = torch.tensor(0.0, device=raw_audio.device, dtype=torch.float32)
+            loss = torch.tensor(
+                0.0, device=processed_signal.device, dtype=torch.float32
+            )
             input_lengths = encoder_lengths.to(torch.long)
 
             for level in labels:

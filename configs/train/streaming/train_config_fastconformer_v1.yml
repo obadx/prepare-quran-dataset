@@ -1,0 +1,121 @@
+# Training configuration for fastconformer-cache-aware
+train_moshaf_ids:
+  - "0.0"
+  - "0.1"
+  - "0.2"
+  - "0.3"
+  - "1.0"
+  - "2.0"
+  - "2.1"
+  - "3.0"
+  - "4.0"
+  - "5.0"
+  - "6.0"
+  - "7.0"
+  - "8.0"
+  - "9.0"
+  - "11.0"
+  - "12.0"
+  - "13.0"
+  - "22.0"
+  - "24.0"
+  - "26.0"
+  - "27.0"
+  - "28.0"
+
+# Test moshaf IDs (optional)
+test_moshaf_ids:
+  - "19.0"
+  - "29.0"
+  - "30.0"
+
+# Loss
+loss_weights:
+  phonemes: 0.5789
+  shidda_or_rakhawa: 0.05263
+  tafkheem_or_taqeeq: 0.05263
+
+# Augmentaion
+augment_prob: 0.4
+max_audio_seconds: null
+max_noise_input_seconds: 30.0
+
+# Model dropout
+dropout: 0.1
+
+# Model architecture
+architecture: fastconformer-cache-aware
+
+# Load the FastConformer encoder weights from a NVIDIA NeMo checkpoint on the
+# HF Hub (via FastConformerCacheAwareMultilevelCTC.from_nemo). Set to null to
+# train the encoder from scratch.
+from_nemo_model_name_or_path: nvidia/stt_ar_fastconformer_hybrid_large_pcd_v1.0
+
+# Not used by this architecture (audio is preprocessed by a standalone
+# FastConformerMelProcessor built from the model config's processor_kwargs)
+processor_name_or_path: null
+
+# FastConformer cache-aware model-specific kwargs, forwarded to
+# FastConformerCacheAwareMultilevelCTCConfig. att_context_size is
+# [left_context, right_context, constant_lookahead_delay]:
+#   - left_context must be a multiple of right_context + 1
+#   - look-ahead(ms) = (right_context + constant_lookahead_delay) * subsampling_factor * window_stride
+#     e.g. (12 + 5) * 8 * 0.01 = 1.36s for the values below.
+# Structural dims (n_layers/d_model/subsampling) match the pretrained NeMo
+# checkpoint so nearly all encoder weights transfer.
+model_kwargs:
+  att_context_size: [78, 12]
+  att_context_style: chunked_limited
+  n_layers: 17
+  d_model: 512
+  subsampling: dw_striding
+  subsampling_factor: 4
+  subsampling_conv_channels: 256
+  causal_downsampling: true
+  ff_expansion_factor: 4
+  self_attention_model: rel_pos
+  n_heads: 8
+  conv_kernel_size: 9
+  conv_norm_type: layer_norm
+  conv_context_size: causal
+  dropout: 0.1
+  dropout_pre_encoder: 0.1
+  dropout_emb: 0.0
+  dropout_att: 0.1
+
+# Training parameters
+num_epochs: 2
+learning_rate: 5e-5
+seed: 10
+
+# Batch sizes
+per_device_train_batch_size: 4
+pre_device_eval_batch_size: 32
+
+# Dataset parameters
+devset_ratio: 0.1
+save_every: 28390
+
+# Hardware settings
+num_workers: 4
+
+# Optimizer settings
+weight_decay: 0.01
+warmup_steps: 0
+lr_scheduler_type: constant
+
+# Model saving and evaluation
+metric_for_bet_model: "average_per"
+greater_is_better: false
+
+hub_model_id: "obadx/muaalem-fastconformer-v1"
+wandb_project_name: "muaalem-fastconformer-v1"
+
+# Ignore mismatched sizes when loading pretrained weights
+ignore_mismatched_sizes: true
+
+# Gradint checkpointing (not supported by the NeMo encoder, keep false)
+gradient_checkpoiniting: false
+
+# Output directory for checkpoints
+output_dir: "./results-fastconformer-v1"
