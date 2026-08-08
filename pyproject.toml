@@ -38,6 +38,9 @@ classifiers = [
 ]
 
 # Optional dependencies
+[tool.pytest.ini_options]
+testpaths = ["tests/test_fastconformer_mask_golden.py"]
+
 [project.optional-dependencies]
 
 test = [
@@ -99,4 +102,3 @@ Issues = "https://github.com/obadx/prepare-quran-dataset/issues"
 # # for addint data: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#package-data
 [tool.setuptools.package-data]
 quran_transcript = ["data/*"]
-
