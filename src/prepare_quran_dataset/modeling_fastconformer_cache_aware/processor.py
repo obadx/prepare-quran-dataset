@@ -162,11 +162,26 @@ class FastConformerMelProcessor:
                 num_frames)``.
             processed_length:
                 Number of valid mel frames per sequence, shape ``(batch_size,)``.
+
+        .. note::
+            The underlying NeMo module is moved to ``input_signal.device`` on
+            demand.  This processor is *not* an :class:`torch.nn.Module`, so it
+            is not a submodule of the model that owns it and ``model.to(...)``
+            never reaches it — syncing here fixes every call site at once
+            (model ``forward``, streaming inference, and dataloader collators).
+            The device is taken from the input rather than from the model so a
+            collator running in a CPU dataloader worker stays on CPU.
         """
+        if self.device != input_signal.device:
+            self.to(input_signal.device)
         return self._processor(input_signal=input_signal, length=length)
 
     def to(self, device: torch.device | str) -> FastConformerMelProcessor:
         """Move the internal processor to the specified device.
+
+        Only the device is changed — the dtype is deliberately left alone, as
+        the mel front-end must stay float32 even when the model it feeds runs
+        in bfloat16.
 
         Args:
             device: Target device (e.g. ``"cuda:0"``, ``torch.device("cpu")``).
@@ -179,8 +194,16 @@ class FastConformerMelProcessor:
 
     @property
     def device(self) -> torch.device:
-        """The :class:`torch.device` where the processor currently resides."""
-        return next(self._processor.parameters()).device
+        """The :class:`torch.device` where the processor currently resides.
+
+        ``AudioToMelSpectrogramPreprocessor`` has no trainable parameters — its
+        window function and mel filterbanks are registered as *buffers* — so
+        the device has to be read from ``buffers()``.  Falls back to CPU for a
+        (hypothetical) buffer-less preprocessor.
+        """
+        for buffer in self._processor.buffers():
+            return buffer.device
+        return torch.device("cpu")
 
     def state_dict(self) -> dict[str, Any]:
         """Return a configuration dictionary suitable for serialisation.

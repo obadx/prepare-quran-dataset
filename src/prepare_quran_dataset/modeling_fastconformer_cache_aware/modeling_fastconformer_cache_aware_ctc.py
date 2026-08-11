@@ -958,6 +958,11 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         super().__init__(config)
 
         # 1. Mel-spectrogram processor (raw audio → mel features)
+        # Intentionally *not* an nn.Module: registering it would pull NeMo's
+        # `window` / `fb` buffers into `state_dict()`, changing checkpoint keys
+        # and polluting the `missing` list computed in `from_nemo`.  The cost is
+        # that `model.to(...)` does not reach it, so `FastConformerMelProcessor`
+        # syncs itself to the input's device inside `__call__`.
         self.processor = FastConformerMelProcessor(**config.processor_kwargs)
 
         # 2. NeMo FastConformer encoder
@@ -1049,10 +1054,14 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
             ``causal_downsampling=True``) the pretrained front-end's extra
             downsampling convs (``pre_encode.conv.5/6``) and its output
             projection (``pre_encode.out``) do **not** transfer and are
-            re-initialised.  Use ``subsampling_factor=8``,
-            ``subsampling_conv_channels=256`` and
-            ``causal_downsampling=False`` in ``config`` to transfer the whole
-            encoder front-end.
+            re-initialised.  ``subsampling_factor=8``,
+            ``subsampling_conv_channels=256`` and ``causal_downsampling=False``
+            would transfer the whole encoder front-end — but that is purely a
+            *weight-transfer* consideration.  Phoneme-level streaming
+            deliberately trades it away: 8× subsampling is too coarse to
+            resolve phonemes (it suits word-level ASR), and cache-aware
+            streaming requires causal downsampling.  The shipped configs keep
+            ``subsampling_factor=4`` and accept the partial transfer.
 
         Args:
             pretrained_model_name_or_path:
