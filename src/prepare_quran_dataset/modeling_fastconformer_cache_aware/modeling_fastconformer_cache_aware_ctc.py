@@ -625,6 +625,15 @@ class MuaalemConformerEncoder(ConformerEncoder):
             cache_last_time_next = []
             cache_last_channel_next = []
 
+        # Gradient checkpointing only applies to the offline training path:
+        # recomputing layer activations in the backward pass makes no sense
+        # while carrying a cross-chunk cache (streaming inference).
+        use_grad_ckpt = (
+            self.training
+            and cache_last_channel is None
+            and getattr(self, "gradient_checkpointing", False)
+        )
+
         for lth, (drop_prob, layer) in enumerate(
             zip(self.layer_drop_probs, self.layers)
         ):
@@ -635,14 +644,25 @@ class MuaalemConformerEncoder(ConformerEncoder):
             else:
                 cache_last_channel_cur = None
                 cache_last_time_cur = None
-            audio_signal = layer(
-                x=audio_signal,
-                att_mask=att_mask,
-                pos_emb=pos_emb,
-                pad_mask=pad_mask,
-                cache_last_channel=cache_last_channel_cur,
-                cache_last_time=cache_last_time_cur,
-            )
+            if use_grad_ckpt:
+                audio_signal = self._gradient_checkpointing_func(
+                    layer,
+                    audio_signal,
+                    att_mask,
+                    pos_emb,
+                    pad_mask,
+                    cache_last_channel_cur,
+                    cache_last_time_cur,
+                )
+            else:
+                audio_signal = layer(
+                    x=audio_signal,
+                    att_mask=att_mask,
+                    pos_emb=pos_emb,
+                    pad_mask=pad_mask,
+                    cache_last_channel=cache_last_channel_cur,
+                    cache_last_time=cache_last_time_cur,
+                )
 
             if cache_last_channel_cur is not None:
                 (audio_signal, cache_last_channel_cur, cache_last_time_cur) = (
@@ -953,6 +973,7 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
     """
 
     config_class = FastConformerCacheAwareMultilevelCTCConfig
+    supports_gradient_checkpointing = True
 
     def __init__(self, config: FastConformerCacheAwareMultilevelCTCConfig) -> None:
         super().__init__(config)
@@ -1008,7 +1029,15 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         # 4. Current cache state (``None`` until set by caller)
         self.cache: FastConformerCache | None = None
 
-        # 5. Weight initialisation and tying
+        # 5. Gradient checkpointing flags (toggled by
+        #    ``gradient_checkpointing_enable`` / ``gradient_checkpointing_disable``).
+        #    Must be set before ``post_init`` so that the backward-compatibility
+        #    hook in ``post_init`` can auto-enable checkpointing when
+        #    ``config.gradient_checkpointing`` is True.
+        self.gradient_checkpointing = False
+        self.encoder.gradient_checkpointing = False
+
+        # 6. Weight initialisation and tying
         self.post_init()
 
     # ------------------------------------------------------------------
