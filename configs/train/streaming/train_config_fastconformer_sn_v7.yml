@@ -38,7 +38,7 @@ loss_weights:
 # Augmentaion
 augment_prob: 0.4
 max_audio_seconds: null
-max_noise_input_seconds: 30.0
+max_noise_input_seconds: 12.0
 
 # whether to add noise dataset or not
 include_noise_ds_in_train: true
@@ -93,12 +93,12 @@ learning_rate: 5e-5
 seed: 10
 
 # Batch sizes
-per_device_train_batch_size: 16
+per_device_train_batch_size: 4
 pre_device_eval_batch_size: 32
 
 # Dataset parameters
 devset_ratio: 0.1
-save_every: 7097
+save_every: 28390
 
 # Hardware settings
 num_workers: 4
@@ -112,14 +112,14 @@ lr_scheduler_type: constant
 metric_for_bet_model: "average_per"
 greater_is_better: false
 
-hub_model_id: "obadx/muaalem-fastconformer-v5"
-wandb_project_name: "muaalem-fastconformer-v5"
+hub_model_id: "obadx/muaalem-fastconformer-sn-v7"
+wandb_project_name: "muaalem-fastconformer-sn-v7"
 
 # Ignore mismatched sizes when loading pretrained weights
 ignore_mismatched_sizes: true
 
 # Gradint checkpointing (not supported by the NeMo encoder, keep false)
-gradient_checkpoiniting: true
+gradient_checkpoiniting: false
 
 # Output directory for checkpoints
-output_dir: "./results-fastconformer-v5"
+output_dir: "./results-fastconformer-sn-v7"

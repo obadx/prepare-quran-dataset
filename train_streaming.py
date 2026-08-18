@@ -7,7 +7,7 @@ import os
 import random
 import re
 import string
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Union
 
@@ -729,6 +729,7 @@ class DataCollatorCTCWithPadding:
     chunk_frames: int = 25
     sample_rate: int = 16000
     architecture: ArchitectureName = "w2v2bert-streaming-rnn"
+    apply_augment: bool = True
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -758,7 +759,8 @@ class DataCollatorCTCWithPadding:
                 if len(wav) > max_silence_samples:
                     wav = wav[:max_silence_samples]
             else:
-                wav = self.augment.apply(wav)
+                if self.apply_augment:
+                    wav = self.augment.apply(wav)
 
             waves.append(wav)
 
@@ -814,6 +816,56 @@ class DataCollatorCTCWithPadding:
         batch["labels"] = labels["input_ids"]
 
         return batch
+
+
+class StreamingTrainer(Trainer):
+    def evaluate(
+        self,
+        eval_dataset=None,
+        ignore_keys=None,
+        metric_key_prefix="eval",
+        apply_augment=True,
+        *args,
+        **kwargs,
+    ):
+        """
+        Run evaluation, optionally toggling augmentation for the data collator.
+
+        The default collator (``DataCollatorCTCWithPadding``) applies audio
+        augmentations to every speech sample, which is desirable for the
+        validation/dev set so its metrics reflect the same distribution the
+        model is trained on. However, the held-out test set must be scored on
+        clean, un-augmented audio to report an honest estimate of generalization
+        performance. Since stock ``Trainer.evaluate`` does not forward extra
+        kwargs to the collator (it uses ``self.data_collator`` from
+        ``get_eval_dataloader``), we swap in a copy of the collator with
+        ``apply_augment=False`` for the duration of the evaluation. The swap is
+        confined to the branch where the collator setting actually differs, and
+        ``try/finally`` guarantees restoration even if evaluation raises, so a
+        mid-eval failure can never leave the trainer stuck on the no-augment
+        collator. When ``apply_augment`` is not passed (e.g. the in-training
+        eval on the dev set), it defaults to ``True`` and nothing is swapped.
+        """
+        prev = self.data_collator
+        if hasattr(prev, "apply_augment") and prev.apply_augment != apply_augment:
+            self.data_collator = replace(prev, apply_augment=apply_augment)
+            try:
+                return super().evaluate(
+                    *args,
+                    eval_dataset=eval_dataset,
+                    ignore_keys=ignore_keys,
+                    metric_key_prefix=metric_key_prefix,
+                    **kwargs,
+                )
+            finally:
+                self.data_collator = prev
+        return super().evaluate(
+            *args,
+            eval_dataset=eval_dataset,
+            ignore_keys=ignore_keys,
+            metric_key_prefix=metric_key_prefix,
+            **kwargs,
+        )
 
 
 def prepare_special_moshaf_ways(
@@ -1278,7 +1330,7 @@ if __name__ == "__main__":
     )
 
     # Initialize Trainer
-    trainer = Trainer(
+    trainer = StreamingTrainer(
         model=model,
         args=training_args,
         train_dataset=dataset["train"],
@@ -1334,7 +1386,9 @@ if __name__ == "__main__":
             testset = prepare_dataset(
                 train_config, processor, multi_level_tokenizer, is_testset=True
             )
-            test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
+            test_results = trainer.evaluate(
+                testset["test"], metric_key_prefix="test_", apply_augment=False
+            )
             with open(test_results_path, "w") as f:
                 json.dump(test_results, f, indent=4)
             print("Test Results:", test_results)
