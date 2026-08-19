@@ -5,8 +5,9 @@ import io
 import json
 import os
 import random
+import re
 import string
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Union
 
@@ -14,7 +15,6 @@ import Levenshtein
 import librosa
 import numpy as np
 import torch
-import wandb
 import yaml
 from datasets import Audio, Dataset, DatasetDict, concatenate_datasets, load_dataset
 from dotenv import load_dotenv
@@ -23,7 +23,7 @@ from huggingface_hub import login as hf_login
 from numpy.typing import NDArray
 from pydantic import BaseModel, Field, field_validator, model_validator
 from qdat_bench.audio_utils import decode_audio
-from qdat_bench.eval_results import eval_qdat_bench
+from qdat_bench.eval_results import align_preditc_ds, eval_qdat_bench
 from quran_transcript import MoshafAttributes, quran_phonetizer
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.nn import CrossEntropyLoss
@@ -36,6 +36,7 @@ from transformers import (
     Wav2Vec2BertProcessor,
 )
 
+import wandb
 from prepare_quran_dataset.modeling_fastconformer_cache_aware import (
     FastConformerCacheAwareMultilevelCTC,
     FastConformerCacheAwareMultilevelCTCConfig,
@@ -110,6 +111,8 @@ class TrainConfig(BaseModel):
     max_chunk_batch: int = 1
     conv_depthwise_kernel_size: int = 31
     max_noise_input_seconds: float = 40.0
+    include_noise_ds_in_train: bool = True
+    include_noise_ds_in_augment: bool = True
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "TrainConfig":
@@ -726,6 +729,7 @@ class DataCollatorCTCWithPadding:
     chunk_frames: int = 25
     sample_rate: int = 16000
     architecture: ArchitectureName = "w2v2bert-streaming-rnn"
+    apply_augment: bool = True
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -755,7 +759,8 @@ class DataCollatorCTCWithPadding:
                 if len(wav) > max_silence_samples:
                     wav = wav[:max_silence_samples]
             else:
-                wav = self.augment.apply(wav)
+                if self.apply_augment:
+                    wav = self.augment.apply(wav)
 
             waves.append(wav)
 
@@ -811,6 +816,56 @@ class DataCollatorCTCWithPadding:
         batch["labels"] = labels["input_ids"]
 
         return batch
+
+
+class StreamingTrainer(Trainer):
+    def evaluate(
+        self,
+        eval_dataset=None,
+        ignore_keys=None,
+        metric_key_prefix="eval",
+        apply_augment=True,
+        *args,
+        **kwargs,
+    ):
+        """
+        Run evaluation, optionally toggling augmentation for the data collator.
+
+        The default collator (``DataCollatorCTCWithPadding``) applies audio
+        augmentations to every speech sample, which is desirable for the
+        validation/dev set so its metrics reflect the same distribution the
+        model is trained on. However, the held-out test set must be scored on
+        clean, un-augmented audio to report an honest estimate of generalization
+        performance. Since stock ``Trainer.evaluate`` does not forward extra
+        kwargs to the collator (it uses ``self.data_collator`` from
+        ``get_eval_dataloader``), we swap in a copy of the collator with
+        ``apply_augment=False`` for the duration of the evaluation. The swap is
+        confined to the branch where the collator setting actually differs, and
+        ``try/finally`` guarantees restoration even if evaluation raises, so a
+        mid-eval failure can never leave the trainer stuck on the no-augment
+        collator. When ``apply_augment`` is not passed (e.g. the in-training
+        eval on the dev set), it defaults to ``True`` and nothing is swapped.
+        """
+        prev = self.data_collator
+        if hasattr(prev, "apply_augment") and prev.apply_augment != apply_augment:
+            self.data_collator = replace(prev, apply_augment=apply_augment)
+            try:
+                return super().evaluate(
+                    *args,
+                    eval_dataset=eval_dataset,
+                    ignore_keys=ignore_keys,
+                    metric_key_prefix=metric_key_prefix,
+                    **kwargs,
+                )
+            finally:
+                self.data_collator = prev
+        return super().evaluate(
+            *args,
+            eval_dataset=eval_dataset,
+            ignore_keys=ignore_keys,
+            metric_key_prefix=metric_key_prefix,
+            **kwargs,
+        )
 
 
 def prepare_special_moshaf_ways(
@@ -973,6 +1028,135 @@ def run_qdat_bench_test(
     return metrics
 
 
+def compute_qdat_top_phonemes_per(
+    pred_trans_ds: Dataset,
+    multi_level_tokenizer: MultiLevelTokenizer,
+    vocab: dict[str, dict[str, int]],
+    qdat_bench_name_or_path: str = "obadx/qdat_bench",
+    pad_token_id: int = PAD_TOKEN_IDX,
+    eos_token_id: int = 1,
+    top_k: int | None = None,
+) -> dict:
+    """Rank the phonemes that contribute most to the phonemes-level PER.
+
+    Uses ``Levenshtein.editops`` between the CTC-decoded predicted phoneme ids
+    and the tokenized reference ids (the exact inputs ``compute_per_level``
+    uses), attributing every edit to a single phoneme:
+
+    - substitution (``replace``): the reference phoneme the model confused.
+    - insertion (``delete`` in the pred->ref alignment): an extra predicted
+      phoneme, credited to the hallucinated predicted phoneme.
+    - deletion (``insert`` in the pred->ref alignment): a reference phoneme the
+      model missed.
+
+    Args:
+        pred_trans_ds: Predictions dataset with ``id`` and
+            ``levels_labels[phonemes]`` fields (from the saved
+            ``qdat_bench_predictions_{suffix}.jsonl``).
+        multi_level_tokenizer: Tokenizer used to build the reference ids.
+        vocab: Dict mapping level name -> {label: id} (from ``vocab.json``).
+        qdat_bench_name_or_path: The qdat_bench dataset to load.
+        pad_token_id: PAD token id to strip from reference ids.
+        eos_token_id: EOS token id to strip from reference ids.
+        top_k: Limit the returned ``phoneme_ranking`` to the top-k phonemes.
+
+    Returns:
+        Dict with overall PER summary (``per_phonemes`` should match
+        ``speech_metrics.per_phonemes`` from ``eval_qdat_bench``) and a
+        ``phoneme_ranking`` sorted descending by total error contribution.
+    """
+    qdat_bench_ds = load_dataset(qdat_bench_name_or_path)["train"].cast_column(
+        "audio", Audio(decode=False)
+    )
+    pred_trans_ds = align_preditc_ds(pred_trans_ds, qdat_bench_ds["id"])
+
+    levels_ref = multi_level_tokenizer.tokenize(
+        [re.sub(r"\s+", "", ph) for ph in qdat_bench_ds["phonetic_transcript"]],
+        qdat_bench_ds["sifat"],
+        to_dict=True,
+    )
+    ref_phonemes_ids = levels_ref["input_ids"]["phonemes"]
+    pred_phonemes_ids = [item["phonemes"] for item in pred_trans_ds["levels_labels"]]
+
+    ids_to_ph = {idx: label for label, idx in vocab["phonemes"].items()}
+    special_ids = {pad_token_id, eos_token_id}
+
+    tally: dict[str, dict[str, int]] = {}
+    ref_counts: dict[str, int] = {}
+
+    total_errors = 0
+    total_ref_phonemes = 0
+
+    for pred_ids, ref_ids in zip(pred_phonemes_ids, ref_phonemes_ids):
+        pred_ids = [t for t in pred_ids if t not in special_ids]
+        ref_ids = [t for t in ref_ids if t not in special_ids]
+
+        for rid in ref_ids:
+            label = ids_to_ph[rid]
+            ref_counts[label] = ref_counts.get(label, 0) + 1
+        total_ref_phonemes += len(ref_ids)
+
+        # Empty predicted phonemes: editops turns every reference phoneme into
+        # a deletion (insert op), matching the official PER which charges the
+        # full reference length as errors for blank predictions.
+        pred_str = sequence_to_chars(pred_ids)
+        ref_str = sequence_to_chars(ref_ids)
+
+        sample_errors = 0
+        for op, i, j in Levenshtein.editops(pred_str, ref_str):
+            if op == "replace":
+                label = ids_to_ph[ref_ids[j]]
+                err_type = "substitutions"
+            elif op == "delete":
+                # Extra predicted chars: model insertion.
+                label = ids_to_ph[pred_ids[i]]
+                err_type = "insertions"
+            else:  # insert
+                # Missing reference chars: model deletion.
+                label = ids_to_ph[ref_ids[j]]
+                err_type = "deletions"
+
+            entry = tally.setdefault(
+                label, {"substitutions": 0, "insertions": 0, "deletions": 0}
+            )
+            entry[err_type] += 1
+            sample_errors += 1
+
+        # Match the official PER clamp: min(distance, ref_len).
+        total_errors += min(sample_errors, len(ref_ids))
+
+    ranking = []
+    for label, entry in tally.items():
+        total = sum(entry.values())
+        ref_count = ref_counts.get(label, 0)
+        ranking.append(
+            {
+                "phoneme": label,
+                "total_errors": total,
+                "substitutions": entry["substitutions"],
+                "insertions": entry["insertions"],
+                "deletions": entry["deletions"],
+                "ref_count": ref_count,
+                "error_rate": total / ref_count if ref_count > 0 else 0.0,
+                "per_contribution": (
+                    total / total_ref_phonemes if total_ref_phonemes > 0 else 0.0
+                ),
+            }
+        )
+    ranking.sort(key=lambda r: (r["total_errors"], r["error_rate"]), reverse=True)
+
+    result = {
+        "per_phonemes": total_errors / total_ref_phonemes
+        if total_ref_phonemes > 0
+        else 0.0,
+        "total_errors": total_errors,
+        "total_ref_phonemes": total_ref_phonemes,
+        "n_samples": len(pred_phonemes_ids),
+        "phoneme_ranking": ranking[:top_k] if top_k is not None else ranking,
+    }
+    return result
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -1067,8 +1251,23 @@ if __name__ == "__main__":
     # turn off watch to log faster
     os.environ["WANDB_WATCH"] = "false"
 
-    # Prepare noise dataset
-    noise_data = prepare_noise_dataset(train_config)
+    # Prepare noise dataset (only the parts enabled by the config flags)
+    use_noise = (
+        train_config.include_noise_ds_in_train
+        or train_config.include_noise_ds_in_augment
+    )
+    noise_data = prepare_noise_dataset(train_config) if use_noise else None
+
+    input_noise_ds = (
+        noise_data["input"]
+        if noise_data and train_config.include_noise_ds_in_train
+        else None
+    )
+    noise_dir_path = (
+        noise_data["augmentation"]
+        if noise_data and train_config.include_noise_ds_in_augment
+        else None
+    )
 
     # Load dataset
     # Update with your dataset path
@@ -1076,7 +1275,7 @@ if __name__ == "__main__":
         train_config,
         processor,
         multi_level_tokenizer,
-        input_noise_ds=noise_data["input"],
+        input_noise_ds=input_noise_ds,
     )
 
     # Configure training arguments
@@ -1122,7 +1321,7 @@ if __name__ == "__main__":
         augment=Augment(
             augment_prob=train_config.augment_prob,
             seed=train_config.seed,
-            noise_dir_path=noise_data["augmentation"],
+            noise_dir_path=noise_dir_path,
         ),
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
         max_noise_input_seconds=train_config.max_noise_input_seconds,
@@ -1131,7 +1330,7 @@ if __name__ == "__main__":
     )
 
     # Initialize Trainer
-    trainer = Trainer(
+    trainer = StreamingTrainer(
         model=model,
         args=training_args,
         train_dataset=dataset["train"],
@@ -1187,7 +1386,9 @@ if __name__ == "__main__":
             testset = prepare_dataset(
                 train_config, processor, multi_level_tokenizer, is_testset=True
             )
-            test_results = trainer.evaluate(testset["test"], metric_key_prefix="test_")
+            test_results = trainer.evaluate(
+                testset["test"], metric_key_prefix="test_", apply_augment=False
+            )
             with open(test_results_path, "w") as f:
                 json.dump(test_results, f, indent=4)
             print("Test Results:", test_results)
@@ -1232,6 +1433,40 @@ if __name__ == "__main__":
             architecture=train_config.architecture,
         )
 
+    # Per-phoneme PER analysis on the phonemes level (cached like the other
+    # qdat_bench results, re-computed only when --rerun-qdat-bench is passed).
+    qdat_top_phonemes_path = (
+        Path(train_config.output_dir) / f"qdat_top_phonemes_per_{model_suffix}.json"
+    )
+    if qdat_top_phonemes_path.exists() and not args.rerun_qdat_bench:
+        print(
+            f"Found existing {qdat_top_phonemes_path}, skipping top-phonemes PER analysis. "
+            "Use --rerun-qdat-bench to force."
+        )
+    elif qdat_pred_path.exists():
+        print("Running top-phonemes PER analysis...")
+        pred_ds = Dataset.from_json(str(qdat_pred_path))
+        top_phonemes = compute_qdat_top_phonemes_per(
+            pred_trans_ds=pred_ds,
+            multi_level_tokenizer=multi_level_tokenizer,
+            vocab=vocab,
+        )
+        with open(qdat_top_phonemes_path, "w") as f:
+            json.dump(top_phonemes, f, indent=4, ensure_ascii=False)
+        print(f"Top phonemes PER analysis saved to {qdat_top_phonemes_path}")
+        print(f"Phonemes PER: {top_phonemes['per_phonemes']:.6f}")
+        for rank in top_phonemes["phoneme_ranking"][:10]:
+            print(
+                f"  {rank['phoneme']}: total={rank['total_errors']} "
+                f"(sub={rank['substitutions']} ins={rank['insertions']} "
+                f"del={rank['deletions']}) err_rate={rank['error_rate']:.4f}"
+            )
+    else:
+        print(
+            "Predictions file missing; re-run with --rerun-qdat-bench to regenerate "
+            "and compute top-phonemes PER analysis."
+        )
+
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()
 
@@ -1243,6 +1478,7 @@ if __name__ == "__main__":
         for fname in [
             f"test_results_{model_suffix}.json",
             f"qdat_bench_test_results_{model_suffix}.json",
+            f"qdat_top_phonemes_per_{model_suffix}.json",
         ]:
             fpath = Path(train_config.output_dir) / fname
             if fpath.exists():
