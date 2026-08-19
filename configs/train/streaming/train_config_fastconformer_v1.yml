@@ -72,6 +72,10 @@ model_kwargs:
   subsampling_factor: 4
   subsampling_conv_channels: 256
   causal_downsampling: true
+  # Run the conv subsampling front-end (encoder.pre_encode) in float32 while
+  # the rest of the model keeps running in bf16 autocast. Its output is cast
+  # back to bf16, so everything downstream is unchanged. Defaults to false.
+  # fp32_pre_encode: true
   ff_expansion_factor: 4
   self_attention_model: rel_pos
   n_heads: 8

@@ -620,6 +620,12 @@ def build_model_components(
         else:
             model = FastConformerCacheAwareMultilevelCTC(config)
 
+        if config.fp32_pre_encode:
+            print(
+                "fp32 pre_encode enabled: the conv subsampling front-end runs in "
+                "float32 while the rest of the model runs in bf16."
+            )
+
         # Mel-spectrogram extraction happens in the collator via a standalone
         # FastConformerMelProcessor (same config as the model's internal one),
         # mirroring how other architectures preprocess audio outside the model.

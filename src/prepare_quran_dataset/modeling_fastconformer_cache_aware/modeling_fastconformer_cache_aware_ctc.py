@@ -27,6 +27,7 @@ chunk-by-chunk processing with cache reuse, using NeMo's
 
 from __future__ import annotations
 
+import contextlib
 import random
 import re
 import sys
@@ -448,6 +449,64 @@ class MuaalemConformerEncoder(ConformerEncoder):
         pad_mask = ~pad_mask
         return pad_mask, att_mask
 
+    def _run_pre_encode(
+        self,
+        audio_signal: torch.FloatTensor,
+        lengths: torch.LongTensor | None = None,
+    ) -> torch.FloatTensor | tuple[torch.FloatTensor, torch.LongTensor]:
+        """Run the subsampling front-end, optionally forcing float32.
+
+        ``pre_encode`` consumes raw log-mel features, whose dynamic range makes
+        its convolutions the most numerically fragile part of the encoder under
+        bf16 / fp16 autocast.  When ``self.fp32_pre_encode`` is set (propagated
+        from ``config.fp32_pre_encode`` by
+        :class:`FastConformerCacheAwareMultilevelCTC`), the front-end is
+        computed in float32 with autocast disabled and its output is cast back
+        to the autocast dtype, so every module downstream — positional
+        encoding, Conformer layers, and the streaming cache concatenations —
+        sees exactly the tensors it would have seen with the flag off.  Model
+        weights are untouched: under autocast they are already float32 masters.
+
+        The flag is read with ``getattr`` so encoders built directly (without
+        the :class:`FastConformerCacheAwareMultilevelCTC` wrapper) keep working.
+
+        Args:
+            audio_signal:
+                Input features of shape ``(batch_size, num_frames, feat_in)``.
+            lengths:
+                Valid frame counts, shape ``(batch_size,)``.  Pass ``None`` when
+                ``pre_encode`` is an :class:`~torch.nn.Linear` (no subsampling,
+                no length change).
+
+        Returns:
+            The encoded features when ``lengths`` is ``None``, otherwise the
+            ``(features, lengths)`` pair returned by the subsampling module.
+        """
+        fp32 = getattr(self, "fp32_pre_encode", False)
+        device_type = audio_signal.device.type
+        ctx = (
+            torch.autocast(device_type=device_type, enabled=False)
+            if fp32
+            else contextlib.nullcontext()
+        )
+
+        with ctx:
+            if fp32:
+                audio_signal = audio_signal.float()
+            if lengths is None:
+                out = self.pre_encode(audio_signal)
+            else:
+                out = self.pre_encode(x=audio_signal, lengths=lengths)
+
+        if not fp32 or not torch.is_autocast_enabled(device_type):
+            return out
+
+        cast_dtype = torch.get_autocast_dtype(device_type)
+        if lengths is None:
+            return out.to(cast_dtype)
+        encoded, encoded_lengths = out
+        return encoded.to(cast_dtype), encoded_lengths
+
     def forward_internal(
         self,
         audio_signal: torch.FloatTensor,
@@ -556,9 +615,9 @@ class MuaalemConformerEncoder(ConformerEncoder):
         audio_signal = torch.transpose(audio_signal, 1, 2)
 
         if isinstance(self.pre_encode, nn.Linear):
-            audio_signal = self.pre_encode(audio_signal)
+            audio_signal = self._run_pre_encode(audio_signal)
         else:
-            audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
+            audio_signal, length = self._run_pre_encode(audio_signal, lengths=length)
             length = length.to(torch.int64)
             # self.streaming_cfg is set by setup_streaming_cfg(), called in the init
             if (
@@ -1037,7 +1096,13 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
         self.gradient_checkpointing = False
         self.encoder.gradient_checkpointing = False
 
-        # 6. Weight initialisation and tying
+        # 6. Precision of the conv subsampling front-end: when True it runs in
+        #    float32 even under bf16 / fp16 autocast, with its output cast back
+        #    to the autocast dtype (see
+        #    ``MuaalemConformerEncoder._run_pre_encode``).
+        self.encoder.fp32_pre_encode = config.fp32_pre_encode
+
+        # 7. Weight initialisation and tying
         self.post_init()
 
     # ------------------------------------------------------------------

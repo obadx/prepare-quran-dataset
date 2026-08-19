@@ -130,6 +130,12 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
             Whether to use causal (left-only) padding in subsampling
             convolutions.  Must be ``True`` for cache-aware streaming.
             Defaults to ``True``.
+        fp32_pre_encode:
+            Run the convolutional subsampling front-end (``encoder.pre_encode``)
+            in float32 even when the rest of the model runs under bf16 / fp16
+            autocast.  The subsampling output is cast back to the autocast dtype
+            afterwards, so every module downstream behaves exactly as it does
+            with this flag disabled.  Defaults to ``False``.
         ff_expansion_factor:
             Expansion factor for the feed-forward sub-layer inside each
             Conformer block.  Defaults to ``4``.
@@ -227,6 +233,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         subsampling_factor: int = 4,
         subsampling_conv_channels: int = 256,
         causal_downsampling: bool = True,
+        fp32_pre_encode: bool = False,
         ff_expansion_factor: int = 4,
         self_attention_model: str = "rel_pos",
         n_heads: int = 8,
@@ -306,6 +313,7 @@ class FastConformerCacheAwareMultilevelCTCConfig(PretrainedConfig):
         self.subsampling_factor = subsampling_factor
         self.subsampling_conv_channels = subsampling_conv_channels
         self.causal_downsampling = causal_downsampling
+        self.fp32_pre_encode = fp32_pre_encode
         self.ff_expansion_factor = ff_expansion_factor
         self.self_attention_model = self_attention_model
         self.n_heads = n_heads
