@@ -40,7 +40,6 @@ from prepare_quran_dataset.modeling_fastconformer_cache_aware import (
     FastConformerCacheAwareMultilevelCTC,
     FastConformerCacheAwareMultilevelCTCConfig,
     FastConformerMelProcessor,
-    stream_inference,
 )
 from prepare_quran_dataset.modeling_streaming_rnn.modeling_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTC,
@@ -97,15 +96,6 @@ class TrainConfig(BaseModel):
     base_model_name_or_path: str = "facebook/w2v-bert-2.0"
     processor_name_or_path: str | None = "facebook/w2v-bert-2.0"
     ignore_mismatched_sizes: bool = True
-
-    # Streaming evaluation (fastconformer-cache-aware only). When enabled, the
-    # held-out test set and qdat_bench are evaluated a second time chunk-by-chunk
-    # through `stream_inference`, alongside the offline numbers.
-    run_streaming_eval: bool = True
-    # Streaming eval is inherently batch-1, so it is much slower than the offline
-    # pass (which runs at `pre_device_eval_batch_size`). Cap the number of test
-    # samples to keep the runtime sane; None means the full set.
-    streaming_eval_max_samples: int | None = None
 
     # FastConformer cache-aware specific fields
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
@@ -852,128 +842,6 @@ def prepare_special_moshaf_ways(
     return moshaf_id_to_seg_moshaf_attr
 
 
-def _artifact_path(
-    output_dir: str | Path,
-    stem: str,
-    model_suffix: str,
-    mode: Literal["offline", "streaming"],
-    ext: str,
-) -> Path:
-    """Build ``<stem>[_<model_suffix>][_streaming].<ext>`` under ``output_dir``.
-
-    Offline artifacts keep their historical filenames so existing runs and the
-    ``--rerun-*`` short-circuits are unaffected; streaming artifacts get a
-    ``_streaming`` marker so both modes can coexist in one output directory.
-    """
-    parts = [stem]
-    if model_suffix:
-        parts.append(model_suffix)
-    if mode == "streaming":
-        parts.append("streaming")
-    return Path(output_dir) / f"{'_'.join(parts)}.{ext}"
-
-
-def qdat_bench_pred_path(output_dir, model_suffix, mode="offline") -> Path:
-    """Path of the qdat_bench predictions JSONL for a given model/mode."""
-    return _artifact_path(
-        output_dir, "qdat_bench_predictions", model_suffix, mode, "jsonl"
-    )
-
-
-def qdat_bench_results_path(output_dir, model_suffix, mode="offline") -> Path:
-    """Path of the qdat_bench metrics JSON for a given model/mode."""
-    return _artifact_path(
-        output_dir, "qdat_bench_test_results", model_suffix, mode, "json"
-    )
-
-
-def testset_results_path(output_dir, model_suffix, mode="offline") -> Path:
-    """Path of the held-out test-set metrics JSON for a given model/mode."""
-    return _artifact_path(output_dir, "test_results", model_suffix, mode, "json")
-
-
-def run_streaming_testset_eval(
-    model: FastConformerCacheAwareMultilevelCTC,
-    testset: Dataset,
-    data_collator: "DataCollatorCTCWithPadding",
-    device: torch.device,
-    pad_token_idx: int = 0,
-    max_samples: int | None = None,
-) -> dict[str, float]:
-    """Evaluate the held-out test set through the cache-aware streaming loop.
-
-    ``Trainer.evaluate`` always calls the model's offline forward, so streaming
-    numbers need their own loop.  Metrics match the offline ones exactly: this
-    reuses :func:`compute_per_level_stats` (which greedily CTC-collapses the
-    predictions but not the references) and reports the same ``per_<level>`` /
-    ``average_per`` / ``silence_per`` keys as :class:`IncrementalMetrics`.
-
-    Args:
-        model: Model in eval mode with streaming params configured.
-        testset: The held-out split (``dataset["test"]``).
-        data_collator: The same collator used for training, so audio
-            preprocessing and label tokenization are identical to the offline run.
-        device: Device to run inference on.
-        pad_token_idx: CTC blank / pad id.
-        max_samples: Stop after this many samples.  ``None`` runs the full set.
-
-    Returns:
-        Dict of metric name to value, mirroring :class:`IncrementalMetrics` output.
-    """
-    if max_samples is not None:
-        testset = testset.select(range(min(max_samples, len(testset))))
-
-    dataloader = DataLoader(testset, batch_size=1, collate_fn=data_collator)
-
-    running: dict[str, dict[str, int]] = {}
-    silence_running = {"errors": 0, "total": 0}
-
-    model.eval()
-    for batch in tqdm(dataloader, desc="Streaming test-set eval"):
-        labels = {level: t.numpy() for level, t in batch["labels"].items()}
-        for level in labels:
-            labels[level][labels[level] < 0] = pad_token_idx
-
-        streamed = stream_inference(
-            model,
-            processed_signal=batch["processed_signal"],
-            processed_length=batch["processed_length"],
-            device=device,
-        )
-
-        # Silence samples carry all-pad labels (at most the EOS token); they are
-        # scored as a frame-level error rate instead of a PER, same as offline.
-        is_silence = (labels["phonemes"][0] != pad_token_idx).sum() <= 1
-        if is_silence:
-            preds = np.asarray(streamed["phonemes"])
-            silence_running["errors"] += int((preds != pad_token_idx).sum())
-            silence_running["total"] += int(preds.size)
-            continue
-
-        for level, frame_ids in streamed.items():
-            if level not in labels:
-                continue
-            running.setdefault(level, {"distance": 0, "length": 0})
-            distance, length = compute_per_level_stats(
-                np.asarray([frame_ids]),
-                labels[level],
-                pad_token_idx=pad_token_idx,
-            )
-            running[level]["distance"] += distance
-            running[level]["length"] += length
-
-    metrics: dict[str, float] = {}
-    total_per = 0.0
-    for level, stats in running.items():
-        per = stats["distance"] / stats["length"] if stats["length"] > 0 else 0.0
-        metrics[f"per_{level}"] = per
-        total_per += per
-    metrics["average_per"] = total_per / len(running) if running else 0.0
-    if silence_running["total"] > 0:
-        metrics["silence_per"] = silence_running["errors"] / silence_running["total"]
-    return metrics
-
-
 def run_qdat_bench_test(
     model: Wav2Vec2BertForRNNStreamingMultilevelCTC
     | FastConformerCacheAwareMultilevelCTC,
@@ -986,7 +854,6 @@ def run_qdat_bench_test(
     batch_size: int = 1,
     model_suffix: str = "",
     architecture: ArchitectureName = "w2v2bert-streaming-rnn",
-    mode: Literal["offline", "streaming"] = "offline",
 ) -> None:
     """
     Run inference + evaluation on the qdat_bench dataset.
@@ -1008,24 +875,7 @@ def run_qdat_bench_test(
         batch_size: Inference batch size.
         architecture: Model architecture name; controls how audio batches are
             built (HF processor mel features vs raw zero-padded audio).
-        mode: ``"offline"`` runs a single full-utterance forward.
-            ``"streaming"`` drives the cache-aware chunk loop via
-            ``stream_inference`` — only supported for
-            ``fastconformer-cache-aware``, and only at ``batch_size=1``.
-            Results are written to ``*_streaming`` filenames so the two modes do
-            not overwrite each other.
     """
-    if mode == "streaming":
-        if architecture != "fastconformer-cache-aware":
-            raise ValueError(
-                "mode='streaming' is only supported for the "
-                f"`fastconformer-cache-aware` architecture, got `{architecture}`."
-            )
-        if batch_size != 1:
-            raise ValueError(
-                f"mode='streaming' requires batch_size=1, got {batch_size}."
-            )
-
     ds = load_dataset("obadx/qdat_bench", split="train")
     ds = ds.cast_column("audio", Audio(decode=False))
 
@@ -1047,25 +897,13 @@ def run_qdat_bench_test(
             else:
                 batch = {k: v.to(device, dtype=dtype) for k, v in batch.items()}
 
-            if mode == "streaming":
-                streamed = stream_inference(
-                    model,
-                    processed_signal=batch["processed_signal"],
-                    processed_length=batch["processed_length"],
-                    device=device,
-                )
-                level_to_labels = {
-                    level: ctc_decode(np.asarray([frame_ids]))
-                    for level, frame_ids in streamed.items()
-                }
-            else:
-                outputs = model(**batch)
-                level_to_logits = outputs.logits
+            outputs = model(**batch)
+            level_to_logits = outputs.logits
 
-                level_to_labels = {}
-                for level in level_to_logits:
-                    labels = level_to_logits[level].argmax(dim=-1).cpu().numpy()
-                    level_to_labels[level] = ctc_decode(labels)
+            level_to_labels = {}
+            for level in level_to_logits:
+                labels = level_to_logits[level].argmax(dim=-1).cpu().numpy()
+                level_to_labels[level] = ctc_decode(labels)
 
             special_ids = set(multi_level_tokenizer.special_tokens)
             for level in level_to_labels:
@@ -1102,7 +940,11 @@ def run_qdat_bench_test(
                     }
                 )
 
-    pred_path = qdat_bench_pred_path(output_dir, model_suffix, mode)
+    pred_path = (
+        Path(output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
+        if model_suffix
+        else Path(output_dir) / "qdat_bench_predictions.jsonl"
+    )
     with open(pred_path, "w") as f:
         for r in results:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
@@ -1115,7 +957,11 @@ def run_qdat_bench_test(
         bootstrap=False,
     )
 
-    results_path = qdat_bench_results_path(output_dir, model_suffix, mode)
+    results_path = (
+        Path(output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
+        if model_suffix
+        else Path(output_dir) / "qdat_bench_test_results.json"
+    )
     with open(results_path, "w") as f:
         json.dump(metrics, f, indent=4, ensure_ascii=False)
     print(f"QDAT benchmark results saved to {results_path}")
@@ -1149,12 +995,6 @@ if __name__ == "__main__":
         "--rerun-qdat-bench",
         action="store_true",
         help="Force re-run qdat_bench inference + evaluation even if results exist",
-    )
-    parser.add_argument(
-        "--rerun-streaming-eval",
-        action="store_true",
-        help="Force re-run the cache-aware streaming evaluations (held-out test set "
-        "and qdat_bench) even if their *_streaming result files already exist",
     )
     parser.add_argument(
         "--load-last-model",
@@ -1334,32 +1174,11 @@ if __name__ == "__main__":
     else:
         trainer.train()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dtype = torch.bfloat16
-
-    # Streaming evaluation is only wired up for the cache-aware FastConformer.
-    # The RNN architecture's inference helper is phonemes-only and batch-1, so
-    # it stays offline-only for now.
-    run_streaming = (
-        train_config.run_streaming_eval
-        and train_config.architecture == "fastconformer-cache-aware"
-    )
-    if run_streaming:
-        trainer.model.setup_streaming_params()
-        print(
-            "Streaming eval enabled — encoder streaming cfg: "
-            f"{trainer.model.encoder.streaming_cfg}"
-        )
-
     # Final evaluation on test set
-    test_results_path = testset_results_path(
-        train_config.output_dir, model_suffix, "offline"
-    )
-    streaming_test_results_path = testset_results_path(
-        train_config.output_dir, model_suffix, "streaming"
+    test_results_path = (
+        Path(train_config.output_dir) / f"test_results_{model_suffix}.json"
     )
     if train_config.test_moshaf_ids is not None:
-        testset = None
         if test_results_path.exists() and not args.rerun_testset:
             print(
                 f"Found existing {test_results_path}, skipping test evaluation. Use --rerun-testset to force."
@@ -1373,41 +1192,14 @@ if __name__ == "__main__":
                 json.dump(test_results, f, indent=4)
             print("Test Results:", test_results)
 
-        if run_streaming:
-            if (
-                streaming_test_results_path.exists()
-                and not args.rerun_streaming_eval
-            ):
-                print(
-                    f"Found existing {streaming_test_results_path}, skipping streaming "
-                    "test evaluation. Use --rerun-streaming-eval to force."
-                )
-            else:
-                if testset is None:
-                    testset = prepare_dataset(
-                        train_config,
-                        processor,
-                        multi_level_tokenizer,
-                        is_testset=True,
-                    )
-                streaming_test_results = run_streaming_testset_eval(
-                    model=trainer.model,
-                    testset=testset["test"],
-                    data_collator=data_collector,
-                    device=device,
-                    pad_token_idx=PAD_TOKEN_IDX,
-                    max_samples=train_config.streaming_eval_max_samples,
-                )
-                with open(streaming_test_results_path, "w") as f:
-                    json.dump(streaming_test_results, f, indent=4)
-                print("Streaming Test Results:", streaming_test_results)
-
     # QDAT benchmark evaluation
-    qdat_pred_path = qdat_bench_pred_path(
-        train_config.output_dir, model_suffix, "offline"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dtype = torch.bfloat16
+    qdat_pred_path = (
+        Path(train_config.output_dir) / f"qdat_bench_predictions_{model_suffix}.jsonl"
     )
-    qdat_results_path = qdat_bench_results_path(
-        train_config.output_dir, model_suffix, "offline"
+    qdat_results_path = (
+        Path(train_config.output_dir) / f"qdat_bench_test_results_{model_suffix}.json"
     )
 
     if qdat_results_path.exists() and not args.rerun_qdat_bench:
@@ -1440,32 +1232,6 @@ if __name__ == "__main__":
             architecture=train_config.architecture,
         )
 
-    # QDAT benchmark, streamed chunk-by-chunk
-    if run_streaming:
-        streaming_qdat_results_path = qdat_bench_results_path(
-            train_config.output_dir, model_suffix, "streaming"
-        )
-        if streaming_qdat_results_path.exists() and not args.rerun_streaming_eval:
-            print(
-                f"Found existing {streaming_qdat_results_path}, skipping streaming "
-                "qdat_bench. Use --rerun-streaming-eval to force."
-            )
-        else:
-            print("Running streaming qdat_bench test...")
-            run_qdat_bench_test(
-                model=trainer.model,
-                processor=processor,
-                multi_level_tokenizer=multi_level_tokenizer,
-                output_dir=train_config.output_dir,
-                vocab=vocab,
-                device=device,
-                dtype=dtype,
-                batch_size=1,
-                model_suffix=model_suffix,
-                architecture=train_config.architecture,
-                mode="streaming",
-            )
-
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()
 
@@ -1477,8 +1243,6 @@ if __name__ == "__main__":
         for fname in [
             f"test_results_{model_suffix}.json",
             f"qdat_bench_test_results_{model_suffix}.json",
-            f"test_results_{model_suffix}_streaming.json",
-            f"qdat_bench_test_results_{model_suffix}_streaming.json",
         ]:
             fpath = Path(train_config.output_dir) / fname
             if fpath.exists():
