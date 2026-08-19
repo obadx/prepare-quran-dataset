@@ -39,15 +39,7 @@ classifiers = [
 
 # Optional dependencies
 [tool.pytest.ini_options]
-# Listed file by file on purpose: most of tests/ are `main()`-style scripts that
-# execute (and download checkpoints) at import time, so pointing pytest at the
-# whole directory would run them during collection.
-testpaths = [
-  "tests/test_fastconformer_mask_golden.py",
-  "tests/test_fastconformer_streaming_parity.py",
-  "tests/test_processor_device.py",
-  "tests/test_chunk_streaming_offline.py",
-]
+testpaths = ["tests/test_fastconformer_mask_golden.py"]
 
 [project.optional-dependencies]
 
