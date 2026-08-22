@@ -192,6 +192,48 @@ def _build_load_report(
 
 
 class MuaalemConformerEncoder(ConformerEncoder):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        # ``pos_enc.pe`` is a non-persistent buffer computed from math at
+        # construction time (NeMo ``PositionalEncoding.create_pe``).  It is
+        # never saved into checkpoints, and HF ``from_pretrained``
+        # re-materializes tensors while filling weights, leaving
+        # checkpoint-absent buffers holding uninitialized memory instead of
+        # the constructor-computed sinusoids.  Invalidate it on every
+        # ``load_state_dict`` so that ``forward_internal`` rebuilds a fresh,
+        # valid table via ``extend_pe`` before it is first sliced.
+        self._register_load_state_dict_pre_hook(self._invalidate_pos_enc_pe)
+
+    def _invalidate_pos_enc_pe(self, *args, **kwargs) -> None:
+        """Delete a stale ``pos_enc.pe`` buffer ahead of weight loading."""
+        if hasattr(self.pos_enc, "pe"):
+            del self.pos_enc.pe
+
+    def _ensure_pos_enc_pe(self, input_len: int, device, dtype) -> None:
+        """Guarantee ``pos_enc.pe`` holds a valid relative-position table.
+
+        Covers ``2 * input_len - 1`` positions, recreating the table whenever
+        it is missing, undersized, or corrupted (HF ``from_pretrained``
+        re-materializes checkpoint-absent buffers with uninitialized memory,
+        and its loader bypasses torch ``load_state_dict`` hooks, so validity
+        cannot be tracked with a load-time flag).
+        """
+        pe = getattr(self.pos_enc, "pe", None)
+        valid = False
+        if pe is not None and pe.device == device and pe.size(1) >= 2 * input_len - 1:
+            # Position 0 sits on the centre row: even columns are
+            # ``sin(0) == 0`` and odd columns are ``cos(0) == 1`` exactly,
+            # for every valid sinusoid table regardless of its size.
+            mid = pe.size(1) // 2
+            valid = bool(
+                (pe[0, mid, 0::2] == 0).all() and (pe[0, mid, 1::2] == 1).all()
+            )
+        if not valid:
+            if hasattr(self.pos_enc, "pe"):
+                del self.pos_enc.pe
+            self.pos_enc.extend_pe(input_len, device=device, dtype=dtype)
+
     def _create_masks(
         self,
         att_context_size: list[int],
@@ -589,6 +631,14 @@ class MuaalemConformerEncoder(ConformerEncoder):
             cache_len = 0
             offset = None
 
+        # Mirrors NeMo's ``ConformerEncoder.forward_internal``: guarantee a
+        # valid positional-encoding table before it is sliced (a no-op when
+        # the existing table already covers the request).
+        self._ensure_pos_enc_pe(
+            audio_signal.size(1) + cache_len,
+            audio_signal.device,
+            audio_signal.dtype,
+        )
         audio_signal, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
 
         # Create the self-attention and padding masks
@@ -693,6 +743,11 @@ class MuaalemConformerEncoder(ConformerEncoder):
                 max_audio_length = audio_signal.size(1)
                 # Don't update the audio_signal here because then it will again scale the audio_signal
                 # and cause an increase in the WER
+                self._ensure_pos_enc_pe(
+                    max_audio_length + cache_len,
+                    audio_signal.device,
+                    audio_signal.dtype,
+                )
                 _, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
                 pad_mask, att_mask = self._create_masks(
                     att_context_size=cur_att_context_size,
@@ -974,6 +1029,24 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
 
     config_class = FastConformerCacheAwareMultilevelCTCConfig
     supports_gradient_checkpointing = True
+
+    @classmethod
+    def get_init_context(
+        cls, dtype, is_quantized, _is_ds_init_called, allow_all_kernels
+    ):
+        """Initialise on CPU instead of meta device.
+
+        NeMo's ``ConvSubsampling`` calls ``int()`` (→ ``.item()``) on
+        intermediate tensors during ``__init__``, which is illegal on
+        meta tensors.
+        """
+        ctxs = super().get_init_context(
+            dtype, is_quantized, _is_ds_init_called, allow_all_kernels
+        )
+        for i, c in enumerate(ctxs):
+            if isinstance(c, torch.device) and c == torch.device("meta"):
+                ctxs[i] = torch.device("cpu")
+        return ctxs
 
     def __init__(self, config: FastConformerCacheAwareMultilevelCTCConfig) -> None:
         super().__init__(config)
@@ -1394,7 +1467,14 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                 length=audio_length,
             )
 
-        # ---- 3. Encoder forward — offline or streaming ----
+        # ---- 3. Match input dtype to model dtype (e.g. bfloat16 inference) ----
+        # The NeMo AudioPreprocessor always emits float32, so re-align the
+        # features with the encoder's parameter dtype.
+        param_dtype = next(self.encoder.parameters()).dtype
+        if processed_signal.dtype != param_dtype:
+            processed_signal = processed_signal.to(param_dtype)
+
+        # ---- 4. Encoder forward — offline or streaming ----
         new_cache: FastConformerCache | None = None
 
         if cache is None:
@@ -1459,6 +1539,14 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                 log_probs = nn.functional.log_softmax(
                     level_to_logits[level], dim=-1, dtype=torch.float32
                 ).transpose(0, 1)
+                # if level == "phonemes":
+                #     print(flattened_targets)
+                #     print(target_lengths)
+                #     print(input_lengths)
+                #     print(
+                #         log_probs.argmax(-1).sum()
+                #         / (log_probs.shape[0] * log_probs.shape[1])
+                #     )
 
                 with torch.backends.cudnn.flags(enabled=False):
                     level_loss = nn.functional.ctc_loss(
@@ -1470,6 +1558,8 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                         reduction=self.config.ctc_loss_reduction,
                         zero_infinity=self.config.ctc_zero_infinity,
                     )
+                    # if level == "phonemes":
+                    #     print(f"loss: {level_loss}")
                 loss = loss + self.config.level_to_loss_weight[level] * level_loss
 
         # ---- 6. Return ----
