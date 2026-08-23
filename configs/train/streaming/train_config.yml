@@ -62,14 +62,16 @@ output_hidden_size: 512
 intermediate_size: 2048
 num_attention_heads: 8
 
-# Streaming-specific
-chunk_frames: 25
-lookback_frames: 5
-lookahead_frames: 5
-rnn_hidden_size: 128
-rnn_dropout: 0.05
-max_chunk_batch: 128
-conv_depthwise_kernel_size: 7
+# Streaming RNN model-specific kwargs, forwarded to
+# Wav2Vec2BertForRNNStreamingMultilevelCTCConfig
+model_kwargs:
+  chunk_frames: 25
+  lookback_frames: 5
+  lookahead_frames: 5
+  rnn_hidden_size: 128
+  rnn_dropout: 0.05
+  max_chunk_batch: 128
+  conv_depthwise_kernel_size: 7
 
 # Training parameters
 num_epochs: 5
