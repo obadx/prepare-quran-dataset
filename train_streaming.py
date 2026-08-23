@@ -286,19 +286,18 @@ class IncrementalMetrics:
             level: np.argmax(p, axis=-1) for level, p in predictions_dict.items()
         }
 
-        # Separate speech vs silence by checking label content:
-        # Silence samples have all-pad labels (1 non-pad token max from EOS),
-        # speech samples have real phoneme tokens. This avoids relying on a
-        # shared-state buffer that breaks with multiprocessing DataLoaders.
+        # Separating speech from silence. Silence samples'labels are all padding token (0)
         batch_size = len(next(iter(labels_dict.values())))
         speech_indices = []
         silence_indices = []
         for i in range(batch_size):
-            non_pad = (labels_dict["phonemes"][i] != self.pad_token_idx).sum()
-            if non_pad <= 1:
-                silence_indices.append(i)
-            else:
+            if (
+                len(labels_dict["phonemes"][i]) > 0
+                and sum(labels_dict["phonemes"][i]) > 0
+            ):
                 speech_indices.append(i)
+            else:
+                silence_indices.append(i)
 
         # Speech: normal PER computation per level
         if speech_indices:
@@ -515,38 +514,39 @@ def prepare_dataset(
         moshaf_ids = train_config.test_moshaf_ids
     else:
         moshaf_ids = train_config.train_moshaf_ids
-    # concatenate datasets
-    ds = concatenate_datasets(
-        [
-            load_dataset(
-                "obadx/muaalem-annotated-v3",
-                name=f"moshaf_{m_id}",
-                split="train",
-                num_proc=train_config.num_workers,
-            )
-            for m_id in moshaf_ids
-        ]
-    )
-
-    # disable torchcodec decoding, use liborsa instead
-    ds = ds.cast_column("audio", Audio(decode=False))
-
-    def _audio_len(audio_dict):
-        src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
-        wav, _ = librosa.load(src, sr=16000, mono=True)
-        return len(wav)
-
-    if train_config.max_audio_seconds is not None:
-        # removihg long samples
-        max_samples = int(train_config.max_audio_seconds * sample_rate)
-
-        ds = ds.filter(
-            lambda ex: _audio_len(ex["audio"]) <= max_samples,
-            num_proc=train_config.num_workers,
+    if train_config.train_moshaf_ids:
+        # concatenate datasets
+        ds = concatenate_datasets(
+            [
+                load_dataset(
+                    "obadx/muaalem-annotated-v3",
+                    name=f"moshaf_{m_id}",
+                    split="train",
+                    num_proc=train_config.num_workers,
+                )
+                for m_id in moshaf_ids
+            ]
         )
 
-    # Add input_type column to speech samples
-    ds = ds.add_column("input_type", ["speech"] * ds.num_rows)
+        # disable torchcodec decoding, use liborsa instead
+        ds = ds.cast_column("audio", Audio(decode=False))
+
+        def _audio_len(audio_dict):
+            src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+            wav, _ = librosa.load(src, sr=16000, mono=True)
+            return len(wav)
+
+        if train_config.max_audio_seconds is not None:
+            # removihg long samples
+            max_samples = int(train_config.max_audio_seconds * sample_rate)
+
+            ds = ds.filter(
+                lambda ex: _audio_len(ex["audio"]) <= max_samples,
+                num_proc=train_config.num_workers,
+            )
+
+        # Add input_type column to speech samples
+        ds = ds.add_column("input_type", ["speech"] * ds.num_rows)
 
     if input_noise_ds is not None:
         input_noise_ds = input_noise_ds.cast_column("audio", Audio(decode=False))
@@ -571,7 +571,10 @@ def prepare_dataset(
                 "commercial_use",
             ]
         )
-        ds = concatenate_datasets([ds, input_noise_ds])
+        if train_config.train_moshaf_ids:
+            ds = concatenate_datasets([ds, input_noise_ds])
+        else:
+            ds = input_noise_ds
 
     if is_testset:
         return DatasetDict(
