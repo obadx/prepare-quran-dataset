@@ -98,18 +98,13 @@ class TrainConfig(BaseModel):
     processor_name_or_path: str | None = "facebook/w2v-bert-2.0"
     ignore_mismatched_sizes: bool = True
 
-    # FastConformer cache-aware specific fields
+    # Model-specific fields, forwarded to the model config class of the
+    # selected `architecture` (e.g. FastConformerCacheAwareMultilevelCTCConfig
+    # or Wav2Vec2BertForRNNStreamingMultilevelCTCConfig)
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
     from_nemo_model_name_or_path: str | None = None
 
-    # Streaming-specific fields
-    chunk_frames: int = 25
-    lookback_frames: int = 5
-    lookahead_frames: int = 5
-    rnn_hidden_size: int = 256
-    rnn_dropout: float = 0.1
-    max_chunk_batch: int = 1
-    conv_depthwise_kernel_size: int = 31
+    # Streaming data/training-level fields
     max_noise_input_seconds: float = 40.0
     include_noise_ds_in_train: bool = True
     include_noise_ds_in_augment: bool = True
@@ -657,13 +652,7 @@ def build_model_components(
         ctc_loss_reduction="mean",
         add_adapter=False,
         adapter_stride=1,
-        chunk_frames=train_config.chunk_frames,
-        lookback_frames=train_config.lookback_frames,
-        lookahead_frames=train_config.lookahead_frames,
-        rnn_hidden_size=train_config.rnn_hidden_size,
-        rnn_dropout=train_config.rnn_dropout,
-        max_chunk_batch=train_config.max_chunk_batch,
-        conv_depthwise_kernel_size=train_config.conv_depthwise_kernel_size,
+        **train_config.model_kwargs,
     )
 
     model = Wav2Vec2BertForRNNStreamingMultilevelCTC.from_pretrained(
@@ -1328,7 +1317,7 @@ if __name__ == "__main__":
         ),
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
         max_noise_input_seconds=train_config.max_noise_input_seconds,
-        chunk_frames=train_config.chunk_frames,
+        chunk_frames=config.chunk_frames,
         architecture=train_config.architecture,
     )
 
