@@ -1062,6 +1062,22 @@ class FastConformerCTCWithCacheOutput(ModelOutput):
     attentions: tuple[torch.FloatTensor, ...] | None = None
 
 
+@dataclass
+class StreamingStepOutput:
+    """Output of a single cache-aware streaming step.
+
+    Args:
+        logits:
+            Dictionary mapping each level name to its CTC logits tensor.
+            Each tensor has shape ``(batch_size, T_chunk, vocab_size)``.
+        cache:
+            Updated cache state for the next streaming step.
+    """
+
+    logits: dict[str, torch.FloatTensor]
+    cache: FastConformerCache
+
+
 class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
     """FastConformer model with cache-aware streaming and multi-level CTC heads.
 
@@ -1552,7 +1568,14 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
             )
         else:
             # --- Streaming inference (forward_internal + streaming_post_process) ---
+            # Save and restore the original value, matching NeMo's
+            # cache_aware_stream_step pattern (streaming.py:53-73).
+            # Without this, step 0's override (0) permanently replaces the
+            # config value (2), so subsequent steps never drop pre-encoded
+            # frames and produce too many encoder outputs.
+            prev_drop = None
             if drop_extra_pre_encoded is not None:
+                prev_drop = self.encoder.streaming_cfg.drop_extra_pre_encoded
                 self.encoder.streaming_cfg.drop_extra_pre_encoded = (
                     drop_extra_pre_encoded
                 )
@@ -1569,6 +1592,9 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                     rets, keep_all_outputs=keep_all_outputs
                 )
             )
+
+            if prev_drop is not None:
+                self.encoder.streaming_cfg.drop_extra_pre_encoded = prev_drop
 
             new_cache = FastConformerCache(
                 last_channel=new_ch,
@@ -1604,14 +1630,6 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                 log_probs = nn.functional.log_softmax(
                     level_to_logits[level], dim=-1, dtype=torch.float32
                 ).transpose(0, 1)
-                # if level == "phonemes":
-                #     print(flattened_targets)
-                #     print(target_lengths)
-                #     print(input_lengths)
-                #     print(
-                #         log_probs.argmax(-1).sum()
-                #         / (log_probs.shape[0] * log_probs.shape[1])
-                #     )
 
                 with torch.backends.cudnn.flags(enabled=False):
                     level_loss = nn.functional.ctc_loss(
@@ -1623,8 +1641,6 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
                         reduction=self.config.ctc_loss_reduction,
                         zero_infinity=self.config.ctc_zero_infinity,
                     )
-                    # if level == "phonemes":
-                    #     print(f"loss: {level_loss}")
                 loss = loss + self.config.level_to_loss_weight[level] * level_loss
 
         # ---- 6. Return ----
@@ -1640,3 +1656,51 @@ class FastConformerCacheAwareMultilevelCTC(PreTrainedModel):
             cache=new_cache,
             attentions=None,
         )
+
+    # ------------------------------------------------------------------
+    # Streaming step
+    # ------------------------------------------------------------------
+
+    @torch.no_grad()
+    def streaming_step(
+        self,
+        processed_signal: torch.FloatTensor,
+        processed_length: torch.LongTensor,
+        cache: FastConformerCache,
+        keep_all_outputs: bool = True,
+        drop_extra_pre_encoded: int | None = None,
+    ) -> StreamingStepOutput:
+        """Execute a single cache-aware streaming step.
+
+        Equivalent to NeMo's ``conformer_stream_step`` but adapted for our
+        multi-level CTC model.  Calls :meth:`forward` with the provided
+        pre-processed mel chunk and cache, returning per-level logits and
+        the updated cache state.
+
+        Args:
+            processed_signal:
+                Pre-processed mel spectrogram chunk from the streaming buffer.
+                Shape ``(batch_size, num_mel_bins, num_frames)``.
+            processed_length:
+                Valid frame counts for this chunk.  Shape ``(batch_size,)``.
+            cache:
+                Cache state from the previous streaming step.
+                Use :meth:`get_initial_cache` for the first step.
+            keep_all_outputs:
+                If ``True``, keep all encoder output frames (including
+                lookahead).  Set to ``True`` for the **last** streaming step.
+            drop_extra_pre_encoded:
+                Override for ``encoder.streaming_cfg.drop_extra_pre_encoded``.
+                Use ``0`` for the first step, ``None`` for subsequent steps.
+
+        Returns:
+            :class:`StreamingStepOutput` with per-level logits and updated cache.
+        """
+        out = self(
+            processed_signal=processed_signal,
+            processed_length=processed_length,
+            cache=cache,
+            keep_all_outputs=keep_all_outputs,
+            drop_extra_pre_encoded=drop_extra_pre_encoded,
+        )
+        return StreamingStepOutput(logits=out.logits, cache=out.cache)
