@@ -1,6 +1,7 @@
 """refernce notebook: https://colab.research.google.com/drive/1_jsPUMe4odJiRpuyeE9kjnNu--Lg-MGB?usp=sharing"""
 
 import argparse
+import copy
 import io
 import json
 import os
@@ -9,6 +10,7 @@ import re
 import string
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Dict, List, Literal, Union
 
 import Levenshtein
@@ -41,6 +43,7 @@ from prepare_quran_dataset.modeling_fastconformer_cache_aware import (
     FastConformerCacheAwareMultilevelCTC,
     FastConformerCacheAwareMultilevelCTCConfig,
     FastConformerMelProcessor,
+    infer_fastconformer_streaming,
 )
 from prepare_quran_dataset.modeling_streaming_rnn.modeling_rnn_streaming_multi_level_ctc import (
     Wav2Vec2BertForRNNStreamingMultilevelCTC,
@@ -1026,6 +1029,222 @@ def run_qdat_bench_test(
     return metrics
 
 
+def run_streaming_qdat_bench_test(
+    model: FastConformerCacheAwareMultilevelCTC,
+    processor: FastConformerMelProcessor,
+    multi_level_tokenizer: MultiLevelTokenizer,
+    output_dir: str | Path,
+    vocab: dict[str, dict[str, int]],
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int,
+    model_suffix: str = "",
+) -> dict:
+    """
+    Run streaming cache-aware inference + evaluation on the qdat_bench dataset.
+
+    Loads ``obadx/qdat_bench``, streams audio chunk-by-chunk through the model,
+    saves predictions as ``qdat_bench_predictions_streaming_{suffix}.jsonl``,
+    then evaluates with ``eval_qdat_bench`` and saves metrics as
+    ``qdat_bench_test_results_streaming_{suffix}.json``.
+
+    Args:
+        model: Trained FastConformerCacheAwareMultilevelCTC (eval mode).
+        processor: Mel-spectrogram processor for the model.
+        multi_level_tokenizer: MultiLevelTokenizer instance for eval.
+        output_dir: Path to save prediction/results JSON files.
+        vocab: Dict mapping level name -> {label: id} (from ``vocab.json``).
+        device: torch device (cuda/cpu).
+        dtype: torch dtype (bfloat16/float32).
+        batch_size: Number of audio samples to stream simultaneously.
+        model_suffix: Suffix for output filenames (e.g. "best" or "last").
+    """
+    ds = load_dataset("obadx/qdat_bench", split="train")
+    ds = ds.cast_column("audio", Audio(decode=False))
+
+    model.eval()
+    results = []
+    with torch.no_grad():
+        for start_idx in tqdm(
+            range(0, len(ds), batch_size), desc="Streaming qdat_bench"
+        ):
+            batch = ds[start_idx : start_idx + batch_size]
+            audio_sources = [io.BytesIO(a["bytes"]) for a in batch["audio"]]
+            ids = batch["id"]
+
+            logits = infer_fastconformer_streaming(
+                audio_sources, device, dtype, model, processor
+            )
+
+            level_to_labels = {}
+            for level in logits:
+                labels = logits[level].argmax(dim=-1).cpu().numpy()
+                level_to_labels[level] = ctc_decode(labels)
+
+            special_ids = set(multi_level_tokenizer.special_tokens)
+            for level in level_to_labels:
+                level_to_labels[level] = [
+                    [t for t in seq if t not in special_ids]
+                    for seq in level_to_labels[level]
+                ]
+
+            level_to_batch_to_script = {}
+            for level in vocab:
+                ids_to_ph = {idx: label for label, idx in vocab[level].items()}
+                batch_list = []
+                for seq in level_to_labels[level]:
+                    seq_list = [ids_to_ph[int(label)] for label in seq]
+                    batch_list.append(seq_list)
+                level_to_batch_to_script[level] = batch_list
+
+            for idx in range(len(ids)):
+                results.append(
+                    {
+                        "id": ids[idx],
+                        "levels_labels": {
+                            level: [int(x) for x in level_to_labels[level][idx]]
+                            for level in level_to_labels
+                        },
+                        "level_to_scripts": {
+                            level: (
+                                "".join(level_to_batch_to_script[level][idx])
+                                if level == "phonemes"
+                                else level_to_batch_to_script[level][idx]
+                            )
+                            for level in level_to_batch_to_script
+                        },
+                    }
+                )
+
+    pred_path = (
+        Path(output_dir) / f"qdat_bench_predictions_streaming_{model_suffix}.jsonl"
+    )
+    with open(pred_path, "w") as f:
+        for r in results:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"Streaming predictions saved to {pred_path}")
+
+    pred_ds = Dataset.from_json(str(pred_path))
+    metrics = eval_qdat_bench(
+        pred_trans_ds=pred_ds,
+        multi_level_tokenizer=multi_level_tokenizer,
+        bootstrap=False,
+    )
+
+    results_path = (
+        Path(output_dir) / f"qdat_bench_test_results_streaming_{model_suffix}.json"
+    )
+    with open(results_path, "w") as f:
+        json.dump(metrics, f, indent=4, ensure_ascii=False)
+    print(f"Streaming QDAT benchmark results saved to {results_path}")
+
+    print("Speech metrics:", metrics.get("speech_metrics"))
+    print("QDAT metrics:", metrics.get("qdat_metrics"))
+    print("QDAT avg metrics:", metrics.get("qdat_avg_metrics"))
+
+    return metrics
+
+
+def run_streaming_testset_test(
+    model: FastConformerCacheAwareMultilevelCTC,
+    processor: FastConformerMelProcessor,
+    multi_level_tokenizer: MultiLevelTokenizer,
+    testset: DatasetDict,
+    output_dir: str | Path,
+    vocab: dict[str, dict[str, int]],
+    moshaf_id_to_moshaf_attr: dict[str, MoshafAttributes],
+    special_moshaf_id_to_seg_to_moshaf_attr: dict[str, dict[str, MoshafAttributes]],
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int,
+    model_suffix: str = "",
+) -> dict:
+    """
+    Run streaming cache-aware inference + evaluation on the held-out test set.
+
+    Streams audio chunk-by-chunk through the model, computes per-level
+    phoneme error rates, and saves metrics as
+    ``test_results_streaming_{suffix}.json``.
+
+    Reuses the same ``DataCollatorCTCWithPadding`` (with augmentation
+    disabled) and ``IncrementalMetrics`` as the offline evaluation to
+    guarantee identical label preparation and PER computation.
+
+    Args:
+        model: Trained FastConformerCacheAwareMultilevelCTC (eval mode).
+        processor: Mel-spectrogram processor for the model.
+        multi_level_tokenizer: MultiLevelTokenizer instance for eval.
+        testset: Test set ``DatasetDict`` with a ``"test"`` split (already
+            loaded via ``prepare_dataset``).
+        output_dir: Path to save the results JSON file.
+        vocab: Dict mapping level name -> {label: id} (from ``vocab.json``).
+        moshaf_id_to_moshaf_attr: Mapping from moshaf ID to
+            ``MoshafAttributes``.
+        special_moshaf_id_to_seg_to_moshaf_attr: Per-segment moshaf
+            attribute overrides.
+        device: torch device (cuda/cpu).
+        dtype: torch dtype (bfloat16/float32).
+        batch_size: Number of audio samples to stream simultaneously.
+        model_suffix: Suffix for output filename (e.g. "best" or "last").
+    """
+
+    ds = testset["test"]
+    model.eval()
+
+    collator = DataCollatorCTCWithPadding(
+        processor=processor,
+        multi_level_tokenizer=multi_level_tokenizer,
+        moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
+        augment=Augment(),
+        special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
+        architecture="fastconformer-cache-aware",
+        apply_augment=False,
+    )
+    processor = copy.deepcopy(processor)
+    processor.to(model.device)
+
+    metrics_acc = IncrementalMetrics(pad_token_idx=PAD_TOKEN_IDX)
+
+    num_batches = (len(ds) + batch_size - 1) // batch_size
+    with torch.no_grad():
+        for batch_idx, start_idx in enumerate(
+            tqdm(
+                range(0, len(ds), batch_size),
+                total=num_batches,
+                desc="Streaming testset",
+            )
+        ):
+            batch_features = [
+                ds[i] for i in range(start_idx, min(start_idx + batch_size, len(ds)))
+            ]
+
+            # Reference labels via the same collator used in offline eval
+            collated = collator(batch_features)
+            labels = collated["labels"]
+
+            # Streaming model predictions
+            audio_sources = [io.BytesIO(f["audio"]["bytes"]) for f in batch_features]
+            logits = infer_fastconformer_streaming(
+                audio_sources, device, dtype, model, processor
+            )
+
+            # Feed to IncrementalMetrics (expects .predictions and .label_ids)
+            eval_pred = SimpleNamespace(predictions=logits, label_ids=labels)
+            is_last = batch_idx == num_batches - 1
+            metrics = metrics_acc(eval_pred, compute_result=is_last)
+
+    # Prefix keys with test_streaming__
+    metrics = {f"test_streaming__{k}": v for k, v in metrics.items()}
+
+    results_path = Path(output_dir) / f"test_results_streaming_{model_suffix}.json"
+    with open(results_path, "w") as f:
+        json.dump(metrics, f, indent=4)
+    print(f"Streaming test results saved to {results_path}")
+    print("Streaming Test Results:", metrics)
+
+    return metrics
+
+
 def compute_qdat_top_phonemes_per(
     pred_trans_ds: Dataset,
     multi_level_tokenizer: MultiLevelTokenizer,
@@ -1179,6 +1398,16 @@ if __name__ == "__main__":
         help="Force re-run qdat_bench inference + evaluation even if results exist",
     )
     parser.add_argument(
+        "--rerun-streaming-testset",
+        action="store_true",
+        help="Force re-run streaming test set evaluation even if results exist",
+    )
+    parser.add_argument(
+        "--rerun-streaming-qdat-bench",
+        action="store_true",
+        help="Force re-run streaming qdat_bench inference + evaluation even if results exist",
+    )
+    parser.add_argument(
         "--load-last-model",
         action="store_true",
         default=False,
@@ -1236,8 +1465,8 @@ if __name__ == "__main__":
     }
 
     if args.push_to_hub and processor is not None:
-        processor.push_to_hub(train_config.hub_model_id)
-        multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id)
+        processor.push_to_hub(train_config.hub_model_id, private=True)
+        multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id, private=True)
 
     # Initializaze wanddb
     # set the wandb project where this run will be logged
@@ -1323,7 +1552,7 @@ if __name__ == "__main__":
         ),
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
         max_noise_input_seconds=train_config.max_noise_input_seconds,
-        chunk_frames=config.chunk_frames,
+        chunk_frames=train_config.model_kwargs.get("chunk_frames", 25),
         architecture=train_config.architecture,
     )
 
@@ -1465,18 +1694,80 @@ if __name__ == "__main__":
             "and compute top-phonemes PER analysis."
         )
 
+    # Streaming inference evaluation (fastconformer-cache-aware only)
+    if train_config.architecture == "fastconformer-cache-aware":
+        streaming_batch_size = train_config.pre_device_eval_batch_size
+
+        # Streaming testset evaluation
+        if train_config.test_moshaf_ids is not None:
+            streaming_test_path = (
+                Path(train_config.output_dir)
+                / f"test_results_streaming_{model_suffix}.json"
+            )
+            if streaming_test_path.exists() and not args.rerun_streaming_testset:
+                print(
+                    f"Found existing {streaming_test_path}, skipping streaming test evaluation. "
+                    "Use --rerun-streaming-testset to force."
+                )
+            else:
+                testset = prepare_dataset(
+                    train_config,
+                    processor,
+                    multi_level_tokenizer,
+                    is_testset=True,
+                )
+                run_streaming_testset_test(
+                    model=trainer.model,
+                    processor=processor,
+                    multi_level_tokenizer=multi_level_tokenizer,
+                    testset=testset,
+                    output_dir=train_config.output_dir,
+                    vocab=vocab,
+                    moshaf_id_to_moshaf_attr=moshaf_id_to_moshaf_attr,
+                    special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
+                    device=device,
+                    dtype=dtype,
+                    batch_size=streaming_batch_size,
+                    model_suffix=model_suffix,
+                )
+
+        # Streaming qdat_bench evaluation
+        streaming_qdat_results_path = (
+            Path(train_config.output_dir)
+            / f"qdat_bench_test_results_streaming_{model_suffix}.json"
+        )
+        if streaming_qdat_results_path.exists() and not args.rerun_streaming_qdat_bench:
+            print(
+                f"Found existing {streaming_qdat_results_path}, skipping streaming qdat_bench. "
+                "Use --rerun-streaming-qdat-bench to force."
+            )
+        else:
+            run_streaming_qdat_bench_test(
+                model=trainer.model,
+                processor=processor,
+                multi_level_tokenizer=multi_level_tokenizer,
+                output_dir=train_config.output_dir,
+                vocab=vocab,
+                device=device,
+                dtype=dtype,
+                batch_size=streaming_batch_size,
+                model_suffix=model_suffix,
+            )
+
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()
 
     # Push model and tokenizer to Hub
     if args.push_to_hub:
-        trainer.push_to_hub()
+        trainer.push_to_hub(private=True)
 
         api = HfApi()
         for fname in [
             f"test_results_{model_suffix}.json",
             f"qdat_bench_test_results_{model_suffix}.json",
             f"qdat_top_phonemes_per_{model_suffix}.json",
+            f"test_results_streaming_{model_suffix}.json",
+            f"qdat_bench_test_results_streaming_{model_suffix}.json",
         ]:
             fpath = Path(train_config.output_dir) / fname
             if fpath.exists():
