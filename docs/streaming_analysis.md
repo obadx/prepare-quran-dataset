@@ -11,6 +11,7 @@
 | c5_v3 | en-str-m | bf16 | Yes | Yes | 30.0 | [78, 12, 5] | 0.0160 | 0.0155 | 0.1865 | 0.1187 | 0.000173 |
 | v6 | en-str-m | bf16 | Yes | Yes | 30.0 | [78, 12, 0] | 0.0179 | 0.0116 | 0.1834 | 0.1155 | 0.000177 |
 | c5_v4 | en-str-m | fp32 | Yes | Yes | 30.0 | [78, 12, 5] | 0.0190 | 0.0072 | 0.1792 | 0.1045 | 0.000140 |
+| v7 | en-str-m | fp32 | Yes | Yes | 30.0 | [78, 12, 0] | 0.0216 | 0.0080 | 0.2018 | 0.1220 | 0.000151 |
 
 Where `from` is the pretrained NeMo checkpoint the encoder weights were loaded from:
 
