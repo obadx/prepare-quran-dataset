@@ -24,3 +24,12 @@ convolutions applied to the log-mel features), controlled by the model kwarg
 front-end runs in float32 with autocast disabled — since log-mel features' dynamic range
 makes these convolutions numerically fragile under bf16 — and its output is cast back to
 bf16 so all downstream layers are unaffected.
+
+## Streaming Results
+
+| Model | from | pre-enc | [left, right, C] | Test per_phonemes | Test avg_per | QDAT per_phonemes | QDAT avg_per |
+|-------|:-:|:-:|:-:|--:|--:|--:|--:|
+| c5_v3 | en-str-m | bf16 | [78, 12, 5] | 0.0524 | 0.0287 | 0.2544 | 0.1121 |
+| v6 | en-str-m | bf16 | [78, 12, 0] | 0.0180 | 0.0118 | 0.1818 | 0.1149 |
+| c5_v4 | en-str-m | fp32 | [78, 12, 5] | 0.0392 | 0.0222 | 0.2025 | 0.1031 |
+| v7 | en-str-m | fp32 | [78, 12, 0] | 0.0217 | 0.0080 | 0.2002 | 0.1214 |
