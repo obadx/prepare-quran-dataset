@@ -18,7 +18,14 @@ import librosa
 import numpy as np
 import torch
 import yaml
-from datasets import Audio, Dataset, DatasetDict, concatenate_datasets, load_dataset
+from datasets import (
+    Audio,
+    Dataset,
+    DatasetDict,
+    concatenate_datasets,
+    load_dataset,
+    load_from_disk,
+)
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
 from huggingface_hub import login as hf_login
@@ -111,6 +118,12 @@ class TrainConfig(BaseModel):
     max_noise_input_seconds: float = 40.0
     include_noise_ds_in_train: bool = True
     include_noise_ds_in_augment: bool = True
+
+    # Tlog dataset: when True, loads tlog-clean-16k from $HF_HOME/datasets/ and
+    # concatenates it with the training data. Tlog samples already contain
+    # phonemes so they skip phonetization; sifat is empty for them.
+    add_tlog_dataset: bool = False
+    add_eos_token: bool = True
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "TrainConfig":
@@ -529,22 +542,41 @@ def prepare_dataset(
         # disable torchcodec decoding, use liborsa instead
         ds = ds.cast_column("audio", Audio(decode=False))
 
-        def _audio_len(audio_dict):
-            src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
-            wav, _ = librosa.load(src, sr=16000, mono=True)
-            return len(wav)
-
-        if train_config.max_audio_seconds is not None:
-            # removihg long samples
-            max_samples = int(train_config.max_audio_seconds * sample_rate)
-
-            ds = ds.filter(
-                lambda ex: _audio_len(ex["audio"]) <= max_samples,
-                num_proc=train_config.num_workers,
-            )
-
         # Add input_type column to speech samples
         ds = ds.add_column("input_type", ["speech"] * ds.num_rows)
+
+    if train_config.add_tlog_dataset and not is_testset:
+        tlog_path = (
+            Path(os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface")))
+            / "datasets"
+            / "tlog-clean-16k"
+        )
+        if not tlog_path.exists():
+            raise FileNotFoundError(
+                f"tlog dataset not found at {tlog_path}. "
+                "Run build_tlog_clean_16k.py first to build it."
+            )
+        tlog_ds = load_from_disk(str(tlog_path))
+        tlog_ds = tlog_ds.cast_column("audio", Audio(decode=False))
+        tlog_ds = tlog_ds.add_column("uthmani", [""] * tlog_ds.num_rows)
+        tlog_ds = tlog_ds.add_column("moshaf_id", [""] * tlog_ds.num_rows)
+        tlog_ds = tlog_ds.add_column("segment_index", ["-1"] * tlog_ds.num_rows)
+        tlog_ds = tlog_ds.add_column("input_type", ["speech"] * tlog_ds.num_rows)
+        ds = concatenate_datasets([ds, tlog_ds])
+
+    # Filtering speech samples > max_audio_seconds
+    def _audio_len(audio_dict):
+        src = audio_dict["path"] or io.BytesIO(audio_dict["bytes"])
+        wav, _ = librosa.load(src, sr=16000, mono=True)
+        return len(wav)
+
+    if train_config.max_audio_seconds is not None:
+        # removihg long samples
+        max_samples = int(train_config.max_audio_seconds * sample_rate)
+        ds = ds.filter(
+            lambda ex: _audio_len(ex["audio"]) <= max_samples,
+            # num_proc=train_config.num_workers, #BUG: from python: https://github.com/python/cpython/issues/148914
+        )
 
     if input_noise_ds is not None:
         input_noise_ds = input_noise_ds.cast_column("audio", Audio(decode=False))
@@ -731,6 +763,7 @@ class DataCollatorCTCWithPadding:
     sample_rate: int = 16000
     architecture: ArchitectureName = "w2v2bert-streaming-rnn"
     apply_augment: bool = True
+    add_eos_token: bool = True
 
     def __call__(
         self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
@@ -769,6 +802,9 @@ class DataCollatorCTCWithPadding:
             if features_input_types[idx] == "silence":
                 phonemes_list.append("")
                 sifat_list.append([])
+            elif features[idx].get("predicted_phonemes"):
+                phonemes_list.append(features[idx]["predicted_phonemes"])
+                sifat_list.append([])
             else:
                 m_id = features[idx]["moshaf_id"]
                 if m_id in self.special_moshaf_id_to_seg_to_moshaf_attr:
@@ -806,7 +842,7 @@ class DataCollatorCTCWithPadding:
             phonemes_list,
             sifat_list,
             to_dict=True,
-            add_eos=True,
+            add_eos=self.add_eos_token,
             return_tensors="pt",
             padding="longest",
         )
@@ -1558,6 +1594,7 @@ if __name__ == "__main__":
         max_noise_input_seconds=train_config.max_noise_input_seconds,
         chunk_frames=train_config.model_kwargs.get("chunk_frames", 25),
         architecture=train_config.architecture,
+        add_eos_token=train_config.add_eos_token,
     )
 
     # Initialize Trainer
