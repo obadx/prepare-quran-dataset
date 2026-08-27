@@ -1059,6 +1059,8 @@ def run_streaming_qdat_bench_test(
         batch_size: Number of audio samples to stream simultaneously.
         model_suffix: Suffix for output filenames (e.g. "best" or "last").
     """
+    processor = copy.deepcopy(processor)
+    processor.to(model.device)
     ds = load_dataset("obadx/qdat_bench", split="train")
     ds = ds.cast_column("audio", Audio(decode=False))
 
@@ -1466,7 +1468,9 @@ if __name__ == "__main__":
 
     if args.push_to_hub and processor is not None:
         processor.push_to_hub(train_config.hub_model_id, private=True)
-        multi_level_tokenizer.get_tokenizer().push_to_hub(train_config.hub_model_id, private=True)
+        multi_level_tokenizer.get_tokenizer().push_to_hub(
+            train_config.hub_model_id, private=True
+        )
 
     # Initializaze wanddb
     # set the wandb project where this run will be logged
@@ -1759,7 +1763,7 @@ if __name__ == "__main__":
 
     # Push model and tokenizer to Hub
     if args.push_to_hub:
-        trainer.push_to_hub(private=True)
+        trainer.push_to_hub()
 
         api = HfApi()
         for fname in [
