@@ -35,3 +35,16 @@ bf16 so all downstream layers are unaffected.
 | c5_v4 | en-str-m | fp32 | [78, 12, 5] | 0.0392 | 0.0222 | 0.2025 | 0.1031 |
 | v7 | en-str-m | fp32 | [78, 12, 0] | 0.0217 | 0.0080 | 0.2002 | 0.1214 |
 | c2_v1 | en-str-m | fp32 | [78, 12, 2] | 0.0448 | 0.0230 | 0.2389 | 0.1379 |
+
+## Muallem-annotated-v3 + tlog
+
+> Default att_context_size: `[78, 12, 0]`
+
+| Model | off-T-phonemes | str-T-phonemes | off-Q-phonemes | str-Q-phonemes |
+|-------|--:|--:|--:|--:|
+| base-v1 | 0.00211 | 0.00211 | 0.0572 | 0.0572 |
+
+* **T**: for Testset
+* **Q**: for qdat
+* **off**: offline
+* **str**: streaming
