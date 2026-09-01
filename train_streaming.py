@@ -457,6 +457,15 @@ class Augment(object):
         return item
 
 
+def get_most_recent_checkpoint(output_dir: str | Path) -> Path | None:
+    """Return the ``checkpoint-NNN`` directory with the highest step number."""
+    checkpoints = sorted(
+        (p for p in Path(output_dir).glob("checkpoint-*") if p.is_dir()),
+        key=lambda p: int(p.name.split("-")[-1]),
+    )
+    return checkpoints[-1] if checkpoints else None
+
+
 def fix_dataset_len(ds: Dataset, batch_size: int) -> Dataset:
     """Fix dataset len to be multiple of batch_size as the model
     config asserts that config.max_chunk_batch be mutliple of batch_size"""
@@ -1196,6 +1205,7 @@ def run_streaming_testset_test(
     dtype: torch.dtype,
     batch_size: int,
     model_suffix: str = "",
+    add_eos_token=False,
 ) -> dict:
     """
     Run streaming cache-aware inference + evaluation on the held-out test set.
@@ -1237,6 +1247,7 @@ def run_streaming_testset_test(
         special_moshaf_id_to_seg_to_moshaf_attr=special_moshaf_id_to_seg_to_moshaf_attr,
         architecture="fastconformer-cache-aware",
         apply_augment=False,
+        add_eos_token=add_eos_token,
     )
     processor = copy.deepcopy(processor)
     processor.to(model.device)
@@ -1452,6 +1463,12 @@ if __name__ == "__main__":
         help="Use the last saved checkpoint instead of the best model when running test set evaluation, qdat_bench, and pushing to the Hub (default: best model)",
     )
     parser.add_argument(
+        "--skip-train",
+        action="store_true",
+        default=False,
+        help="Skip training. Load the most recent checkpoint and only run validation/testing.",
+    )
+    parser.add_argument(
         "--reset-learning-rate",
         action="store_true",
         default=False,
@@ -1460,6 +1477,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     load_best_model_at_end = not args.load_last_model
     model_suffix = "last" if args.load_last_model else "best"
+
+    if args.skip_train:
+        load_best_model_at_end = False
+        model_suffix = "last"
 
     # loading wandb tokens and HF login
     load_secrets()
@@ -1609,9 +1630,18 @@ if __name__ == "__main__":
         data_collator=data_collector,
     )
 
-    # Start training
-    if list(Path(train_config.output_dir).glob("checkpoint-*")):
-        print("Resuming !")
+    # Start training (skipped entirely with --skip-train)
+    if args.skip_train:
+        checkpoint = get_most_recent_checkpoint(train_config.output_dir)
+        if checkpoint is None:
+            raise FileNotFoundError(
+                f"No checkpoint-* found in {train_config.output_dir}; "
+                "cannot use --skip-train."
+            )
+        print(f"⏭️ Skipping training. Loading checkpoint: {checkpoint}")
+        trainer.model = type(trainer.model).from_pretrained(str(checkpoint))
+    elif list(Path(train_config.output_dir).glob("checkpoint-*")):
+        print("▶️▶️▶️▶️ Resuming !")
         if args.reset_learning_rate:
             print(
                 f"🚨🚨🚨🚨🚨🚨  Resting Learning rate to {train_config.learning_rate}"
@@ -1770,6 +1800,7 @@ if __name__ == "__main__":
                     dtype=dtype,
                     batch_size=streaming_batch_size,
                     model_suffix=model_suffix,
+                    add_eos_token=train_config.add_eos_token,
                 )
 
         # Streaming qdat_bench evaluation
