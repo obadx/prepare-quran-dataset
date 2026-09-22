@@ -39,7 +39,15 @@ classifiers = [
 
 # Optional dependencies
 [tool.pytest.ini_options]
-testpaths = ["tests/test_fastconformer_mask_golden.py"]
+testpaths = [
+  "tests/test_fastconformer_mask_golden.py",
+  "tests/test_ctc_decoding.py",
+  "tests/test_streaming_processor.py",
+]
+# The package cannot be pip-installed where python < 3.14 (see requires-python), so
+# pytest would not find `prepare_quran_dataset` at all. "." also puts train_streaming
+# in reach, which un-skips the canonical-decoder comparison.
+pythonpath = ["src", "."]
 
 [project.optional-dependencies]
 
@@ -73,6 +81,7 @@ annotate = [
 
 test_streaming = [
   "gradio>=6.20.0",
+  "soxr", # the mic app's stateful chunk resampler; was relied on transitively via librosa
 ]
 litert = [
     "ai-edge-litert>=2.1.5",
